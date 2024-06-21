@@ -57,7 +57,7 @@ def compute_similarity(corrs):
     return corrs.abs().pow(2).sum() / corrs.shape[0]
 
 
-def compute_gram(modes: nd) -> nd:
+def compute_gram(modes):
     """
     Compute Gram matrix from collection of modes.
 
@@ -69,7 +69,7 @@ def compute_gram(modes: nd) -> nd:
     gram = np.zeros(shape=[num_modes]*2)
 
     for n in range(num_modes):
-        row_mode = modes[:, :, n]
+        row_mode = np.expand_dims(modes[:, :, n], 2)
         gram[:, n] = inner(modes, row_mode, dim=(0, 1))
 
     return gram
