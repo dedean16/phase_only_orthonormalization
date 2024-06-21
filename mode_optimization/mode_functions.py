@@ -1,7 +1,7 @@
 import torch
 import numpy as np
 
-from openwfs.algorithms.basic_fourier import build_square_k_space
+from helper_functions import build_square_k_space
 
 
 def inner(a, b, dim):
@@ -19,7 +19,7 @@ def tilt(x, y, kx, ky):
     return torch.exp(1j * np.pi * (kx*x + ky*y))
 
 
-def beam_profile(x, y, r_factor):
+def gaussian(x, y, r_factor):
     r_sq = x ** 2 + y ** 2
     return torch.exp(-(r_factor ** 2 * r_sq)) * (r_sq <= 1)
     # return 1
@@ -64,7 +64,7 @@ def compute_mode(mode_shape, k, r_factor, ax=None, ay=None, x_min=-1, x_max=0, y
     if ignore_amplitude:
         amplitude = 1
     else:
-        amplitude = beam_profile(x, y, r_factor)
+        amplitude = gaussian(x, y, r_factor)
 
     # Phase
     if ignore_warp:
