@@ -1,13 +1,22 @@
 [tool.poetry]
-name = "mode-optimization"
+name = "mode_optimization"
 version = "0.1.0"
 description = ""
 authors = ["Daniel Cox <danielcox16@hotmail.com>"]
 readme = "README.md"
 
 [tool.poetry.dependencies]
-python = "^3.12"
+python = ">=3.10, <3.12"    # Currently restricted by openwfs
+numpy = "^1.26.4"
+matplotlib = "^3.8.3"
+tqdm = "^4.66.2"
+gitpython = "^3.1.43"
 
+[tool.poetry.group.dev]
+optional = true
+
+[tool.poetry.group.dev.dependencies]
+pytest = "~7.0.0"
 
 [build-system]
 requires = ["poetry-core"]
