@@ -7,7 +7,8 @@ import matplotlib.pyplot as plt
 import git
 
 from helper_functions import plot_field
-from mode_functions import compute_mode, warp_func, compute_gram, compute_non_orthogonality, compute_tilt_similarity
+from mode_functions import warp_func, compute_non_orthogonality, compute_similarity
+from tilt_optim_functions import compute_tilt_mode, compute_gram_tilt
 
 
 # ====== Settings ====== #
@@ -69,19 +70,19 @@ if do_plot:
     plt.tight_layout()
 
 # Compute starting conditions, for comparison
-overlaps_original, tilt_corrs_original = compute_gram(r_factor, ax.detach(), ay.detach(), shape=shape,
-                                                      k_min=-k_max, k_max=k_max)
+overlaps_original, tilt_corrs_original = compute_gram_tilt(r_factor, ax.detach(), ay.detach(), shape=shape,
+                                                           k_min=-k_max, k_max=k_max)
 non_orthogonality_original = compute_non_orthogonality(overlaps_original)
-tilt_similarity_original = compute_tilt_similarity(tilt_corrs_original)
+tilt_similarity_original = compute_similarity(tilt_corrs_original)
 
 
 # ====== Gradient descent ====== #
 for it in range(iterations):
-    overlaps, tilt_corrs = compute_gram(r_factor, ax, ay, shape=shape, k_min=-k_max, k_max=k_max)
+    overlaps, tilt_corrs = compute_gram_tilt(r_factor, ax, ay, shape=shape, k_min=-k_max, k_max=k_max)
 
     # Compute error
     non_orthogonality = compute_non_orthogonality(overlaps)
-    tilt_similarity = compute_tilt_similarity(tilt_corrs)
+    tilt_similarity = compute_similarity(tilt_corrs)
     error = non_orthogonality - tilt_weight * tilt_similarity
 
     # Save error and terms
@@ -131,7 +132,7 @@ for it in range(iterations):
         plt.subplot(2, 4, 5)
         plt.cla()
         k1 = (2, 2)
-        mode1 = compute_mode(shape, k1, r_factor, ax, ay).detach().squeeze()
+        mode1 = compute_tilt_mode(shape, k1, r_factor, ax, ay).detach().squeeze()
         plot_field(mode1, 1)
         plt.xticks([])
         plt.yticks([])
@@ -141,7 +142,7 @@ for it in range(iterations):
         plt.subplot(2, 4, 6)
         plt.cla()
         k2 = (-3, 2)
-        mode2 = compute_mode(shape, k2, r_factor, ax, ay).detach().squeeze()
+        mode2 = compute_tilt_mode(shape, k2, r_factor, ax, ay).detach().squeeze()
         plot_field(mode2, 1)
         plt.xticks([])
         plt.yticks([])
@@ -151,7 +152,7 @@ for it in range(iterations):
         plt.subplot(2, 4, 7)
         plt.cla()
         k3 = (4, 0)
-        mode3 = compute_mode(shape, k3, r_factor, ax, ay).detach().squeeze()
+        mode3 = compute_tilt_mode(shape, k3, r_factor, ax, ay).detach().squeeze()
         plot_field(mode3, 1)
         plt.xticks([])
         plt.yticks([])
@@ -197,9 +198,9 @@ for it in range(iterations):
 
 
 # ====== Show and save ====== #
-overlaps_big, tilt_corrs_big = compute_gram(r_factor, ax.detach(), ay.detach(), shape=shape, k_min=-6, k_max=6)
+overlaps_big, tilt_corrs_big = compute_gram_tilt(r_factor, ax.detach(), ay.detach(), shape=shape, k_min=-6, k_max=6)
 non_orthogonality_big = compute_non_orthogonality(overlaps_big)
-tilt_similarity_big = compute_tilt_similarity(tilt_corrs_big)
+tilt_similarity_big = compute_similarity(tilt_corrs_big)
 print('\nax:\n', ax.detach())
 print('\nay:\n', ay.detach())
 print('\nnon-orthogonality:', non_orthogonality_big)
