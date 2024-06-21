@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import git
 
-from tpmpy.helper_functions import plot_field
+from helper_functions import plot_field
 from mode_functions import compute_mode, warp_func, compute_gram, compute_non_orthogonality, compute_tilt_similarity
 
 
@@ -28,8 +28,8 @@ f_obj1_m = 12.5e-3  # Objective focal length in m
 waist_m = 2 * 5.9e-3  # Fit beam profile gaussian width in m
 
 # Mode settings
-shape = (150, 150)
-k_max = 4
+shape = (100, 100)
+k_max = 2
 
 # Coefficients
 N = 3  # Sqrt of number of polynomial terms
