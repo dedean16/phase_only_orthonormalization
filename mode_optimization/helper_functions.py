@@ -74,22 +74,5 @@ def gitinfo() -> dict:
     return git_info
 
 
-def build_square_k_space(k_min, k_max):
-    """
-    Constructs the k-space by creating a set of (k_x, k_y) coordinates.
-    Fills the k_left and k_right matrices with the same k-space. (k_x, k_y) denote the k-space coordinates of the whole
-    pupil. Only half SLM (and thus pupil) is modulated at a time, hence k_y (axis=1) must make steps of 2.
-
-    Returns:
-        k_space (np.ndarray): A 2xN array of k-space coordinates.
-    """
-    # Generate kx and ky coordinates
-    kx_angles = np.arange(k_min, k_max + 1, 1)
-    k_angles_min_even = (k_min if k_min % 2 == 0 else k_min + 1)        # Must be even
-    ky_angles = np.arange(k_angles_min_even, k_max + 1, 2)              # Steps of 2
-
-    # Combine kx and ky coordinates into pairs
-    k_x = np.repeat(np.array(kx_angles)[np.newaxis, :], len(ky_angles), axis=0).flatten()
-    k_y = np.repeat(np.array(ky_angles)[:, np.newaxis], len(kx_angles), axis=1).flatten()
-    k_space = np.vstack((k_x, k_y))
-    return k_space
+def is_close(a, b, margin):
+    return (a - b).abs() < margin

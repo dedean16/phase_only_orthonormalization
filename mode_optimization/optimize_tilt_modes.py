@@ -7,8 +7,8 @@ import matplotlib.pyplot as plt
 import git
 
 from helper_functions import plot_field
-from mode_functions import warp_func, compute_non_orthogonality, compute_similarity
-from tilt_optim_functions import compute_tilt_mode, compute_gram_tilt
+from mode_functions import compute_non_orthogonality
+from tilt_optim_functions import compute_tilt_mode, compute_gram_tilt, compute_similarity_from_corrs, warp_func_tilt
 
 
 # ====== Settings ====== #
@@ -73,7 +73,7 @@ if do_plot:
 overlaps_original, tilt_corrs_original = compute_gram_tilt(r_factor, ax.detach(), ay.detach(), shape=shape,
                                                            k_min=-k_max, k_max=k_max)
 non_orthogonality_original = compute_non_orthogonality(overlaps_original)
-tilt_similarity_original = compute_similarity(tilt_corrs_original)
+tilt_similarity_original = compute_similarity_from_corrs(tilt_corrs_original)
 
 
 # ====== Gradient descent ====== #
@@ -82,7 +82,7 @@ for it in range(iterations):
 
     # Compute error
     non_orthogonality = compute_non_orthogonality(overlaps)
-    tilt_similarity = compute_similarity(tilt_corrs)
+    tilt_similarity = compute_similarity_from_corrs(tilt_corrs)
     error = non_orthogonality - tilt_weight * tilt_similarity
 
     # Save error and terms
@@ -165,14 +165,14 @@ for it in range(iterations):
         x_grid = torch.linspace(-1, 0, 11).view(1, -1, 1, 1)  # Normalized x coords
         y_grid = torch.linspace(-1, 1, 21).view(-1, 1, 1, 1)  # Normalized y coords
         r_mask = x_grid * x_grid + y_grid * y_grid > 1.01
-        wx_grid, wy_grid = warp_func(x_grid, y_grid, ax.detach(), ay.detach())
+        wx_grid, wy_grid = warp_func_tilt(x_grid, y_grid, ax.detach(), ay.detach())
         wx_grid[r_mask] = np.nan
         wy_grid[r_mask] = np.nan
         # Warped arc
         phi_arc = torch.linspace(np.pi/2, 3*np.pi/2, 80)
         x_arc = torch.cos(phi_arc).view(-1, 1, 1, 1)
         y_arc = torch.sin(phi_arc).view(-1, 1, 1, 1)
-        wx_arc, wy_arc = warp_func(x_arc, y_arc, ax.detach(), ay.detach())
+        wx_arc, wy_arc = warp_func_tilt(x_arc, y_arc, ax.detach(), ay.detach())
         # Plot
         plt.plot(wx_arc.squeeze(), wy_arc.squeeze(), '-', linewidth=1)
         plt.plot(wx_grid.squeeze(), wy_grid.squeeze(), '-k', linewidth=1)
@@ -200,7 +200,7 @@ for it in range(iterations):
 # ====== Show and save ====== #
 overlaps_big, tilt_corrs_big = compute_gram_tilt(r_factor, ax.detach(), ay.detach(), shape=shape, k_min=-6, k_max=6)
 non_orthogonality_big = compute_non_orthogonality(overlaps_big)
-tilt_similarity_big = compute_similarity(tilt_corrs_big)
+tilt_similarity_big = compute_similarity_from_corrs(tilt_corrs_big)
 print('\nax:\n', ax.detach())
 print('\nay:\n', ay.detach())
 print('\nnon-orthogonality:', non_orthogonality_big)

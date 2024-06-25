@@ -1,12 +1,47 @@
 import torch
 import numpy as np
 
-from mode_functions import gaussian, warp_func, field_correlation
-from helper_functions import build_square_k_space
+from mode_functions import inner
+
+
+def field_correlation(a, b, dim):
+    aa = inner(a, a, dim)
+    bb = inner(b, b, dim)
+    ab = inner(a, b, dim)
+    return ab / torch.sqrt(aa * bb)
 
 
 def tilt(x, y, kx, ky):
     return torch.exp(1j * np.pi * (kx*x + ky*y))
+
+
+def beam_profile_gauss(x, y, r_factor):
+    """
+    Compute an apodized gaussian on the given x & y coordinates.
+    """
+    r_sq = x ** 2 + y ** 2
+    return torch.exp(-(r_factor ** 2 * r_sq)) * (r_sq <= 1)
+
+
+def build_square_k_space(k_min, k_max):
+    """
+    Constructs the k-space by creating a set of (k_x, k_y) coordinates.
+    Fills the k_left and k_right matrices with the same k-space. (k_x, k_y) denote the k-space coordinates of the whole
+    pupil. Only half SLM (and thus pupil) is modulated at a time, hence k_y (axis=1) must make steps of 2.
+
+    Returns:
+        k_space (np.ndarray): A 2xN array of k-space coordinates.
+    """
+    # Generate kx and ky coordinates
+    kx_angles = np.arange(k_min, k_max + 1, 1)
+    k_angles_min_even = (k_min if k_min % 2 == 0 else k_min + 1)        # Must be even
+    ky_angles = np.arange(k_angles_min_even, k_max + 1, 2)              # Steps of 2
+
+    # Combine kx and ky coordinates into pairs
+    k_x = np.repeat(np.array(kx_angles)[np.newaxis, :], len(ky_angles), axis=0).flatten()
+    k_y = np.repeat(np.array(ky_angles)[:, np.newaxis], len(kx_angles), axis=1).flatten()
+    k_space = np.vstack((k_x, k_y))
+    return k_space
 
 
 def compute_tilt_mode(mode_shape, k, r_factor, ax=None, ay=None, x_min=-1, x_max=0, y_min=-1, y_max=1, ignore_warp=False,
@@ -19,13 +54,13 @@ def compute_tilt_mode(mode_shape, k, r_factor, ax=None, ay=None, x_min=-1, x_max
     if ignore_amplitude:
         amplitude = 1
     else:
-        amplitude = gaussian(x, y, r_factor)
+        amplitude = beam_profile_gauss(x, y, r_factor)
 
     # Phase
     if ignore_warp:
         phase_factor = tilt(x, y, k[1], k[0])
     else:
-        wx, wy = warp_func(x, y, ax, ay)
+        wx, wy = warp_func_tilt(x, y, ax, ay)
         phase_factor = tilt(wx, wy, k[1], k[0])
     return amplitude * phase_factor
 
@@ -54,3 +89,34 @@ def compute_gram_tilt(r_factor, ax, ay, shape, k_min, k_max):
 
     return overlaps, tilt_corrs
 
+
+def compute_similarity_from_corrs(corrs):
+    return corrs.abs().pow(2).sum() / corrs.shape[0]
+
+def warp_func_tilt(x, y, a, b, pow_factor = 2):
+    """
+    x: Nx1x1x1
+    y: 1xMx1x1
+    a: 1x1xPxQ
+    b: 1x1xPxQ
+    """
+    assert a.shape == b.shape
+    if isinstance(a, np.ndarray):
+        a = torch.from_numpy(a)
+    if isinstance(b, np.ndarray):
+        b = torch.from_numpy(b)
+
+    # Create arrays of powers
+    # Note: a pow_factor 2 means that the indexing is different from the paper by a factor of 2!
+    xpows = torch.tensor(range(a.shape[2])).view(1, 1, -1, 1) * pow_factor
+    ypows = torch.tensor(range(a.shape[3])).view(1, 1, 1, -1) * pow_factor
+
+    # Raise x and y to even powers
+    x_to_powers = x ** xpows
+    y_to_powers = y ** ypows
+
+    # Multiply all factors and sum to create the polynomial
+    wx = (a * x * x_to_powers * y_to_powers).sum(dim=(2, 3))
+    wy = (b * y * x_to_powers * y_to_powers).sum(dim=(2, 3))
+
+    return wx, wy
