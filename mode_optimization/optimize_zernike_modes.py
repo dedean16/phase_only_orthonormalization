@@ -45,14 +45,15 @@ waist = waist_m / (NA * f_obj1_m)
 k_max = 4
 
 # Coefficients
-poly_degree = 2         # Sqrt of number of polynomial terms
+poly_degree = 3         # Sqrt of number of polynomial terms
 poly_per_mode = True    # If True, every mode has its own transform polynomial
 pow_factor = 2
 
 # Optimization parameters
 learning_rate = 3.0e-2
 iterations = 600
-similarity_weight = 2
+similarity_weight = 0.05
+phase_grad_weight = 0.5
 
 
 # ====== Initial basis ====== #
@@ -92,7 +93,8 @@ def zernike_phases(x, y, phase_coeff_matrix, dtype=torch.float32):
 a, b, new_modes, init_modes = optimize_modes(
     domain=domain, amplitude_func=apo_gaussian, amplitude_kwargs=amplitude_kwargs, phase_func=zernike_phases,
     phase_kwargs=phase_kwargs, poly_degree=poly_degree, poly_per_mode=poly_per_mode, pow_factor=pow_factor,
-    similarity_weight=similarity_weight, iterations=iterations, learning_rate=learning_rate, extra_params=extra_params)
+    similarity_weight=similarity_weight, phase_grad_weight=phase_grad_weight, iterations=iterations,
+    learning_rate=learning_rate, extra_params=extra_params)
 
 
 print('\na:', a)

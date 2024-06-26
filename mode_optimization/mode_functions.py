@@ -115,7 +115,7 @@ def compute_similarity(modes1: tt, modes2: tt) -> tt:
     return inner(modes1, modes2, dim=(0, 1)).abs().sum() / modes1.shape[2]
 
 
-def compute_modes(amplitude: tt, phase_func: callable, phase_kwargs: dict, x: tt, y: tt) -> tt:
+def compute_modes(amplitude: tt, phase_func: callable, phase_kwargs: dict, x: tt, y: tt) -> Tuple[tt, tt]:
     """
     Compute modes
 
@@ -135,12 +135,19 @@ def compute_modes(amplitude: tt, phase_func: callable, phase_kwargs: dict, x: tt
     """
     phase = phase_func(x, y, **phase_kwargs)
     modes = amplitude * torch.exp(1j * phase)
-    return modes
+
+    # Phase grad
+    phase_grad_sq_dim0 = torch.diff(phase, dim=0).abs().pow(2)
+    phase_grad_sq_dim1 = torch.diff(phase, dim=1).abs().pow(2)
+    phase_grad_sq = phase_grad_sq_dim0[:, :-1, ...] + phase_grad_sq_dim1[:-1, ...]
+    mean_phase_grad_sq = (amplitude[:-1, :-1, ...] * phase_grad_sq).sum() / phase.shape[0]
+    return modes, mean_phase_grad_sq
 
 
 def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, gram: tt, init_non_orthogonality: tt,
-                           non_orthogonality: tt, init_similarity: tt, similarity: tt, errors, non_orthogonalities,
-                           similarities, scale, a, b, pow_factor, do_save_plot=False, save_path_plot='.'):
+                           non_orthogonality: tt, init_similarity: tt, similarity: tt, mean_phase_grad_sq: tt, errors,
+                           non_orthogonalities, similarities, mean_phase_grad_sqs, scale, a, b, pow_factor,
+                           do_save_plot=False, save_path_plot='.'):
     # Original Gram matrix
     plt.subplot(2, 4, 1)
     plt.cla()
@@ -172,6 +179,7 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
     plt.cla()
     plt.plot(np.asarray(non_orthogonalities), label='non-orthogonality')
     plt.plot(similarities, label='similarity')
+    plt.plot(np.asarray(mean_phase_grad_sqs), label='mean phase gradient')
     plt.xlim((0, iterations))
     plt.xlabel('Iteration')
     plt.ylim((0, 1))
@@ -238,9 +246,9 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
 
 def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable, amplitude_kwargs: dict = {},
                    phase_kwargs: dict = {}, poly_degree: int = 3, poly_per_mode: bool = True, pow_factor = 2,
-                   extra_params: dict = {}, similarity_weight: float = 0.1, iterations: int = 500,
-                   learning_rate: float = 0.02, optimizer: Optimizer = None, do_plot: bool = True,
-                   plot_per_its: int = 10, do_save_plot: bool = False, save_path_plot: str = '.'):
+                   extra_params: dict = {}, similarity_weight: float = 0.1, phase_grad_weight: float = 0.1,
+                   iterations: int = 500, learning_rate: float = 0.02, optimizer: Optimizer = None,
+                   do_plot: bool = True, plot_per_its: int = 10, do_save_plot: bool = False, save_path_plot: str = '.'):
     """
     Optimize modes
     """
@@ -251,16 +259,8 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
     amplitude = amplitude_unnorm / amplitude_unnorm.abs().pow(2).sum().sqrt()
 
     # Compute initial modes
-    init_modes = compute_modes(amplitude, phase_func, phase_kwargs, x, y).detach()
-
-    # ####
-    # import matplotlib.pyplot as plt
-    # from helper_functions import plot_field
-    # scale = 50
-    # plt.figure()
-    # plot_field(init_modes[:, :, 1, 0, 0].detach(), scale=scale)
-    # plt.show()
-    # ####
+    init_modes_graph, init_mean_phase_grad_sq_graph = compute_modes(amplitude, phase_func, phase_kwargs, x, y)
+    init_modes = init_modes_graph.detach()
 
     # Determine coefficients shape
     M = init_modes.shape[2]
@@ -295,6 +295,7 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
     errors = [np.nan] * iterations
     non_orthogonalities = [np.nan] * iterations
     similarities = [np.nan] * iterations
+    mean_phase_grad_sqs = [np.nan] * iterations
     progress_bar = tqdm(total=iterations)
 
     # Initialize plot figure
@@ -305,24 +306,27 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
     # Gradient descent loop
     for it in range(iterations):
         wx, wy = warp_func(x, y, a, b, pow_factor=pow_factor)
-        new_modes = compute_modes(amplitude, phase_func, phase_kwargs, wx, wy)
+        new_modes, mean_phase_grad_sq = compute_modes(amplitude, phase_func, phase_kwargs, wx, wy)
 
         # Compute error
         non_orthogonality, gram = compute_non_orthogonality(new_modes)
         similarity = compute_similarity(new_modes, init_modes)
-        error = non_orthogonality - similarity_weight * similarity
+        error = non_orthogonality - similarity_weight * similarity + phase_grad_weight * mean_phase_grad_sq
 
         # Save error and terms
         errors[it] = error.detach()
         non_orthogonalities[it] = non_orthogonality.detach()
         similarities[it] = similarity.detach()
+        mean_phase_grad_sqs[it] = mean_phase_grad_sq.detach()
 
         if do_plot and it % plot_per_its == 0:
            plot_mode_optimization(it=it, iterations=iterations, modes=new_modes, init_gram=init_gram, gram=gram,
                                   init_non_orthogonality=init_non_orthogonality, non_orthogonality=non_orthogonality,
-                                  init_similarity=init_similarity, similarity=similarity, errors=errors,
-                                  non_orthogonalities=non_orthogonalities, similarities=similarities, scale=50, a=a,
-                                  b=b, pow_factor=pow_factor, do_save_plot=do_save_plot, save_path_plot=save_path_plot)
+                                  init_similarity=init_similarity, similarity=similarity,
+                                  mean_phase_grad_sq=mean_phase_grad_sq, errors=errors,
+                                  non_orthogonalities=non_orthogonalities, similarities=similarities,
+                                  mean_phase_grad_sqs=mean_phase_grad_sqs, scale=50, a=a, b=b, pow_factor=pow_factor,
+                                  do_save_plot=do_save_plot, save_path_plot=save_path_plot)
 
         # Gradient descent step
         error.backward()
