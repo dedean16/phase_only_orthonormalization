@@ -140,7 +140,7 @@ def compute_modes(amplitude: tt, phase_func: callable, phase_kwargs: dict, x: tt
 
 def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, gram: tt, init_non_orthogonality: tt,
                            non_orthogonality: tt, init_similarity: tt, similarity: tt, errors, non_orthogonalities,
-                           similarities, scale, a, b, pow_factor, do_save_plot = False, save_path_plot = '.'):
+                           similarities, scale, a, b, pow_factor, do_save_plot=False, save_path_plot='.'):
     # Original Gram matrix
     plt.subplot(2, 4, 1)
     plt.cla()

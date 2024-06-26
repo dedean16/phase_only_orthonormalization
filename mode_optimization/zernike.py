@@ -2,7 +2,7 @@ import torch
 from helper_functions import n_choose_k, factorial
 
 
-def zernfun_cart(x, y, n, m, circle=False, dtype=torch.float32):
+def zernike_cart(x, y, n, m, circle=False, dtype=torch.float32):
     """
     Zernike Cartesian
     
@@ -63,3 +63,27 @@ def zernfun_cart(x, y, n, m, circle=False, dtype=torch.float32):
         U[(x**2 + y**2) > 1] = 0
 
     return U
+
+
+def zernike_order(j):
+    """
+    Zernike order
+
+    Original author of Matlab version: Giulia Sereni
+    Translated to Python by: Daniël Cox
+
+    Compute zernike mode radial and azimuthal order n, m, from index j, as defined in DOI:10.1117/12.294412.
+
+    Args:
+        j: Zernike mode index.
+
+    Returns:
+        n: is the radial order of the zernike function.
+        m: is the azimuthal order.
+    """
+    if j is not torch.Tensor:
+        j = torch.tensor(j)
+
+    n = torch.ceil(-1.5 + 0.5 * torch.sqrt(1+j*8))          # Radial order
+    m = n-j + 1 + (n+1)*n/2                                 # Azimuthal order
+    return n, m
