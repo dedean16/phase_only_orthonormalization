@@ -3,9 +3,9 @@ import numpy as np
 import pytest
 
 from mode_optimization.mode_functions import compute_non_orthogonality, compute_similarity
-from mode_optimization.helper_functions import is_close
 
 
+### TODO: make it work for 1x5x5 bases
 def test_non_orthogonality_on_orthonormal_basis():
     """
     Construct an Euler basis and check if non_orthogonality is 0.
@@ -34,4 +34,4 @@ def test_similarity_perfect_match():
     # Create normal basis
     a = torch.tensor(((1, 0, 2), (2, 1, 0), (0, 2, 1))).unsqueeze(0) / np.sqrt(5)
     similarity = compute_similarity(a, a)
-    assert is_close(similarity, 1, margin=1e-6)
+    assert torch.allclose(similarity, torch.tensor(1.0))

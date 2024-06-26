@@ -24,7 +24,7 @@ domain = {
     'y_min': -1,
     'y_max': 1,
     'r_pupil': 1,
-    'yxshape': (100, 50),           # Number of samples in each spatial direction
+    'yxshape': (150, 75),           # Number of samples in each spatial direction
 }
 
 # Gaussian shape parameters
@@ -37,12 +37,12 @@ waist = waist_m / (NA * f_obj1_m)
 k_max = 4
 
 # Coefficients
-poly_degree = 4  # Sqrt of number of polynomial terms
+poly_degree = 3  # Sqrt of number of polynomial terms
 pow_factor = 2
 
 # Optimization parameters
-learning_rate = 0.02
-iterations = 1000
+learning_rate = 2.5e-2
+iterations = 500
 similarity_weight = 0.1
 
 

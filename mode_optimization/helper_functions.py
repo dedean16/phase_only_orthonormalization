@@ -1,3 +1,4 @@
+import torch
 import numpy as np
 import matplotlib.pyplot as plt
 from matplotlib.colors import hsv_to_rgb
@@ -74,5 +75,24 @@ def gitinfo() -> dict:
     return git_info
 
 
-def is_close(a, b, margin):
-    return (a - b).abs() < margin
+def n_choose_k(n, k):
+    """
+    N choose k. Also known as comb in scipy.
+    """
+    if n is not torch.Tensor:
+        n = torch.tensor(n)
+    if k is not torch.Tensor:
+        k = torch.tensor(k)
+    return (torch.lgamma(n + 1) - torch.lgamma(k + 1) - torch.lgamma((n - k) + 1)).exp()
+
+
+def factorial(x):
+    if x is not torch.Tensor:
+        x = torch.tensor(x)
+    return torch.exp(torch.lgamma(x+1))
+
+
+def t_abs(x):
+    if x is not torch.Tensor:
+        x = torch.tensor(x)
+    return x.abs()
