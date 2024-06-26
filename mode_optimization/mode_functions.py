@@ -112,7 +112,7 @@ def compute_similarity(modes1: tt, modes2: tt) -> tt:
     Returns:
         similarity
     """
-    return inner(modes1, modes2, dim=(0, 1)).abs().pow(2).sum() / modes1.shape[2]
+    return inner(modes1, modes2, dim=(0, 1)).abs().sum() / modes1.shape[2]
 
 
 def compute_modes(amplitude: tt, phase_func: callable, phase_kwargs: dict, x: tt, y: tt) -> tt:
@@ -147,7 +147,7 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
     plt.imshow(init_gram.detach().abs())
     plt.xlabel('$k_1$ linear index')
     plt.ylabel('$k_2$ linear index')
-    plt.title(f'Original Gram matrix (normalized)\nnon-orthogonality = {init_non_orthogonality*100:.3f}%')
+    plt.title(f'Original Gram matrix (normalized)\nnon-orthogonality = {init_non_orthogonality:.3f}')
 
     # New Gram matrix
     plt.subplot(2, 4, 2)
@@ -155,7 +155,7 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
     plt.imshow(gram.detach().abs())
     plt.xlabel('$k_1$ linear index')
     plt.ylabel('$k_2$ linear index')
-    plt.title(f'Gram matrix (normalized), it {it}\nnon-orthogonality = {non_orthogonality.detach()*100:.3f}%')
+    plt.title(f'Gram matrix (normalized), it {it}\nnon-orthogonality = {non_orthogonality.detach():.3f}')
 
     # Error convergence
     plt.subplot(2, 4, 3)
@@ -170,7 +170,7 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
     # Error term evolution
     plt.subplot(2, 4, 4)
     plt.cla()
-    plt.plot(np.asarray(non_orthogonalities)*100, label='non-orthogonality (%)')
+    plt.plot(np.asarray(non_orthogonalities), label='non-orthogonality')
     plt.plot(similarities, label='similarity')
     plt.xlim((0, iterations))
     plt.xlabel('Iteration')
@@ -189,7 +189,7 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
     # Example mode 2
     plt.subplot(2, 4, 6)
     plt.cla()
-    mode2 = modes[:,:,1,0,0].detach()
+    mode2 = modes[:,:,2,0,0].detach()
     plot_field(mode2, scale)
     plt.xticks([])
     plt.yticks([])
@@ -197,7 +197,7 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
     # Example mode 3
     plt.subplot(2, 4, 7)
     plt.cla()
-    mode3 = modes[:,:,2,0,0].detach()
+    mode3 = modes[:,:,3,0,0].detach()
     plot_field(mode3, scale)
     plt.xticks([])
     plt.yticks([])
@@ -251,7 +251,7 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
     amplitude = amplitude_unnorm / amplitude_unnorm.abs().pow(2).sum().sqrt()
 
     # Compute initial modes
-    init_modes = compute_modes(amplitude, phase_func, phase_kwargs, x, y)
+    init_modes = compute_modes(amplitude, phase_func, phase_kwargs, x, y).detach()
 
     # ####
     # import matplotlib.pyplot as plt
@@ -283,7 +283,7 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
     init_similarity = compute_similarity(init_modes, init_modes)
 
     # Create dictionary of parameters to optimize
-    params = [{'lr': learning_rate, 'params': [a, b]}, {'lr': learning_rate, 'params': extra_params}]
+    params = [{'lr': learning_rate, 'params': [a, b]}, {'lr': learning_rate, 'params': extra_params.values()}]
 
     # Define optimizer
     if optimizer is None:
