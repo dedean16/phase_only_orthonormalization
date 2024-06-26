@@ -6,13 +6,12 @@ authors = ["Daniel Cox <danielcox16@hotmail.com>"]
 readme = "README.rst"
 
 [tool.poetry.dependencies]
-python = ">=3.10, <3.12"    # Currently restricted by openwfs
-numpy = "^1.26.4"
+python = ">=3.10, <3.12"        # Currently restricted to be compatible with openwfs
+numpy = "^1.26.4"               # Currently restricted to be compatible with openwfs
 matplotlib = "^3.8.3"
 tqdm = "^4.66.2"
 gitpython = "^3.1.43"
 torch = "^2.3.0"
-zernike = "^0.0.32"
 h5py = "^3.11.0"
 
 [tool.poetry.group.dev]
