@@ -18,8 +18,9 @@ prefer_gpu = True  # Use cuda-GPU if it is available
 if prefer_gpu and torch.cuda.is_available():
     torch.set_default_device('cuda')
 
-do_plot = False
+do_plot = True
 plot_per_its = 25  # Plot every this many iterations
+do_plot_end = True
 do_save_plot = False
 save_path_plot = 'C:/LocalData/mode_optimization_frames'
 save_path_coeffs = 'C:/LocalData'  # Where to save output
@@ -93,42 +94,40 @@ a, b, new_modes, init_modes = optimize_modes(
     domain=domain, amplitude_func=apo_gaussian, amplitude_kwargs=amplitude_kwargs, phase_func=zernike_phases,
     phase_kwargs=phase_kwargs, poly_degree=poly_degree, poly_per_mode=poly_per_mode, pow_factor=pow_factor,
     similarity_weight=similarity_weight, phase_grad_weight=phase_grad_weight, iterations=iterations,
-    learning_rate=learning_rate, extra_params=extra_params, plot_per_its=plot_per_its)
+    learning_rate=learning_rate, extra_params=extra_params, plot_per_its=plot_per_its, do_plot=do_plot)
 
 
 print('\na:', a)
 print('\nb:', b)
 
+# Plot end result
+if do_plot_end:
+    nrows = phase_coeff_matrix.shape[0] // num_of_j
+    ncols = num_of_j
+    scale = 50
 
-import matplotlib.pyplot as plt
-from helper_functions import plot_field
+    plt.figure(figsize=(15, 8), dpi=80)
+    plt.tight_layout()
+    plt.subplots_adjust(left=0.04, right=0.96, top=0.96, bottom=0.04)
+    plt.suptitle('Initial modes')
 
-nrows = phase_coeff_matrix.shape[0] // num_of_j
-ncols = num_of_j
-scale = 50
-
-plt.figure(figsize=(15, 8), dpi=80)
-plt.tight_layout()
-plt.subplots_adjust(left=0.04, right=0.96, top=0.96, bottom=0.04)
-plt.suptitle('Initial modes')
-
-# Loop over modes
-for i in range(init_modes.shape[2]):
-    plt.subplot(nrows, ncols, i+1)
-    plot_field(init_modes[:, :, i], scale=scale)
-    plt.xticks([])
-    plt.yticks([])
+    # Loop over modes
+    for i in range(init_modes.shape[2]):
+        plt.subplot(nrows, ncols, i+1)
+        plot_field(init_modes[:, :, i], scale=scale)
+        plt.xticks([])
+        plt.yticks([])
 
 
-plt.figure(figsize=(15, 8), dpi=80)
-plt.tight_layout()
-plt.subplots_adjust(left=0.04, right=0.96, top=0.96, bottom=0.04)
-plt.suptitle('New modes')
+    plt.figure(figsize=(15, 8), dpi=80)
+    plt.tight_layout()
+    plt.subplots_adjust(left=0.04, right=0.96, top=0.96, bottom=0.04)
+    plt.suptitle('New modes')
 
-for i in range(new_modes.shape[2]):
-    plt.subplot(nrows, ncols, i+1)
-    plot_field(new_modes[:, :, i].detach(), scale=scale)
-    plt.xticks([])
-    plt.yticks([])
+    for i in range(new_modes.shape[2]):
+        plt.subplot(nrows, ncols, i+1)
+        plot_field(new_modes[:, :, i].detach(), scale=scale)
+        plt.xticks([])
+        plt.yticks([])
 
-plt.show()
+    plt.show()
