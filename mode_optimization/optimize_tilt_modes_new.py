@@ -12,7 +12,7 @@ if prefer_gpu and torch.cuda.is_available():
     torch.set_default_device('cuda')
 
 do_plot = False
-plot_per_its = 10  # Plot every this many iterations
+plot_per_its = 25  # Plot every this many iterations
 do_save_plot = False
 save_path_plot = 'C:/LocalData/mode_optimization_frames'
 save_path_coeffs = 'C:/LocalData'  # Where to save output
@@ -37,13 +37,15 @@ waist = waist_m / (NA * f_obj1_m)
 k_max = 4
 
 # Coefficients
-poly_degree = 3  # Sqrt of number of polynomial terms
-pow_factor = 2
+poly_degree = 5  # Sqrt of number of polynomial terms
+poly_per_mode = False
+pow_factor = 1
 
 # Optimization parameters
-learning_rate = 2.5e-2
-iterations = 500
-similarity_weight = 0.1
+learning_rate = 3.0e-2
+iterations = 700
+similarity_weight = 0.01
+phase_grad_weight = 0.01
 
 
 # ====== Initial basis ====== #
@@ -62,8 +64,9 @@ def phase_gradient(x, y, kx, ky):
 # ====== Optimize modes ====== #
 a, b, new_modes, init_modes = optimize_modes(
     domain=domain, amplitude_func=apo_gaussian, amplitude_kwargs=amplitude_kwargs, phase_func=phase_gradient,
-    phase_kwargs=phase_kwargs, poly_degree=poly_degree, poly_per_mode=True, pow_factor=pow_factor,
-    similarity_weight=similarity_weight, iterations=iterations, learning_rate=learning_rate)
+    phase_kwargs=phase_kwargs, poly_degree=poly_degree, poly_per_mode=poly_per_mode, pow_factor=pow_factor,
+    similarity_weight=similarity_weight, phase_grad_weight=phase_grad_weight, iterations=iterations,
+    learning_rate=learning_rate, plot_per_its=plot_per_its)
 
 
 print('\na:', a)

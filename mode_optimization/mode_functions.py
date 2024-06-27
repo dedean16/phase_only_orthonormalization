@@ -154,7 +154,7 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
     plt.imshow(init_gram.detach().abs())
     plt.xlabel('$k_1$ linear index')
     plt.ylabel('$k_2$ linear index')
-    plt.title(f'Original Gram matrix (normalized)\nnon-orthogonality = {init_non_orthogonality:.3f}')
+    plt.title(f'Original Gram matrix (normalized)\nnon-orthogonality = {init_non_orthogonality:.4f}')
 
     # New Gram matrix
     plt.subplot(2, 4, 2)
@@ -162,7 +162,7 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
     plt.imshow(gram.detach().abs())
     plt.xlabel('$k_1$ linear index')
     plt.ylabel('$k_2$ linear index')
-    plt.title(f'Gram matrix (normalized), it {it}\nnon-orthogonality = {non_orthogonality.detach():.3f}')
+    plt.title(f'Gram matrix (normalized), it {it}\nnon-orthogonality = {non_orthogonality.detach():.4f}')
 
     # Error convergence
     plt.subplot(2, 4, 3)
@@ -238,7 +238,7 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
     plt.xlabel('warped x')
     plt.ylabel('warped y')
     plt.title('Warped pupil coords')
-    plt.pause(1e-2)
+    plt.pause(0.02)
 
     if do_save_plot:
         plt.savefig(f'{save_path_plot}/mode_optimization_it{it:04d}.png')

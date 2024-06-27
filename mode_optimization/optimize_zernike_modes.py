@@ -14,13 +14,13 @@ from tilt_optim_functions import build_square_k_space
 
 
 # ====== Settings ====== #
-prefer_gpu = False  # Use cuda-GPU if it is available
+prefer_gpu = True  # Use cuda-GPU if it is available
 
 if prefer_gpu and torch.cuda.is_available():
     torch.set_default_device('cuda')
 
 do_plot = False
-plot_per_its = 10  # Plot every this many iterations
+plot_per_its = 25  # Plot every this many iterations
 do_save_plot = False
 save_path_plot = 'C:/LocalData/mode_optimization_frames'
 save_path_coeffs = 'C:/LocalData'  # Where to save output
@@ -47,19 +47,19 @@ k_max = 4
 # Coefficients
 poly_degree = 3         # Sqrt of number of polynomial terms
 poly_per_mode = True    # If True, every mode has its own transform polynomial
-pow_factor = 2
+pow_factor = 1
 
 # Optimization parameters
 learning_rate = 3.0e-2
 iterations = 600
-similarity_weight = 0.05
-phase_grad_weight = 0.5
+similarity_weight = 0.03
+phase_grad_weight = 0.3
 
 
 # ====== Initial basis ====== #
 amplitude_kwargs = {'waist': waist, 'r_pupil': 1}
 
-num_of_j = 8
+num_of_j = 13
 # phase_coeffs = torch.tensor([np.pi]*num_of_j + [2*np.pi]*num_of_j)
 phase_coeff_matrix = torch.cat((torch.eye(num_of_j) * np.pi, torch.eye(num_of_j) * 2 * np.pi), dim=0)
 # phase_coeff_matrix = (torch.eye(num_of_j) * np.pi)
@@ -94,7 +94,7 @@ a, b, new_modes, init_modes = optimize_modes(
     domain=domain, amplitude_func=apo_gaussian, amplitude_kwargs=amplitude_kwargs, phase_func=zernike_phases,
     phase_kwargs=phase_kwargs, poly_degree=poly_degree, poly_per_mode=poly_per_mode, pow_factor=pow_factor,
     similarity_weight=similarity_weight, phase_grad_weight=phase_grad_weight, iterations=iterations,
-    learning_rate=learning_rate, extra_params=extra_params)
+    learning_rate=learning_rate, extra_params=extra_params, plot_per_its=plot_per_its)
 
 
 print('\na:', a)
