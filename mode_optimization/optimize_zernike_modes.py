@@ -10,7 +10,6 @@ import matplotlib.pyplot as plt
 from zernike import zernike_cart, zernike_order
 from helper_functions import plot_field
 from mode_functions import optimize_modes, apo_gaussian
-from tilt_optim_functions import build_square_k_space
 
 
 # ====== Settings ====== #
