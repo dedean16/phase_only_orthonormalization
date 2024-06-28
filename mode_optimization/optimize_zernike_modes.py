@@ -39,9 +39,6 @@ f_obj1_m = 12.5e-3  # Objective focal length in m
 waist_m = 2 * 5.9e-3  # Fit beam profile gaussian width in m
 waist = waist_m / (NA * f_obj1_m)
 
-# Mode settings
-k_max = 4
-
 # Coefficients
 poly_degree = 3         # Sqrt of number of polynomial terms
 poly_per_mode = True    # If True, every mode has its own transform polynomial
