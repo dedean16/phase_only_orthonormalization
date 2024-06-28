@@ -1,8 +1,6 @@
 """
 Modify Zernike modes to be orthogonal in field.
 """
-from itertools import count
-
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
