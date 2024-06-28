@@ -147,25 +147,26 @@ def compute_modes(amplitude: tt, phase_func: callable, phase_kwargs: dict, x: tt
 def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, gram: tt, init_non_orthogonality: tt,
                            non_orthogonality: tt, init_similarity: tt, similarity: tt, mean_phase_grad_sq: tt, errors,
                            non_orthogonalities, similarities, mean_phase_grad_sqs, scale, a, b, pow_factor,
-                           do_save_plot=False, save_path_plot='.'):
+                           do_plot_all_modes=True, nrows=3, ncols=5,
+                           do_save_plot=False, save_path_plot='.', save_filename_plot='mode_optimization_it'):
     # Original Gram matrix
-    plt.subplot(2, 4, 1)
+    plt.subplot(nrows, 4, 1)
     plt.cla()
     plt.imshow(init_gram.detach().abs())
-    plt.xlabel('$k_1$ linear index')
-    plt.ylabel('$k_2$ linear index')
-    plt.title(f'Original Gram matrix (normalized)\nnon-orthogonality = {init_non_orthogonality:.4f}')
+    plt.xlabel('mode index')
+    plt.ylabel('mode index')
+    plt.title(f'Original Gram matrix\nnon-orthogonality = {init_non_orthogonality:.4f}')
 
     # New Gram matrix
-    plt.subplot(2, 4, 2)
+    plt.subplot(nrows, 4, 2)
     plt.cla()
     plt.imshow(gram.detach().abs())
-    plt.xlabel('$k_1$ linear index')
-    plt.ylabel('$k_2$ linear index')
-    plt.title(f'Gram matrix (normalized), it {it}\nnon-orthogonality = {non_orthogonality.detach():.4f}')
+    plt.xlabel('mode index')
+    plt.ylabel('mode index')
+    plt.title(f'Gram matrix, it {it}\nnon-orthogonality = {non_orthogonality.detach():.4f}')
 
     # Error convergence
-    plt.subplot(2, 4, 3)
+    plt.subplot(nrows, 4, 3)
     plt.cla()
     plt.plot(errors, 'r', label='Error function')
     plt.xlim((0, iterations))
@@ -175,7 +176,7 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
     plt.title('Error convergence')
 
     # Error term evolution
-    plt.subplot(2, 4, 4)
+    plt.subplot(nrows, 4, 4)
     plt.cla()
     plt.plot(np.asarray(non_orthogonalities), label='non-orthogonality')
     plt.plot(similarities, label='similarity')
@@ -186,69 +187,82 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
     plt.legend()
     plt.title('Error terms')
 
-    # Example mode 1
-    plt.subplot(2, 4, 5)
-    plt.cla()
-    mode1 = modes[:,:,0,0,0].detach()
-    plot_field(mode1, scale)
-    plt.xticks([])
-    plt.yticks([])
+    if do_plot_all_modes:
+        scale = 1 / modes[:, :, 0].abs().max().detach()
 
-    # Example mode 2
-    plt.subplot(2, 4, 6)
-    plt.cla()
-    mode2 = modes[:,:,2,0,0].detach()
-    plot_field(mode2, scale)
-    plt.xticks([])
-    plt.yticks([])
+        # Loop over modes
+        for i in range(modes.shape[2]):
+            plt.subplot(nrows, ncols, i + ncols + 1)
+            plot_field(modes[:, :, i, 0, 0].detach(), scale=scale)
+            plt.xticks([])
+            plt.yticks([])
 
-    # Example mode 3
-    plt.subplot(2, 4, 7)
-    plt.cla()
-    mode3 = modes[:,:,3,0,0].detach()
-    plot_field(mode3, scale)
-    plt.xticks([])
-    plt.yticks([])
+    else:       # Plot only a few modes and a transform
+        # Example mode 1
+        plt.subplot(nrows, 4, 5)
+        plt.cla()
+        mode1 = modes[:,:,0,0,0].detach()
+        plot_field(mode1, scale)
+        plt.xticks([])
+        plt.yticks([])
 
-    # Show warp function as grid
-    plt.subplot(2, 4, 8)
-    plt.cla()
+        # Example mode 2
+        plt.subplot(nrows, 4, 6)
+        plt.cla()
+        mode2 = modes[:,:,2,0,0].detach()
+        plot_field(mode2, scale)
+        plt.xticks([])
+        plt.yticks([])
 
-    # Warped grid
-    ### TODO: make arguments available
-    x_grid = torch.linspace(-1, 0, 11).view(1, -1, 1, 1, 1)  # Normalized x coords
-    y_grid = torch.linspace(-1, 1, 21).view(-1, 1, 1, 1, 1)  # Normalized y coords
-    r_mask = x_grid * x_grid + y_grid * y_grid > 1.01
-    wx_grid, wy_grid = warp_func(x_grid, y_grid, a[:, :, 0:1, :, :].detach(), b[:, :, 0:1, :, :].detach(), pow_factor=pow_factor)
-    wx_grid[r_mask] = np.nan
-    wy_grid[r_mask] = np.nan
-    # Warped arc
-    phi_arc = torch.linspace(np.pi / 2, 3 * np.pi / 2, 80)
-    x_arc = torch.cos(phi_arc).view(-1, 1, 1, 1, 1)
-    y_arc = torch.sin(phi_arc).view(-1, 1, 1, 1, 1)
-    wx_arc, wy_arc = warp_func(x_arc, y_arc, a[:, :, 0:1, :, :].detach(), b[:, :, 0:1, :, :].detach(), pow_factor=pow_factor)
-    # Plot
-    plt.plot(wx_arc.squeeze(), wy_arc.squeeze(), '-', linewidth=1)
-    plt.plot(wx_grid.squeeze(), wy_grid.squeeze(), '-k', linewidth=1)
-    plt.plot(wx_grid.squeeze().T, wy_grid.squeeze().T, '-k', linewidth=1)
-    plt.plot()
-    plt.xlim((-1.25, 0.1))
-    plt.ylim((-1.25, 1.25))
-    plt.gca().set_aspect(1)
-    plt.xlabel('warped x')
-    plt.ylabel('warped y')
-    plt.title('Warped pupil coords')
+        # Example mode 3
+        plt.subplot(nrows, 4, 7)
+        plt.cla()
+        mode3 = modes[:,:,3,0,0].detach()
+        plot_field(mode3, scale)
+        plt.xticks([])
+        plt.yticks([])
+
+        # Show warp function as grid
+        plt.subplot(nrows, 4, 8)
+        plt.cla()
+
+        # Warped grid
+        ### TODO: make arguments available
+        x_grid = torch.linspace(-1, 0, 11).view(1, -1, 1, 1, 1)  # Normalized x coords
+        y_grid = torch.linspace(-1, 1, 21).view(-1, 1, 1, 1, 1)  # Normalized y coords
+        r_mask = x_grid * x_grid + y_grid * y_grid > 1.01
+        wx_grid, wy_grid = warp_func(x_grid, y_grid, a[:, :, 0:1, :, :].detach(), b[:, :, 0:1, :, :].detach(), pow_factor=pow_factor)
+        wx_grid[r_mask] = np.nan
+        wy_grid[r_mask] = np.nan
+        # Warped arc
+        phi_arc = torch.linspace(np.pi / 2, 3 * np.pi / 2, 80)
+        x_arc = torch.cos(phi_arc).view(-1, 1, 1, 1, 1)
+        y_arc = torch.sin(phi_arc).view(-1, 1, 1, 1, 1)
+        wx_arc, wy_arc = warp_func(x_arc, y_arc, a[:, :, 0:1, :, :].detach(), b[:, :, 0:1, :, :].detach(), pow_factor=pow_factor)
+        # Plot
+        plt.plot(wx_arc.squeeze(), wy_arc.squeeze(), '-', linewidth=1)
+        plt.plot(wx_grid.squeeze(), wy_grid.squeeze(), '-k', linewidth=1)
+        plt.plot(wx_grid.squeeze().T, wy_grid.squeeze().T, '-k', linewidth=1)
+        plt.plot()
+        plt.xlim((-1.25, 0.1))
+        plt.ylim((-1.25, 1.25))
+        plt.gca().set_aspect(1)
+        plt.xlabel('warped x')
+        plt.ylabel('warped y')
+        plt.title('Warped pupil coords')
+
     plt.pause(0.02)
 
     if do_save_plot:
-        plt.savefig(f'{save_path_plot}/mode_optimization_it{it:04d}.png')
+        plt.savefig(f'{save_path_plot}/{save_filename_plot}{it:04d}.png')
 
 
 def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable, amplitude_kwargs: dict = {},
-                   phase_kwargs: dict = {}, poly_degree: int = 3, poly_per_mode: bool = True, pow_factor = 2,
+                   phase_kwargs: dict = {}, poly_degree: int = 3, poly_per_mode: bool = True, pow_factor=2,
                    extra_params: dict = {}, similarity_weight: float = 0.1, phase_grad_weight: float = 0.1,
                    iterations: int = 500, learning_rate: float = 0.02, optimizer: Optimizer = None,
-                   do_plot: bool = True, plot_per_its: int = 10, do_save_plot: bool = False, save_path_plot: str = '.'):
+                   do_plot: bool = True, plot_per_its: int = 10, do_save_plot: bool = False, save_path_plot: str = '.',
+                   nrows=3, ncols=5, do_plot_all_modes=True, save_filename_plot='mode_optimization_it'):
     """
     Optimize modes
     """
@@ -302,6 +316,8 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
     if do_plot:
         plt.figure(figsize=(16, 10), dpi=90)
         plt.tight_layout()
+        plt.subplots_adjust(left=0.04, right=0.96, top=0.96, bottom=0.04)
+
 
     # Gradient descent loop
     for it in range(iterations):
@@ -326,7 +342,8 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
                                   mean_phase_grad_sq=mean_phase_grad_sq, errors=errors,
                                   non_orthogonalities=non_orthogonalities, similarities=similarities,
                                   mean_phase_grad_sqs=mean_phase_grad_sqs, scale=50, a=a, b=b, pow_factor=pow_factor,
-                                  do_save_plot=do_save_plot, save_path_plot=save_path_plot)
+                                  do_save_plot=do_save_plot, save_path_plot=save_path_plot, nrows=nrows, ncols=ncols,
+                                  do_plot_all_modes=do_plot_all_modes, save_filename_plot=save_filename_plot)
 
         # Gradient descent step
         error.backward()

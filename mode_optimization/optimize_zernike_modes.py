@@ -18,9 +18,11 @@ if prefer_gpu and torch.cuda.is_available():
 
 do_plot = True
 plot_per_its = 25  # Plot every this many iterations
+do_plot_all_modes = True
 do_plot_end = True
 do_save_plot = False
 save_path_plot = 'C:/LocalData/mode_optimization_frames'
+save_filename_plot = 'mode_optimization_it'
 save_path_coeffs = 'C:/LocalData'  # Where to save output
 
 # Domain
@@ -61,6 +63,10 @@ phase_kwargs = {'phase_coeffs': phase_coeffs, 'js': js}
 phase_coeffs.requires_grad = False
 extra_params = {}
 
+# Mode plotting
+nrows = 1 + phase_coeffs.shape[0] // num_of_j
+ncols = num_of_j
+
 
 def zernike_phases(x, y, phase_coeffs, js, dtype=torch.float32):
     """
@@ -97,7 +103,8 @@ a, b, new_modes, init_modes = optimize_modes(
     domain=domain, amplitude_func=apo_gaussian, amplitude_kwargs=amplitude_kwargs, phase_func=zernike_phases,
     phase_kwargs=phase_kwargs, poly_degree=poly_degree, poly_per_mode=poly_per_mode, pow_factor=pow_factor,
     similarity_weight=similarity_weight, phase_grad_weight=phase_grad_weight, iterations=iterations,
-    learning_rate=learning_rate, extra_params=extra_params, plot_per_its=plot_per_its, do_plot=do_plot)
+    learning_rate=learning_rate, extra_params=extra_params, plot_per_its=plot_per_its, do_plot=do_plot, nrows=nrows,
+    ncols=ncols, do_plot_all_modes=do_plot_all_modes)
 
 
 print('\na:', a)
