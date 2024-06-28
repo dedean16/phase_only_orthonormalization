@@ -40,21 +40,21 @@ waist_m = 2 * 5.9e-3  # Fit beam profile gaussian width in m
 waist = waist_m / (NA * f_obj1_m)
 
 # Coefficients
-poly_degree = 5         # Sqrt of number of polynomial terms
+poly_degree = 8         # Sqrt of number of polynomial terms
 poly_per_mode = True    # If True, every mode has its own transform polynomial
 pow_factor = 1
 
 # Optimization parameters
-learning_rate = 3.0e-2
-iterations = 600
-similarity_weight = 0.03
-phase_grad_weight = 0.3
+learning_rate = 2.5e-2
+iterations = 1000
+similarity_weight = 0.02
+phase_grad_weight = 0.2
 
 
 # ====== Initial basis ====== #
 amplitude_kwargs = {'waist': waist, 'r_pupil': 1}
 
-num_of_j = 13
+num_of_j = 8
 phase_coeffs = torch.tensor([np.pi]*num_of_j + [2*np.pi]*num_of_j)
 js = torch.tensor(list(range(2, num_of_j+2)) * 2)
 phase_kwargs = {'phase_coeffs': phase_coeffs, 'js': js}
