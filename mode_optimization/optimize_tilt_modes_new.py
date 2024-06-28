@@ -10,11 +10,16 @@ prefer_gpu = False  # Use cuda-GPU if it is available
 if prefer_gpu and torch.cuda.is_available():
     torch.set_default_device('cuda')
 
-do_plot = False
-plot_per_its = 25  # Plot every this many iterations
-do_save_plot = False
-save_path_plot = 'C:/LocalData/mode_optimization_frames'
+do_plot = True
+plot_per_its = 1  # Plot every this many iterations
+do_save_plot = True
+do_plot_all_modes = False
+save_path_plot = 'C:/LocalData/mode_optimization_frames_tilt'
+save_filename_plot = 'mode_optimization_it'
 save_path_coeffs = 'C:/LocalData'  # Where to save output
+
+# Note: Figures saved as images can be turned into a video with ffmpeg:
+# e.g.: ffmpeg -i mode_optimization_it%04d.png -framerate 60 -c:v libx265 -pix_fmt yuv420p -crf 20 mode_optimization.mp4
 
 # Domain
 domain = {
@@ -42,7 +47,7 @@ pow_factor = 1
 
 # Optimization parameters
 learning_rate = 3.0e-2
-iterations = 700
+iterations = 800
 similarity_weight = 0.01
 phase_grad_weight = 0.01
 
@@ -80,13 +85,20 @@ ky = kspace[0, :].view((1, 1, -1, 1, 1))
 kx = kspace[1, :].view((1, 1, -1, 1, 1))
 phase_kwargs = {'kx': kx, 'ky': ky}
 
+# Mode plotting
+nrows = 4
+ncols = 15
+
+
 
 # ====== Optimize modes ====== #
 a, b, new_modes, init_modes = optimize_modes(
     domain=domain, amplitude_func=apo_gaussian, amplitude_kwargs=amplitude_kwargs, phase_func=phase_gradient,
     phase_kwargs=phase_kwargs, poly_degree=poly_degree, poly_per_mode=poly_per_mode, pow_factor=pow_factor,
     similarity_weight=similarity_weight, phase_grad_weight=phase_grad_weight, iterations=iterations,
-    learning_rate=learning_rate, plot_per_its=plot_per_its)
+    learning_rate=learning_rate, plot_per_its=plot_per_its, do_save_plot=do_save_plot, do_plot=do_plot,
+    save_path_plot=save_path_plot, save_filename_plot=save_filename_plot, ncols=ncols, nrows=nrows,
+    do_plot_all_modes=do_plot_all_modes)
 
 
 print('\na:', a)

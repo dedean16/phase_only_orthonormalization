@@ -150,7 +150,7 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
                            do_plot_all_modes=True, nrows=3, ncols=5,
                            do_save_plot=False, save_path_plot='.', save_filename_plot='mode_optimization_it'):
     # Original Gram matrix
-    plt.subplot(nrows, 4, 1)
+    plt.subplot(nrows-1, 4, 1)
     plt.cla()
     plt.imshow(init_gram.detach().abs())
     plt.xlabel('mode index')
@@ -158,7 +158,7 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
     plt.title(f'Original Gram matrix\nnon-orthogonality = {init_non_orthogonality:.4f}')
 
     # New Gram matrix
-    plt.subplot(nrows, 4, 2)
+    plt.subplot(nrows-1, 4, 2)
     plt.cla()
     plt.imshow(gram.detach().abs())
     plt.xlabel('mode index')
@@ -166,7 +166,7 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
     plt.title(f'Gram matrix, it {it}\nnon-orthogonality = {non_orthogonality.detach():.4f}')
 
     # Error convergence
-    plt.subplot(nrows, 4, 3)
+    plt.subplot(nrows-1, 4, 3)
     plt.cla()
     plt.plot(errors, 'r', label='Error function')
     plt.xlim((0, iterations))
@@ -176,7 +176,7 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
     plt.title('Error convergence')
 
     # Error term evolution
-    plt.subplot(nrows, 4, 4)
+    plt.subplot(nrows-1, 4, 4)
     plt.cla()
     plt.plot(np.asarray(non_orthogonalities), label='non-orthogonality')
     plt.plot(similarities, label='similarity')
@@ -192,14 +192,15 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
 
         # Loop over modes
         for i in range(modes.shape[2]):
-            plt.subplot(nrows, ncols, i + ncols + 1)
+            plt.subplot(nrows+1, ncols, i + 2*ncols + 1)
+            plt.cla()
             plot_field(modes[:, :, i, 0, 0].detach(), scale=scale)
             plt.xticks([])
             plt.yticks([])
 
     else:       # Plot only a few modes and a transform
         # Example mode 1
-        plt.subplot(nrows, 4, 5)
+        plt.subplot(2, 4, 5)
         plt.cla()
         mode1 = modes[:,:,0,0,0].detach()
         plot_field(mode1, scale)
@@ -207,7 +208,7 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
         plt.yticks([])
 
         # Example mode 2
-        plt.subplot(nrows, 4, 6)
+        plt.subplot(2, 4, 6)
         plt.cla()
         mode2 = modes[:,:,2,0,0].detach()
         plot_field(mode2, scale)
@@ -215,7 +216,7 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
         plt.yticks([])
 
         # Example mode 3
-        plt.subplot(nrows, 4, 7)
+        plt.subplot(2, 4, 7)
         plt.cla()
         mode3 = modes[:,:,3,0,0].detach()
         plot_field(mode3, scale)
@@ -223,7 +224,7 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
         plt.yticks([])
 
         # Show warp function as grid
-        plt.subplot(nrows, 4, 8)
+        plt.subplot(2, 4, 8)
         plt.cla()
 
         # Warped grid
@@ -336,14 +337,14 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
         mean_phase_grad_sqs[it] = mean_phase_grad_sq.detach()
 
         if do_plot and it % plot_per_its == 0:
-           plot_mode_optimization(it=it, iterations=iterations, modes=new_modes, init_gram=init_gram, gram=gram,
-                                  init_non_orthogonality=init_non_orthogonality, non_orthogonality=non_orthogonality,
-                                  init_similarity=init_similarity, similarity=similarity,
-                                  mean_phase_grad_sq=mean_phase_grad_sq, errors=errors,
-                                  non_orthogonalities=non_orthogonalities, similarities=similarities,
-                                  mean_phase_grad_sqs=mean_phase_grad_sqs, scale=50, a=a, b=b, pow_factor=pow_factor,
-                                  do_save_plot=do_save_plot, save_path_plot=save_path_plot, nrows=nrows, ncols=ncols,
-                                  do_plot_all_modes=do_plot_all_modes, save_filename_plot=save_filename_plot)
+            plot_mode_optimization(it=it, iterations=iterations, modes=new_modes, init_gram=init_gram, gram=gram,
+                                   init_non_orthogonality=init_non_orthogonality, non_orthogonality=non_orthogonality,
+                                   init_similarity=init_similarity, similarity=similarity,
+                                   mean_phase_grad_sq=mean_phase_grad_sq, errors=errors,
+                                   non_orthogonalities=non_orthogonalities, similarities=similarities,
+                                   mean_phase_grad_sqs=mean_phase_grad_sqs, scale=50, a=a, b=b, pow_factor=pow_factor,
+                                   do_save_plot=do_save_plot, save_path_plot=save_path_plot, nrows=nrows, ncols=ncols,
+                                   do_plot_all_modes=do_plot_all_modes, save_filename_plot=save_filename_plot)
 
         # Gradient descent step
         error.backward()
