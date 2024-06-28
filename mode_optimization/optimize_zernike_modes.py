@@ -40,7 +40,7 @@ waist_m = 2 * 5.9e-3  # Fit beam profile gaussian width in m
 waist = waist_m / (NA * f_obj1_m)
 
 # Coefficients
-poly_degree = 3         # Sqrt of number of polynomial terms
+poly_degree = 5         # Sqrt of number of polynomial terms
 poly_per_mode = True    # If True, every mode has its own transform polynomial
 pow_factor = 1
 
@@ -55,32 +55,40 @@ phase_grad_weight = 0.3
 amplitude_kwargs = {'waist': waist, 'r_pupil': 1}
 
 num_of_j = 13
-# phase_coeffs = torch.tensor([np.pi]*num_of_j + [2*np.pi]*num_of_j)
-phase_coeff_matrix = torch.cat((torch.eye(num_of_j) * np.pi, torch.eye(num_of_j) * 2 * np.pi), dim=0)
-# phase_coeff_matrix = (torch.eye(num_of_j) * np.pi)
-phase_coeff_matrix.requires_grad = True
-phase_kwargs = {'phase_coeff_matrix': phase_coeff_matrix}
-extra_params = {'phase_coeff_matrix': phase_coeff_matrix}
+phase_coeffs = torch.tensor([np.pi]*num_of_j + [2*np.pi]*num_of_j)
+js = torch.tensor(list(range(2, num_of_j+2)) * 2)
+phase_kwargs = {'phase_coeffs': phase_coeffs, 'js': js}
+phase_coeffs.requires_grad = False
+extra_params = {}
 
 
-def zernike_phases(x, y, phase_coeff_matrix, dtype=torch.float32):
-    """Compute the phases of a set of zernike modes."""
-    phases = torch.zeros(y.shape[0], x.shape[1], phase_coeff_matrix.shape[0], 1, 1, dtype=dtype)
-    for iM in range(phase_coeff_matrix.shape[0]):
-        phase_coeffs = phase_coeff_matrix[iM, :]
-        if x.shape[2] > 1:
-            xmode = x[:, :, iM, 0, 0]
-            ymode = y[:, :, iM, 0, 0]
-        else:
-            xmode = x[:, :, 0, 0, 0]
-            ymode = y[:, :, 0, 0, 0]
+def zernike_phases(x, y, phase_coeffs, js, dtype=torch.float32):
+    """
+    Compute the phases of a set of zernike modes.
 
-        z_phase = 0
-        for iJ, phase_coeff in enumerate(phase_coeffs):
-            j = iJ + 2                                  # j=0 doesn't exist, and j=1 is piston
-            n, m = zernike_order(j)
-            z_phase += phase_coeff * zernike_cart(xmode, ymode, n, m)
-        phases[:, :, iM, 0, 0] = z_phase
+    Args:
+        x and y:
+        phase_coeffs:
+        js:
+        dtype:
+
+    Returns:
+
+    """
+    phases = torch.zeros(y.shape[0], x.shape[1], phase_coeffs.shape[0], 1, 1, dtype=dtype)
+    for i_mode in range(phase_coeffs.shape[0]):         # Loop over modes
+        if x.shape[2] > 1:                          # Each mode has its own transformed coords
+            x_mode = x[:, :, i_mode, 0, 0]
+            y_mode = y[:, :, i_mode, 0, 0]
+        else:                                       # One transform for all modes
+            x_mode = x[:, :, 0, 0, 0]
+            y_mode = y[:, :, 0, 0, 0]
+
+        # Create Zernike mode with these coords
+        phase_coeff = phase_coeffs[i_mode]
+        j = js[i_mode]                                  # j=0 doesn't exist, and j=1 is piston
+        n, m = zernike_order(j)
+        phases[:, :, i_mode, 0, 0] = phase_coeff * zernike_cart(x_mode, y_mode, n, m)
     return phases
 
 
@@ -97,7 +105,7 @@ print('\nb:', b)
 
 # Plot end result
 if do_plot_end:
-    nrows = phase_coeff_matrix.shape[0] // num_of_j
+    nrows = phase_coeffs.shape[0] // num_of_j
     ncols = num_of_j
     scale = 50
 
