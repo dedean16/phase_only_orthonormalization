@@ -57,7 +57,7 @@ phase_grad_weight = 5
 amplitude_kwargs = {'waist': waist, 'r_pupil': 1}
 
 num_of_j = 8
-phase_coeffs = torch.tensor([np.pi]*num_of_j + [-np.pi]*num_of_j)
+phase_coeffs = torch.tensor([3/2*np.pi]*num_of_j + [-3/2*np.pi]*num_of_j)
 js = torch.tensor(list(range(2, num_of_j+2)) * 2)
 phase_kwargs = {'phase_coeffs': phase_coeffs, 'js': js}
 phase_coeffs.requires_grad = False
