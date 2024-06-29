@@ -7,7 +7,7 @@ import numpy as np
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
-from helper_functions import plot_field
+from helper_functions import plot_field, mse
 
 
 def inner(a, b, dim):
@@ -115,7 +115,21 @@ def compute_similarity(modes1: tt, modes2: tt) -> tt:
     return inner(modes1, modes2, dim=(0, 1)).abs().sum() / modes1.shape[2]
 
 
-def compute_modes(amplitude: tt, phase_func: callable, phase_kwargs: dict, x: tt, y: tt) -> Tuple[tt, tt]:
+def compute_phase_grad_mse(init_phase_grad0: tt, init_phase_grad1: tt, new_phase_grad0: tt, new_phase_grad1: tt) -> tt:
+    """
+    Compute mode-mean squared error of x,y-mean squared phase gradients
+
+    Args:
+
+    Returns:
+
+    """
+    init_mean_phase_grad = (init_phase_grad0.pow(2) + init_phase_grad1.pow(2)).mean(dim=(0, 1))
+    new_mean_phase_grad = (init_phase_grad0.pow(2) + init_phase_grad1.pow(2)).mean(dim=(0, 1))
+    return mse(init_mean_phase_grad, new_mean_phase_grad)
+
+
+def compute_modes(amplitude: tt, phase_func: callable, phase_kwargs: dict, x: tt, y: tt) -> Tuple[tt, tt, tt]:
     """
     Compute modes
 
@@ -123,7 +137,7 @@ def compute_modes(amplitude: tt, phase_func: callable, phase_kwargs: dict, x: tt
     coordinates, and phase function arguments. The amplitude does not depend on the given x & y coordinates.
 
     Args:
-        amplitude: 2D tensor containing the amplitude.
+        amplitude: tensor containing the amplitude.
         phase_func: A function that computes the phase on coordinates x & y and returns a 3D tensor where the last index
             is the mode index.
         phase_kwargs: Keyword arguments for the phase function.
@@ -131,21 +145,20 @@ def compute_modes(amplitude: tt, phase_func: callable, phase_kwargs: dict, x: tt
         y: y coordinates for phase function.
 
     Returns:
-
+        modes:
+        phase_grad0:
+        phase_grad1:
     """
     phase = phase_func(x, y, **phase_kwargs)
     modes = amplitude * torch.exp(1j * phase)
 
     # Phase grad
-    phase_grad_sq_dim0 = torch.diff(phase, dim=0).abs().pow(2)
-    phase_grad_sq_dim1 = torch.diff(phase, dim=1).abs().pow(2)
-    phase_grad_sq = phase_grad_sq_dim0[:, :-1, ...] + phase_grad_sq_dim1[:-1, ...]
-    mean_phase_grad_sq = (amplitude[:-1, :-1, ...] * phase_grad_sq).sum() / phase.shape[0]
-    return modes, mean_phase_grad_sq
+    phase_grad0, phase_grad1 = torch.gradient(phase, dim=(0, 1))
+    return modes, phase_grad0, phase_grad1
 
 
 def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, gram: tt, init_non_orthogonality: tt,
-                           non_orthogonality: tt, init_similarity: tt, similarity: tt, mean_phase_grad_sq: tt, errors,
+                           non_orthogonality: tt, init_similarity: tt, similarity: tt, phase_grad_mse: tt, errors,
                            non_orthogonalities, similarities, mean_phase_grad_sqs, scale, a, b, pow_factor,
                            do_plot_all_modes=True, nrows=3, ncols=5,
                            do_save_plot=False, save_path_plot='.', save_filename_plot='mode_optimization_it'):
@@ -274,7 +287,7 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
     amplitude = amplitude_unnorm / amplitude_unnorm.abs().pow(2).sum().sqrt()
 
     # Compute initial modes
-    init_modes_graph, init_mean_phase_grad_sq_graph = compute_modes(amplitude, phase_func, phase_kwargs, x, y)
+    init_modes_graph, init_phase_grad0, init_phase_grad1 = compute_modes(amplitude, phase_func, phase_kwargs, x, y)
     init_modes = init_modes_graph.detach()
 
     # Determine coefficients shape
@@ -310,7 +323,7 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
     errors = [np.nan] * iterations
     non_orthogonalities = [np.nan] * iterations
     similarities = [np.nan] * iterations
-    mean_phase_grad_sqs = [np.nan] * iterations
+    phase_grad_mses = [np.nan] * iterations
     progress_bar = tqdm(total=iterations)
 
     # Initialize plot figure
@@ -319,30 +332,30 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
         plt.tight_layout()
         plt.subplots_adjust(left=0.04, right=0.96, top=0.96, bottom=0.04)
 
-
     # Gradient descent loop
     for it in range(iterations):
         wx, wy = warp_func(x, y, a, b, pow_factor=pow_factor)
-        new_modes, mean_phase_grad_sq = compute_modes(amplitude, phase_func, phase_kwargs, wx, wy)
+        new_modes, new_phase_grad0, new_phase_grad1 = compute_modes(amplitude, phase_func, phase_kwargs, wx, wy)
 
         # Compute error
         non_orthogonality, gram = compute_non_orthogonality(new_modes)
         similarity = compute_similarity(new_modes, init_modes)
-        error = non_orthogonality - similarity_weight * similarity + phase_grad_weight * mean_phase_grad_sq
+        phase_grad_mse = compute_phase_grad_mse(init_phase_grad0, init_phase_grad1, new_phase_grad0, new_phase_grad1)
+        error = non_orthogonality - similarity_weight * similarity + phase_grad_weight * phase_grad_mse
 
         # Save error and terms
         errors[it] = error.detach()
         non_orthogonalities[it] = non_orthogonality.detach()
         similarities[it] = similarity.detach()
-        mean_phase_grad_sqs[it] = mean_phase_grad_sq.detach()
+        phase_grad_mses[it] = phase_grad_mse.detach()
 
         if do_plot and it % plot_per_its == 0:
             plot_mode_optimization(it=it, iterations=iterations, modes=new_modes, init_gram=init_gram, gram=gram,
                                    init_non_orthogonality=init_non_orthogonality, non_orthogonality=non_orthogonality,
                                    init_similarity=init_similarity, similarity=similarity,
-                                   mean_phase_grad_sq=mean_phase_grad_sq, errors=errors,
+                                   phase_grad_mse=phase_grad_mse, errors=errors,
                                    non_orthogonalities=non_orthogonalities, similarities=similarities,
-                                   mean_phase_grad_sqs=mean_phase_grad_sqs, scale=50, a=a, b=b, pow_factor=pow_factor,
+                                   mean_phase_grad_sqs=phase_grad_mses, scale=50, a=a, b=b, pow_factor=pow_factor,
                                    do_save_plot=do_save_plot, save_path_plot=save_path_plot, nrows=nrows, ncols=ncols,
                                    do_plot_all_modes=do_plot_all_modes, save_filename_plot=save_filename_plot)
 

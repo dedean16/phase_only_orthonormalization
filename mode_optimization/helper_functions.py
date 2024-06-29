@@ -96,3 +96,8 @@ def t_abs(x):
     if x is not torch.Tensor:
         x = torch.tensor(x)
     return x.abs()
+
+
+def mse(a, b, dim=None):
+    """Mean Squared |Error|"""
+    return (a-b).abs().pow(2).mean(dim=dim)

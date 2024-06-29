@@ -11,7 +11,7 @@ from mode_functions import optimize_modes, apo_gaussian
 
 
 # ====== Settings ====== #
-prefer_gpu = True  # Use cuda-GPU if it is available
+prefer_gpu = False  # Use cuda-GPU if it is available
 
 if prefer_gpu and torch.cuda.is_available():
     torch.set_default_device('cuda')
@@ -20,7 +20,7 @@ do_plot = True
 plot_per_its = 1  # Plot every this many iterations
 do_plot_all_modes = True
 do_plot_end = True
-do_save_plot = True
+do_save_plot = False
 save_path_plot = 'C:/LocalData/mode_optimization_frames'   ### TODO: check if directory exists
 save_filename_plot = 'mode_optimization_zernike_it'
 save_path_coeffs = 'C:/LocalData'  # Where to save output
