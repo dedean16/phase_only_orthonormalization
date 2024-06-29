@@ -115,7 +115,7 @@ def compute_similarity(modes1: tt, modes2: tt) -> tt:
     return inner(modes1, modes2, dim=(0, 1)).abs().sum() / modes1.shape[2]
 
 
-def compute_phase_grad_mse(init_phase_grad0: tt, init_phase_grad1: tt, new_phase_grad0: tt, new_phase_grad1: tt) -> tt:
+def compute_phase_grad_mse(amplitude, init_phase_grad0: tt, init_phase_grad1: tt, new_phase_grad0: tt, new_phase_grad1: tt) -> tt:
     """
     Compute mode-mean squared error of x,y-mean squared phase gradients
 
@@ -124,9 +124,12 @@ def compute_phase_grad_mse(init_phase_grad0: tt, init_phase_grad1: tt, new_phase
     Returns:
 
     """
-    init_mean_phase_grad = (init_phase_grad0.pow(2) + init_phase_grad1.pow(2)).mean(dim=(0, 1))
-    new_mean_phase_grad = (init_phase_grad0.pow(2) + init_phase_grad1.pow(2)).mean(dim=(0, 1))
-    return mse(init_mean_phase_grad, new_mean_phase_grad)
+    amp_sum = amplitude.sum(dim=(0, 1))
+    init_phase_grad_square = init_phase_grad0.abs().pow(2) + init_phase_grad1.abs().pow(2)
+    init_mean_phase_grad = (amplitude * init_phase_grad_square).sum(dim=(0, 1)) / amp_sum
+    new_phase_grad_square = new_phase_grad0.abs().pow(2) + new_phase_grad1.abs().pow(2)
+    new_mean_phase_grad = (amplitude * new_phase_grad_square.sum(dim=(0, 1))) / amp_sum
+    return (init_mean_phase_grad - new_mean_phase_grad).abs().mean()
 
 
 def compute_modes(amplitude: tt, phase_func: callable, phase_kwargs: dict, x: tt, y: tt) -> Tuple[tt, tt, tt]:
@@ -159,13 +162,13 @@ def compute_modes(amplitude: tt, phase_func: callable, phase_kwargs: dict, x: tt
 
 def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, gram: tt, init_non_orthogonality: tt,
                            non_orthogonality: tt, init_similarity: tt, similarity: tt, phase_grad_mse: tt, errors,
-                           non_orthogonalities, similarities, mean_phase_grad_sqs, scale, a, b, pow_factor,
+                           non_orthogonalities, similarities, phase_grad_mses, scale, a, b, pow_factor,
                            do_plot_all_modes=True, nrows=3, ncols=5,
                            do_save_plot=False, save_path_plot='.', save_filename_plot='mode_optimization_it'):
     # Original Gram matrix
     plt.subplot(nrows-1, 4, 1)
     plt.cla()
-    plt.imshow(init_gram.detach().abs())
+    plt.imshow(init_gram.detach().cpu().abs())
     plt.xlabel('mode index')
     plt.ylabel('mode index')
     plt.title(f'Original Gram matrix\nnon-orthogonality = {init_non_orthogonality:.4f}')
@@ -173,10 +176,10 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
     # New Gram matrix
     plt.subplot(nrows-1, 4, 2)
     plt.cla()
-    plt.imshow(gram.detach().abs())
+    plt.imshow(gram.detach().cpu().abs())
     plt.xlabel('mode index')
     plt.ylabel('mode index')
-    plt.title(f'Gram matrix, it {it}\nnon-orthogonality = {non_orthogonality.detach():.4f}')
+    plt.title(f'Gram matrix, it {it}\nnon-orthogonality = {non_orthogonality.detach().cpu():.4f}')
 
     # Error convergence
     plt.subplot(nrows-1, 4, 3)
@@ -193,7 +196,7 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
     plt.cla()
     plt.plot(np.asarray(non_orthogonalities), label='non-orthogonality')
     plt.plot(similarities, label='similarity')
-    plt.plot(np.asarray(mean_phase_grad_sqs), label='mean phase gradient')
+    plt.plot(np.asarray(phase_grad_mses)*10, label='mean phase gradient x10')
     plt.xlim((0, iterations))
     plt.xlabel('Iteration')
     plt.ylim((0, 1))
@@ -201,13 +204,13 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
     plt.title('Error terms')
 
     if do_plot_all_modes:
-        scale = 1 / modes[:, :, 0].abs().max().detach()
+        scale = 1 / modes[:, :, 0].abs().max().detach().cpu()
 
         # Loop over modes
         for i in range(modes.shape[2]):
             plt.subplot(nrows+1, ncols, i + 2*ncols + 1)
             plt.cla()
-            plot_field(modes[:, :, i, 0, 0].detach(), scale=scale)
+            plot_field(modes[:, :, i, 0, 0].detach().cpu(), scale=scale)
             plt.xticks([])
             plt.yticks([])
 
@@ -215,7 +218,7 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
         # Example mode 1
         plt.subplot(2, 4, 5)
         plt.cla()
-        mode1 = modes[:,:,0,0,0].detach()
+        mode1 = modes[:,:,0,0,0].detach().cpu()
         plot_field(mode1, scale)
         plt.xticks([])
         plt.yticks([])
@@ -223,7 +226,7 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
         # Example mode 2
         plt.subplot(2, 4, 6)
         plt.cla()
-        mode2 = modes[:,:,2,0,0].detach()
+        mode2 = modes[:,:,2,0,0].detach().cpu()
         plot_field(mode2, scale)
         plt.xticks([])
         plt.yticks([])
@@ -231,7 +234,7 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
         # Example mode 3
         plt.subplot(2, 4, 7)
         plt.cla()
-        mode3 = modes[:,:,3,0,0].detach()
+        mode3 = modes[:,:,3,0,0].detach().cpu()
         plot_field(mode3, scale)
         plt.xticks([])
         plt.yticks([])
@@ -245,14 +248,14 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
         x_grid = torch.linspace(-1, 0, 11).view(1, -1, 1, 1, 1)  # Normalized x coords
         y_grid = torch.linspace(-1, 1, 21).view(-1, 1, 1, 1, 1)  # Normalized y coords
         r_mask = x_grid * x_grid + y_grid * y_grid > 1.01
-        wx_grid, wy_grid = warp_func(x_grid, y_grid, a[:, :, 0:1, :, :].detach(), b[:, :, 0:1, :, :].detach(), pow_factor=pow_factor)
+        wx_grid, wy_grid = warp_func(x_grid, y_grid, a[:, :, 0:1, :, :].detach().cpu(), b[:, :, 0:1, :, :].detach().cpu(), pow_factor=pow_factor)
         wx_grid[r_mask] = np.nan
         wy_grid[r_mask] = np.nan
         # Warped arc
         phi_arc = torch.linspace(np.pi / 2, 3 * np.pi / 2, 80)
         x_arc = torch.cos(phi_arc).view(-1, 1, 1, 1, 1)
         y_arc = torch.sin(phi_arc).view(-1, 1, 1, 1, 1)
-        wx_arc, wy_arc = warp_func(x_arc, y_arc, a[:, :, 0:1, :, :].detach(), b[:, :, 0:1, :, :].detach(), pow_factor=pow_factor)
+        wx_arc, wy_arc = warp_func(x_arc, y_arc, a[:, :, 0:1, :, :].detach().cpu(), b[:, :, 0:1, :, :].detach().cpu(), pow_factor=pow_factor)
         # Plot
         plt.plot(wx_arc.squeeze(), wy_arc.squeeze(), '-', linewidth=1)
         plt.plot(wx_grid.squeeze(), wy_grid.squeeze(), '-k', linewidth=1)
@@ -287,8 +290,10 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
     amplitude = amplitude_unnorm / amplitude_unnorm.abs().pow(2).sum().sqrt()
 
     # Compute initial modes
-    init_modes_graph, init_phase_grad0, init_phase_grad1 = compute_modes(amplitude, phase_func, phase_kwargs, x, y)
+    init_modes_graph, init_phase_grad0_graph, init_phase_grad1_graph = compute_modes(amplitude, phase_func, phase_kwargs, x, y)
     init_modes = init_modes_graph.detach()
+    init_phase_grad0 = init_phase_grad0_graph.detach()
+    init_phase_grad1 = init_phase_grad1_graph.detach()
 
     # Determine coefficients shape
     M = init_modes.shape[2]
@@ -340,14 +345,14 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
         # Compute error
         non_orthogonality, gram = compute_non_orthogonality(new_modes)
         similarity = compute_similarity(new_modes, init_modes)
-        phase_grad_mse = compute_phase_grad_mse(init_phase_grad0, init_phase_grad1, new_phase_grad0, new_phase_grad1)
+        phase_grad_mse = compute_phase_grad_mse(amplitude, init_phase_grad0, init_phase_grad1, new_phase_grad0, new_phase_grad1)
         error = non_orthogonality - similarity_weight * similarity + phase_grad_weight * phase_grad_mse
 
         # Save error and terms
-        errors[it] = error.detach()
-        non_orthogonalities[it] = non_orthogonality.detach()
-        similarities[it] = similarity.detach()
-        phase_grad_mses[it] = phase_grad_mse.detach()
+        errors[it] = error.detach().cpu()
+        non_orthogonalities[it] = non_orthogonality.detach().cpu()
+        similarities[it] = similarity.detach().cpu()
+        phase_grad_mses[it] = phase_grad_mse.detach().cpu()
 
         if do_plot and it % plot_per_its == 0:
             plot_mode_optimization(it=it, iterations=iterations, modes=new_modes, init_gram=init_gram, gram=gram,
@@ -355,7 +360,7 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
                                    init_similarity=init_similarity, similarity=similarity,
                                    phase_grad_mse=phase_grad_mse, errors=errors,
                                    non_orthogonalities=non_orthogonalities, similarities=similarities,
-                                   mean_phase_grad_sqs=phase_grad_mses, scale=50, a=a, b=b, pow_factor=pow_factor,
+                                   phase_grad_mses=phase_grad_mses, scale=50, a=a, b=b, pow_factor=pow_factor,
                                    do_save_plot=do_save_plot, save_path_plot=save_path_plot, nrows=nrows, ncols=ncols,
                                    do_plot_all_modes=do_plot_all_modes, save_filename_plot=save_filename_plot)
 

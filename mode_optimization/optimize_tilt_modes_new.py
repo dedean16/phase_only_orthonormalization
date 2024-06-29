@@ -5,7 +5,7 @@ from mode_functions import optimize_modes, apo_gaussian
 
 
 # ====== Settings ====== #
-prefer_gpu = False  # Use cuda-GPU if it is available
+prefer_gpu = True  # Use cuda-GPU if it is available
 
 if prefer_gpu and torch.cuda.is_available():
     torch.set_default_device('cuda')
