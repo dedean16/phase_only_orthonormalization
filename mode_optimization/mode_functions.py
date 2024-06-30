@@ -156,7 +156,7 @@ def compute_modes(amplitude: tt, phase_func: callable, phase_kwargs: dict, x: tt
     modes = amplitude * torch.exp(1j * phase)
 
     # Phase grad
-    phase_grad0, phase_grad1 = torch.gradient(phase, dim=(0, 1))
+    phase_grad0, phase_grad1 = torch.gradient(phase, dim=(0, 1), edge_order=2)
     return modes, phase_grad0, phase_grad1
 
 

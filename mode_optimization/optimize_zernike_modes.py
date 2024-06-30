@@ -42,29 +42,29 @@ waist_m = 2 * 5.9e-3  # Fit beam profile gaussian width in m
 waist = waist_m / (NA * f_obj1_m)
 
 # Coefficients
-poly_degree = 8         # Sqrt of number of polynomial terms
+poly_degree = 3         # Sqrt of number of polynomial terms
 poly_per_mode = True    # If True, every mode has its own transform polynomial
-pow_factor = 1
+pow_factor = 2
 
 # Optimization parameters
 learning_rate = 2.0e-2
-iterations = 1000
-similarity_weight = 0.02
-phase_grad_weight = 5
+iterations = 1001
+similarity_weight = 0.1
+phase_grad_weight = 2
 
 
 # ====== Initial basis ====== #
 amplitude_kwargs = {'waist': waist, 'r_pupil': 1}
 
-num_of_j = 8
-phase_coeffs = torch.tensor([3/2*np.pi]*num_of_j + [-3/2*np.pi]*num_of_j)
-js = torch.tensor(list(range(2, num_of_j+2)) * 2)
+num_of_j = 10
+phase_coeffs = torch.tensor([1.5*np.pi]*num_of_j + [-1.5*np.pi]*(num_of_j-1))
+js = torch.tensor([*range(1, num_of_j+1), *range(2, num_of_j+1)])
 phase_kwargs = {'phase_coeffs': phase_coeffs, 'js': js}
-phase_coeffs.requires_grad = False
-extra_params = {}
+phase_coeffs.requires_grad = True
+extra_params = {'phase_coeffs': phase_coeffs}
 
 # Mode plotting
-nrows = 1 + phase_coeffs.shape[0] // num_of_j
+nrows = 3
 ncols = num_of_j
 
 
@@ -112,11 +112,11 @@ print('\nb:', b)
 
 # Plot end result
 if do_plot_end:
-    nrows = phase_coeffs.shape[0] // num_of_j
+    nrows = 2
     ncols = num_of_j
     scale = 50
 
-    plt.figure(figsize=(15, 8), dpi=80)
+    plt.figure(figsize=(16, 6), dpi=80)
     plt.tight_layout()
     plt.subplots_adjust(left=0.04, right=0.96, top=0.96, bottom=0.04)
     plt.suptitle('Initial modes')
@@ -129,7 +129,7 @@ if do_plot_end:
         plt.yticks([])
 
 
-    plt.figure(figsize=(15, 8), dpi=80)
+    plt.figure(figsize=(16, 6), dpi=80)
     plt.tight_layout()
     plt.subplots_adjust(left=0.04, right=0.96, top=0.96, bottom=0.04)
     plt.suptitle('New modes')
