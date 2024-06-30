@@ -5,14 +5,14 @@ from mode_functions import optimize_modes, apo_gaussian
 
 
 # ====== Settings ====== #
-prefer_gpu = True  # Use cuda-GPU if it is available
+prefer_gpu = False  # Use cuda-GPU if it is available
 
 if prefer_gpu and torch.cuda.is_available():
     torch.set_default_device('cuda')
 
 do_plot = True
-plot_per_its = 1  # Plot every this many iterations
-do_save_plot = True
+plot_per_its = 25  # Plot every this many iterations
+do_save_plot = False
 do_plot_all_modes = False
 save_path_plot = 'C:/LocalData/mode_optimization_frames_tilt'
 save_filename_plot = 'mode_optimization_it'
@@ -41,15 +41,15 @@ waist = waist_m / (NA * f_obj1_m)
 k_max = 4
 
 # Coefficients
-poly_degree = 5  # Sqrt of number of polynomial terms
+poly_degree = 6  # Sqrt of number of polynomial terms
 poly_per_mode = False
 pow_factor = 1
 
 # Optimization parameters
 learning_rate = 3.0e-2
-iterations = 800
+iterations = 1000
 similarity_weight = 0.01
-phase_grad_weight = 0.01
+phase_grad_weight = 0.2
 
 
 # ====== Initial basis ====== #
