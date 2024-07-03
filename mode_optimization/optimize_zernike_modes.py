@@ -42,14 +42,14 @@ waist_m = 2 * 5.9e-3  # Fit beam profile gaussian width in m
 waist = waist_m / (NA * f_obj1_m)
 
 # Coefficients
-poly_degree = 3         # Sqrt of number of polynomial terms
+poly_degree = 4         # Sqrt of number of polynomial terms
 poly_per_mode = True    # If True, every mode has its own transform polynomial
 pow_factor = 2
 
 # Optimization parameters
 learning_rate = 2.0e-2
 iterations = 1001
-similarity_weight = 0.1
+similarity_weight = 0.0
 phase_grad_weight = 2
 
 
@@ -114,7 +114,7 @@ print('\nb:', b)
 if do_plot_end:
     nrows = 2
     ncols = num_of_j
-    scale = 50
+    scale = 60
 
     plt.figure(figsize=(16, 6), dpi=80)
     plt.tight_layout()
