@@ -173,7 +173,7 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
     plt.imshow(init_gram.detach().cpu().abs())
     plt.xlabel('mode index')
     plt.ylabel('mode index')
-    plt.title(f'Original Gram matrix\nnon-orthogonality = {init_non_orthogonality:.4f}')
+    plt.title(f'Original Gram matrix\nnon-orthogonality = {init_non_orthogonality:.2f}')
 
     # New Gram matrix
     plt.subplot(nrows-1, 4, 2)
@@ -181,7 +181,7 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
     plt.imshow(gram.detach().cpu().abs())
     plt.xlabel('mode index')
     plt.ylabel('mode index')
-    plt.title(f'Gram matrix, it {it}\nnon-orthogonality = {non_orthogonality.detach().cpu():.4f}')
+    plt.title(f'Gram matrix, it {it}\nnon-orthogonality = {non_orthogonality.detach().cpu():.5f}')
 
     # Error convergence
     plt.subplot(nrows-1, 4, 3)
@@ -335,7 +335,7 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
 
     # Initialize plot figure
     if do_plot:
-        plt.figure(figsize=(16, 10), dpi=90)
+        plt.figure(figsize=(16, 9), dpi=90)
         plt.tight_layout()
         plt.subplots_adjust(left=0.04, right=0.96, top=0.96, bottom=0.04)
 

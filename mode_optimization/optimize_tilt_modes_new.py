@@ -50,7 +50,7 @@ pow_factor = 1
 
 # Optimization parameters
 learning_rate = 3.0e-2
-iterations = 2000
+iterations = 2001
 similarity_weight = 0.00
 phase_grad_weight = 0.2
 
