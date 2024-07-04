@@ -1,7 +1,9 @@
 import torch
 import numpy as np
+import matplotlib.pyplot as plt
 
 from mode_functions import optimize_modes, apo_gaussian
+from helper_functions import plot_field
 
 
 # ====== Settings ====== #
@@ -11,9 +13,10 @@ if prefer_gpu and torch.cuda.is_available():
     torch.set_default_device('cuda')
 
 do_plot = True
-plot_per_its = 25  # Plot every this many iterations
+plot_per_its = 50  # Plot every this many iterations
 do_save_plot = False
 do_plot_all_modes = False
+do_plot_end = True
 save_path_plot = 'C:/LocalData/mode_optimization_frames_tilt'
 save_filename_plot = 'mode_optimization_it'
 save_path_coeffs = 'C:/LocalData'  # Where to save output
@@ -41,13 +44,13 @@ waist = waist_m / (NA * f_obj1_m)
 k_max = 4
 
 # Coefficients
-poly_degree = 5  # Sqrt of number of polynomial terms
+poly_degree = 7  # Sqrt of number of polynomial terms
 poly_per_mode = False
 pow_factor = 1
 
 # Optimization parameters
 learning_rate = 3.0e-2
-iterations = 1001
+iterations = 2000
 similarity_weight = 0.00
 phase_grad_weight = 0.2
 
@@ -104,16 +107,34 @@ a, b, new_modes, init_modes = optimize_modes(
 print('\na:', a)
 print('\nb:', b)
 
-import matplotlib.pyplot as plt
-from helper_functions import plot_field
+# Plot end result
+if do_plot_end:
+    nrows = 5
+    ncols = 9
+    scale = 60
 
-scale = 50
-plt.figure()
-plot_field(init_modes[:,:,1].detach(), scale=scale)
-plt.title('An old mode')
+    plt.figure(figsize=(16, 6), dpi=80)
+    plt.tight_layout()
+    plt.subplots_adjust(left=0.04, right=0.96, top=0.96, bottom=0.04)
+    plt.suptitle('Initial modes')
 
-plt.figure()
-plot_field(new_modes[:,:,1].detach(), scale=scale)
-plt.title('A new mode')
+    # Loop over modes
+    for i in range(init_modes.shape[2]):
+        plt.subplot(nrows, ncols, i+1)
+        plot_field(init_modes[:, :, i], scale=scale)
+        plt.xticks([])
+        plt.yticks([])
 
-plt.show()
+
+    plt.figure(figsize=(16, 6), dpi=80)
+    plt.tight_layout()
+    plt.subplots_adjust(left=0.04, right=0.96, top=0.96, bottom=0.04)
+    plt.suptitle('New modes')
+
+    for i in range(new_modes.shape[2]):
+        plt.subplot(nrows, ncols, i+1)
+        plot_field(new_modes[:, :, i].detach(), scale=scale)
+        plt.xticks([])
+        plt.yticks([])
+
+    plt.show()

@@ -17,7 +17,7 @@ if prefer_gpu and torch.cuda.is_available():
     torch.set_default_device('cuda')
 
 do_plot = True
-plot_per_its = 25  # Plot every this many iterations
+plot_per_its = 50  # Plot every this many iterations
 do_plot_all_modes = True
 do_plot_end = True
 do_save_plot = False
@@ -48,7 +48,7 @@ pow_factor = 2
 
 # Optimization parameters
 learning_rate = 2.0e-2
-iterations = 1001
+iterations = 2000
 similarity_weight = 0.0
 phase_grad_weight = 2
 
@@ -60,7 +60,7 @@ num_of_j = 10
 phase_coeffs = torch.tensor([1.5*np.pi]*num_of_j + [-1.5*np.pi]*(num_of_j-1))
 js = torch.tensor([*range(1, num_of_j+1), *range(2, num_of_j+1)])
 phase_kwargs = {'phase_coeffs': phase_coeffs, 'js': js}
-phase_coeffs.requires_grad = True
+phase_coeffs.requires_grad = False
 extra_params = {'phase_coeffs': phase_coeffs}
 
 # Mode plotting
@@ -109,6 +109,7 @@ a, b, new_modes, init_modes = optimize_modes(
 
 print('\na:', a)
 print('\nb:', b)
+print('\nphase_coeffs:', phase_coeffs)
 
 # Plot end result
 if do_plot_end:

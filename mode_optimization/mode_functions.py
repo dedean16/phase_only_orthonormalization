@@ -129,7 +129,9 @@ def compute_phase_grad_mse(amplitude, init_phase_grad0: tt, init_phase_grad1: tt
     init_mean_phase_grad = (amplitude * init_phase_grad_square).sum(dim=(0, 1)) / amp_sum
     new_phase_grad_square = new_phase_grad0.abs().pow(2) + new_phase_grad1.abs().pow(2)
     new_mean_phase_grad = (amplitude * new_phase_grad_square.sum(dim=(0, 1))) / amp_sum
-    return (init_mean_phase_grad - new_mean_phase_grad).abs().mean()
+    # mse = (init_mean_phase_grad - new_mean_phase_grad).abs().pow(2).mean()
+    me = (init_mean_phase_grad - new_mean_phase_grad).abs().mean()
+    return me
 
 
 def compute_modes(amplitude: tt, phase_func: callable, phase_kwargs: dict, x: tt, y: tt) -> Tuple[tt, tt, tt]:
