@@ -130,7 +130,7 @@ def compute_phase_grad_mse(amplitude, init_phase_grad0: tt, init_phase_grad1: tt
     new_phase_grad_square = new_phase_grad0.abs().pow(2) + new_phase_grad1.abs().pow(2)
     new_mean_phase_grad = (amplitude * new_phase_grad_square.sum(dim=(0, 1))) / amp_sum
     # mse = (init_mean_phase_grad - new_mean_phase_grad).abs().pow(2).mean()
-    me = (init_mean_phase_grad - new_mean_phase_grad).abs().mean()
+    me = (new_mean_phase_grad / (init_mean_phase_grad + 1e-6) - 1).abs().mean()
     return me
 
 
