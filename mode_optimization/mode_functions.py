@@ -198,7 +198,7 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
     plt.cla()
     plt.plot(np.asarray(non_orthogonalities), label='non-orthogonality')
     plt.plot(similarities, label='similarity')
-    plt.plot(np.asarray(phase_grad_mses)*10, label='mean phase gradient x10')
+    plt.plot(np.asarray(phase_grad_mses), label='mean phase gradient')
     plt.xlim((0, iterations))
     plt.xlabel('Iteration')
     plt.ylim((0, 1))
