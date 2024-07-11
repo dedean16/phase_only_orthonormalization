@@ -1,7 +1,7 @@
 Mode Optimization
 =================
 
-Orthogonalization of phase-only 2D basis functions using PyTorch.
+Orthonormalization of phase-only 2D basis functions using PyTorch.
 
 Installation
 ------------
