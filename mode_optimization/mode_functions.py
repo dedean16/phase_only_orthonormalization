@@ -11,6 +11,7 @@ from helper_functions import plot_field, mse
 
 
 def inner(a, b, dim):
+    """Inner product."""
     return (a * b.conj()).sum(dim=dim)
 
 
@@ -284,6 +285,32 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
                    nrows=3, ncols=5, do_plot_all_modes=True, save_filename_plot='mode_optimization_it'):
     """
     Optimize modes
+
+    Args:
+        domain: Specifies x,y limits.
+        amplitude_func: Function that returns the amplitude on given x,y coordinates.
+        phase_func: Function that returns the phase on given x,y coordinates.
+        amplitude_kwargs: Keyword arguments for the amplitude function.
+        phase_kwargs: Keyword arguments for the phase function.
+        poly_degree: The polynomial degree of the bivariate polynomial transform.
+        poly_per_mode: If True, each mode will have its own unique transform. If False, one transform is used for every
+            mode.
+        pow_factor: Multiplication factor for the polynom powers. Setting this to 2 restricts the polynom transform to
+            even powers.
+        extra_params: Extra parameters to optimize with the optimization algorithm.
+        similarity_weight: Weight factor for the mode similarity.
+        phase_grad_weight: Weight factor for the phase gradient.
+        iterations: Number of iterations for the optimizer.
+        learning_rate: Learning rate for the optimizer.
+        optimizer: If not None, overrides the default optimizer instance.
+        do_plot: Plot intermediate results and convergence graphs.
+        plot_per_its: Update plot every this many iterations (if do_plot=True).
+        do_save_plot: Save each plot as an image frame (if do_plot=True).
+        save_path_plot: Folder path to save each plot.
+        nrows: Number of rows in the plot.
+        ncols: Number of columns in the plot.
+        do_plot_all_modes: If True, plot all modes, instead of a few selected ones.
+        save_filename_plot: Filename for each plot. A suffix with the iteration number will be added.
     """
     # Compute initial coordinates and amplitude profile
     x = torch.linspace(domain['x_min'], domain['x_max'], domain['yxshape'][1]).view(1, -1, 1, 1, 1)  # x coords
@@ -341,6 +368,7 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
 
     # Gradient descent loop
     for it in range(iterations):
+        # Compute transformed coordinates and modes
         wx, wy = warp_func(x, y, a, b, pow_factor=pow_factor)
         new_modes, new_phase_grad0, new_phase_grad1 = compute_modes(amplitude, phase_func, phase_kwargs, wx, wy)
 
@@ -356,6 +384,7 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
         similarities[it] = similarity.detach().cpu()
         phase_grad_mses[it] = phase_grad_mse.detach().cpu()
 
+        # Plot
         if do_plot and it % plot_per_its == 0:
             plot_mode_optimization(it=it, iterations=iterations, modes=new_modes, init_gram=init_gram, gram=gram,
                                    init_non_orthogonality=init_non_orthogonality, non_orthogonality=non_orthogonality,
