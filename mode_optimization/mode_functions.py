@@ -135,6 +135,25 @@ def compute_phase_grad_mse(amplitude, init_phase_grad0: tt, init_phase_grad1: tt
     return me
 
 
+def compute_coordinate_similarity(x_init: tt, y_init: tt, x_new: tt, y_new: tt, amplitude: tt, num_modes: int | tt) \
+        -> tt:
+    """
+    Compute coordinate similarity, i.e. a metric of how close the transformed coordinates are to the initial ones. The
+    coordinate similarity is computed as the weighted mean square error of the initial and new coordinates.
+
+    Args:
+        x_init, y_init: Tensor of initial x,y coordinates.
+        x_new, y_new: Tensor of transformed x,y coordinates.
+        amplitude: Tensor containing the amplitude at x_init, y_init.
+        num_modes: Number of modes.
+
+    Returns:
+        coordinate similarity
+    """
+    norm_factor = amplitude.sum() * x_init.shape[2]
+    return (amplitude * ((x_init - x_new).abs().pow(2) + (y_init - y_new).abs().pow(2))).sum() / norm_factor
+
+
 def compute_modes(amplitude: tt, phase_func: callable, phase_kwargs: dict, x: tt, y: tt) -> Tuple[tt, tt, tt]:
     """
     Compute modes
