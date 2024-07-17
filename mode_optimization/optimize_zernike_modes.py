@@ -42,14 +42,14 @@ waist_m = 2 * 5.9e-3  # Fit beam profile gaussian width in m
 waist = waist_m / (NA * f_obj1_m)
 
 # Coefficients
-poly_degree = 4         # Sqrt of number of polynomial terms
+poly_degree = 5         # Sqrt of number of polynomial terms
 poly_per_mode = True    # If True, every mode has its own transform polynomial
 pow_factor = 2
 
 # Optimization parameters
-learning_rate = 3.0e-2
+learning_rate = 2.0e-2
 iterations = 2000
-phase_grad_weight = 2.0
+phase_grad_weight = 3.0
 
 
 # ====== Initial basis ====== #
