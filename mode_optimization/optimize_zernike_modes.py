@@ -47,9 +47,9 @@ poly_per_mode = True    # If True, every mode has its own transform polynomial
 pow_factor = 2
 
 # Optimization parameters
-learning_rate = 4.0e-2
+learning_rate = 3.0e-2
 iterations = 2000
-phase_grad_weight = 1.0
+phase_grad_weight = 2.0
 
 
 # ====== Initial basis ====== #
