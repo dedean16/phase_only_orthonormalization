@@ -44,16 +44,14 @@ waist = waist_m / (NA * f_obj1_m)
 k_max = 4
 
 # Coefficients
-poly_degree = 6  # Sqrt of number of polynomial terms
-poly_per_mode = True
+poly_degree = 7  # Sqrt of number of polynomial terms
+poly_per_mode = False
 pow_factor = 1
 
 # Optimization parameters
 learning_rate = 3.0e-2
-iterations = 2501
-similarity_weight = 0.001
-# phase_grad_weight = 0.003
-phase_grad_weight = 0.000
+iterations = 2001
+phase_grad_weight = 0.003
 
 
 # ====== Initial basis ====== #

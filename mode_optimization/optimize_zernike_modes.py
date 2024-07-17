@@ -49,9 +49,7 @@ pow_factor = 2
 # Optimization parameters
 learning_rate = 5.0e-2
 iterations = 2000
-similarity_weight = 0.05
-# phase_grad_weight = 0.05
-phase_grad_weight = 0.0
+phase_grad_weight = 0.05
 
 
 # ====== Initial basis ====== #
@@ -103,7 +101,7 @@ def zernike_phases(x, y, phase_coeffs, js, dtype=torch.float32):
 a, b, new_modes, init_modes = optimize_modes(
     domain=domain, amplitude_func=apo_gaussian, amplitude_kwargs=amplitude_kwargs, phase_func=zernike_phases,
     phase_kwargs=phase_kwargs, poly_degree=poly_degree, poly_per_mode=poly_per_mode, pow_factor=pow_factor,
-    similarity_weight=similarity_weight, phase_grad_weight=phase_grad_weight, iterations=iterations,
+    phase_grad_weight=phase_grad_weight, iterations=iterations,
     learning_rate=learning_rate, extra_params=extra_params, plot_per_its=plot_per_its, do_plot=do_plot, nrows=nrows,
     ncols=ncols, do_plot_all_modes=do_plot_all_modes, do_save_plot=do_save_plot, save_path_plot=save_path_plot)
 

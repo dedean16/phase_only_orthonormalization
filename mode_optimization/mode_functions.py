@@ -298,7 +298,7 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
 
 def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable, amplitude_kwargs: dict = {},
                    phase_kwargs: dict = {}, poly_degree: int = 3, poly_per_mode: bool = True, pow_factor=2,
-                   extra_params: dict = {}, similarity_weight: float = 0.1, phase_grad_weight: float = 0.1,
+                   extra_params: dict = {}, phase_grad_weight: float = 0.1,
                    iterations: int = 500, learning_rate: float = 0.02, optimizer: Optimizer = None,
                    do_plot: bool = True, plot_per_its: int = 10, do_save_plot: bool = False, save_path_plot: str = '.',
                    nrows=3, ncols=5, do_plot_all_modes=True, save_filename_plot='mode_optimization_it'):
