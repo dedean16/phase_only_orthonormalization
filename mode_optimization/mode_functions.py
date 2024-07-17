@@ -116,23 +116,23 @@ def compute_similarity(modes1: tt, modes2: tt) -> tt:
     return inner(modes1, modes2, dim=(0, 1)).abs().sum() / modes1.shape[2]
 
 
-def compute_phase_grad_mse(amplitude, init_phase_grad0: tt, init_phase_grad1: tt, new_phase_grad0: tt, new_phase_grad1: tt) -> tt:
+def compute_phase_grad_magsq(amplitude, phase_grad0: tt, phase_grad1: tt, num_of_modes) -> tt:
     """
     Compute mode-mean squared error of x,y-mean squared phase gradients
 
     Args:
+        amplitude:
+        phase_grad0
+        phase_grad1
+        num_of_modes
 
     Returns:
 
     """
-    amp_sum = amplitude.sum(dim=(0, 1))
-    init_phase_grad_square = init_phase_grad0.abs().pow(2) + init_phase_grad1.abs().pow(2)
-    init_mean_phase_grad = (amplitude * init_phase_grad_square).sum(dim=(0, 1)) / amp_sum
-    new_phase_grad_square = new_phase_grad0.abs().pow(2) + new_phase_grad1.abs().pow(2)
-    new_mean_phase_grad = (amplitude * new_phase_grad_square.sum(dim=(0, 1))) / amp_sum
-    # mse = (init_mean_phase_grad - new_mean_phase_grad).abs().pow(2).mean()
-    me = (new_mean_phase_grad / (init_mean_phase_grad + 1e-6) - 1).abs().mean()
-    return me
+    norm_factor = amplitude.sum(dim=(0, 1)) * num_of_modes
+    phase_grad_magsq = phase_grad0.abs().pow(2) + phase_grad1.abs().pow(2)
+    mean_phase_grad_magsq = (amplitude * phase_grad_magsq.sum()) / norm_factor
+    return mean_phase_grad_magsq
 
 
 def compute_coordinate_similarity(x_init: tt, y_init: tt, x_new: tt, y_new: tt, amplitude: tt, num_modes: int | tt) \
@@ -394,7 +394,7 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
         # Compute error
         non_orthogonality, gram = compute_non_orthogonality(new_modes)
         similarity = compute_similarity(new_modes, init_modes)
-        phase_grad_mse = compute_phase_grad_mse(amplitude, init_phase_grad0, init_phase_grad1, new_phase_grad0, new_phase_grad1)
+        phase_grad_mse = compute_phase_grad_magsq(amplitude, new_phase_grad0, new_phase_grad1, M)
         coord_similarity = compute_coordinate_similarity(x, y, wx, wy, amplitude, M)
         # error = non_orthogonality - similarity_weight * similarity + phase_grad_weight * phase_grad_mse
         error = non_orthogonality + similarity_weight * coord_similarity
