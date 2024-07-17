@@ -395,7 +395,9 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
         non_orthogonality, gram = compute_non_orthogonality(new_modes)
         similarity = compute_similarity(new_modes, init_modes)
         phase_grad_mse = compute_phase_grad_mse(amplitude, init_phase_grad0, init_phase_grad1, new_phase_grad0, new_phase_grad1)
-        error = non_orthogonality - similarity_weight * similarity + phase_grad_weight * phase_grad_mse
+        coord_similarity = compute_coordinate_similarity(x, y, wx, wy, amplitude, M)
+        # error = non_orthogonality - similarity_weight * similarity + phase_grad_weight * phase_grad_mse
+        error = non_orthogonality + similarity_weight * coord_similarity
 
         # Save error and terms
         errors[it] = error.detach().cpu()
