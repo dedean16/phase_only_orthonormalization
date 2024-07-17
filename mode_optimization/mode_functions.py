@@ -129,9 +129,9 @@ def compute_phase_grad_magsq(amplitude, phase_grad0: tt, phase_grad1: tt, num_of
     Returns:
 
     """
-    norm_factor = amplitude.sum(dim=(0, 1)) * num_of_modes
+    norm_factor = amplitude.sum() * num_of_modes
     phase_grad_magsq = phase_grad0.abs().pow(2) + phase_grad1.abs().pow(2)
-    mean_phase_grad_magsq = (amplitude * phase_grad_magsq.sum()) / norm_factor
+    mean_phase_grad_magsq = (amplitude * phase_grad_magsq).sum() / norm_factor
     return mean_phase_grad_magsq
 
 
@@ -217,7 +217,6 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
     plt.subplot(nrows-1, 4, 4)
     plt.cla()
     plt.plot(np.asarray(non_orthogonalities), label='non-orthogonality')
-    plt.plot(similarities, label='similarity')
     plt.plot(np.asarray(phase_grad_magsqs), label='mean phase gradient')
     plt.xlim((0, iterations))
     plt.xlabel('Iteration')
