@@ -51,7 +51,7 @@ pow_factor = 1
 # Optimization parameters
 learning_rate = 3.0e-2
 iterations = 2001
-phase_grad_weight = 0.003
+phase_grad_weight = 0.1
 
 
 # ====== Initial basis ====== #
@@ -97,7 +97,7 @@ ncols = 15
 a, b, new_modes, init_modes = optimize_modes(
     domain=domain, amplitude_func=apo_gaussian, amplitude_kwargs=amplitude_kwargs, phase_func=phase_gradient,
     phase_kwargs=phase_kwargs, poly_degree=poly_degree, poly_per_mode=poly_per_mode, pow_factor=pow_factor,
-    similarity_weight=similarity_weight, phase_grad_weight=phase_grad_weight, iterations=iterations,
+    phase_grad_weight=phase_grad_weight, iterations=iterations,
     learning_rate=learning_rate, plot_per_its=plot_per_its, do_save_plot=do_save_plot, do_plot=do_plot,
     save_path_plot=save_path_plot, save_filename_plot=save_filename_plot, ncols=ncols, nrows=nrows,
     do_plot_all_modes=do_plot_all_modes)
