@@ -334,7 +334,7 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
     # Compute initial coordinates and amplitude profile
     x = torch.linspace(domain['x_min'], domain['x_max'], domain['yxshape'][1]).view(1, -1, 1, 1, 1)  # x coords
     y = torch.linspace(domain['y_min'], domain['y_max'], domain['yxshape'][0]).view(-1, 1, 1, 1, 1)  # y coords
-    amplitude_unnorm = apo_gaussian(x, y, **amplitude_kwargs)
+    amplitude_unnorm = amplitude_func(x, y, **amplitude_kwargs)
     amplitude = amplitude_unnorm / amplitude_unnorm.abs().pow(2).sum().sqrt()
 
     # Compute initial modes
