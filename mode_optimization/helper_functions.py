@@ -15,7 +15,7 @@ def complex_to_rgb(array, scale, axis=2):
     return rgb
 
 
-def plot_field(array, scale):
+def plot_field(array, scale, imshow_kwargs={}):
     """
     Plot a complex array as an RGB image.
 
@@ -27,7 +27,7 @@ def plot_field(array, scale):
         scale(float): scaling factor for the magnitude. The final value is clipped to the range [0, 1].
     """
     rgb = complex_to_rgb(array, scale)
-    plt.imshow(rgb)
+    plt.imshow(rgb, **imshow_kwargs)
     # plt.set_cmap('hsv')
 
 

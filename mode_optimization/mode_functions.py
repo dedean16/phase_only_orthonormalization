@@ -231,9 +231,33 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
         for i in range(modes.shape[2]):
             plt.subplot(nrows+1, ncols, i + 2*ncols + 1)
             plt.cla()
-            plot_field(modes[:, :, i, 0, 0].detach().cpu(), scale=scale)
+            plot_field(modes[:, :, i, 0, 0].detach().cpu(), scale=scale, imshow_kwargs={'extent': (-1, 0, -1, 1)})
             plt.xticks([])
             plt.yticks([])
+
+            x_grid = torch.linspace(-1, 0, 1+8).view(1, -1, 1, 1, 1)  # Normalized x coords
+            y_grid = torch.linspace(-1, 1, 1+16).view(-1, 1, 1, 1, 1)  # Normalized y coords
+            r_mask = x_grid * x_grid + y_grid * y_grid > 1.01
+            if a.shape[2] == 1:
+                m = 0
+            else:
+                m = i
+
+            wx_grid, wy_grid = warp_func(x_grid, y_grid, a[:, :, m:m+1, :, :].detach().cpu(), b[:, :, m:m+1, :, :].detach().cpu(), pow_factor=pow_factor)
+            wx_grid[r_mask] = np.nan
+            wy_grid[r_mask] = np.nan
+            # Warped arc
+            phi_arc = torch.linspace(np.pi / 2, 3 * np.pi / 2, 60)
+            x_arc = torch.cos(phi_arc).view(-1, 1, 1, 1, 1)
+            y_arc = torch.sin(phi_arc).view(-1, 1, 1, 1, 1)
+            wx_arc, wy_arc = warp_func(x_arc, y_arc, a[:, :, m:m+1, :, :].detach().cpu(), b[:, :, m:m+1, :, :].detach().cpu(), pow_factor=pow_factor)
+            # Plot
+            plt.plot(wx_arc.squeeze(), wy_arc.squeeze(), '-', linewidth=0.5)
+            plt.plot(wx_grid.squeeze(), wy_grid.squeeze(), '-w', linewidth=0.5)
+            plt.plot(wx_grid.squeeze().T, wy_grid.squeeze().T, '-w', linewidth=0.5)
+            plt.plot()
+            plt.xlim((-1.05, 0.05))
+            plt.ylim((-1.05, 1.05))
 
     else:       # Plot only a few modes and a transform
         # Example mode 1

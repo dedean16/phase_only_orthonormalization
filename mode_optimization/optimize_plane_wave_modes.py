@@ -15,7 +15,7 @@ if prefer_gpu and torch.cuda.is_available():
 do_plot = True
 plot_per_its = 50  # Plot every this many iterations
 do_save_plot = False
-do_plot_all_modes = False
+do_plot_all_modes = True
 do_plot_end = True
 save_path_plot = 'C:/LocalData/mode_optimization_frames_tilt'
 save_filename_plot = 'mode_optimization_it'
@@ -44,7 +44,7 @@ waist = waist_m / (NA * f_obj1_m)
 k_max = 4
 
 # Coefficients
-poly_degree = 5  # Sqrt of number of polynomial terms
+poly_degree = 6  # Sqrt of number of polynomial terms
 poly_per_mode = True
 pow_factor = 2
 
