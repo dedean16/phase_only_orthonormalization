@@ -208,6 +208,7 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
     plt.subplot(nrows-1, 4, 3)
     plt.cla()
     plt.plot(errors, 'r', label='Error function')
+    plt.yscale('log')
     plt.xlim((0, iterations))
     plt.xlabel('Iteration')
     plt.ylim((min([*errors, 0]), max(errors)))
@@ -219,6 +220,7 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
     plt.cla()
     plt.plot(np.asarray(non_orthogonalities), label='non-orthogonality')
     plt.plot(np.asarray(phase_grad_magsqs), label='mean phase gradient')
+    plt.yscale('log')
     plt.xlim((0, iterations))
     plt.xlabel('Iteration')
     plt.ylim((0, 1))
@@ -314,7 +316,7 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
         plt.ylabel('warped y')
         plt.title('Warped pupil coords')
 
-    plt.pause(0.02)
+    plt.pause(0.03)
 
     if do_save_plot:
         plt.savefig(f'{save_path_plot}/{save_filename_plot}{it:04d}.png')

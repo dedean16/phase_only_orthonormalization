@@ -44,22 +44,23 @@ waist = waist_m / (NA * f_obj1_m)
 k_max = 4
 
 # Coefficients
-poly_powers_x = (0, 1, 2, 3, 4, 5)
+# poly_powers_x = (0, 1, 2, 3, 4, 5)
+poly_powers_x = (0, 2, 4, 6, 8, 10)
 poly_powers_y = (0, 2, 4, 6, 8, 10)
 poly_per_mode = True    # If True, every mode has its own transform polynomial
 
 # Optimization parameters
-learning_rate = 3.0e-2
-iterations = 2001
+learning_rate = 2.0e-2
+iterations = 2501
 phase_grad_weight = 0.2
 
 
 # ====== Initial basis ====== #
 def build_square_k_space(k_min, k_max):
     """
-    Constructs the k-space by creating a set of (k_x, k_y) coordinates.
-    Fills the k_left and k_right matrices with the same k-space. (k_x, k_y) denote the k-space coordinates of the whole
-    pupil. Only half SLM (and thus pupil) is modulated at a time, hence k_y (axis=1) must make steps of 2.
+    Constructs the k-space by creating a set of (k_y, k_x) coordinates.
+    Fills the k_left and k_right matrices with the same k-space. (k_y, k_x) denote the k-space coordinates of the whole
+    pupil. Only half SLM (and thus pupil) is modulated at a time, hence k_x (axis=1) must make steps of 2.
 
     Returns:
         k_space (np.ndarray): A 2xN array of k-space coordinates.
