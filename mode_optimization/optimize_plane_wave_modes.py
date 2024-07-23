@@ -44,8 +44,8 @@ waist = waist_m / (NA * f_obj1_m)
 k_max = 4
 
 # Coefficients
-poly_powers_x = (0, 1, 2, 3, 4, 5, 6)
-poly_powers_y = (0, 2, 4, 6, 8)
+poly_powers_x = (0, 1, 2, 3, 4, 5)
+poly_powers_y = (0, 2, 4, 6, 8, 10)
 poly_per_mode = True    # If True, every mode has its own transform polynomial
 
 # Optimization parameters

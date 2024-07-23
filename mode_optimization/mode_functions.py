@@ -45,7 +45,6 @@ def coord_transform(x: tt, y: tt, a: tt, b: tt, poly_powers_x: Tuple[int, ...], 
     assert a.shape == b.shape
 
     # Create arrays of powers
-    # Note: a pow_factor 2 means that the indexing is different from the paper by a factor of 2!
     xpows = torch.tensor(poly_powers_x).view(1, 1, 1, -1, 1)
     ypows = torch.tensor(poly_powers_y).view(1, 1, 1, 1, -1)
 
@@ -186,7 +185,7 @@ def compute_modes(amplitude: tt, phase_func: callable, phase_kwargs: dict, x: tt
 
 def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, gram: tt, init_non_orthogonality: tt,
                            non_orthogonality: tt, phase_grad_magsq: tt, errors,
-                           non_orthogonalities, phase_grad_magsqs, scale, a, b, pow_factor,
+                           non_orthogonalities, phase_grad_magsqs, scale, a, b, poly_powers_x, poly_powers_y,
                            do_plot_all_modes=True, nrows=3, ncols=5,
                            do_save_plot=False, save_path_plot='.', save_filename_plot='mode_optimization_it'):
     # Original Gram matrix
@@ -245,14 +244,14 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
             else:
                 m = i
 
-            wx_grid, wy_grid = warp_func(x_grid, y_grid, a[:, :, m:m+1, :, :].detach().cpu(), b[:, :, m:m+1, :, :].detach().cpu(), pow_factor=pow_factor)
+            wx_grid, wy_grid = coord_transform(x_grid, y_grid, a[:, :, m:m+1, :, :].detach().cpu(), b[:, :, m:m+1, :, :].detach().cpu(), poly_powers_x, poly_powers_y)
             wx_grid[r_mask] = np.nan
             wy_grid[r_mask] = np.nan
             # Warped arc
             phi_arc = torch.linspace(np.pi / 2, 3 * np.pi / 2, 60)
             x_arc = torch.cos(phi_arc).view(-1, 1, 1, 1, 1)
             y_arc = torch.sin(phi_arc).view(-1, 1, 1, 1, 1)
-            wx_arc, wy_arc = warp_func(x_arc, y_arc, a[:, :, m:m+1, :, :].detach().cpu(), b[:, :, m:m+1, :, :].detach().cpu(), pow_factor=pow_factor)
+            wx_arc, wy_arc = coord_transform(x_arc, y_arc, a[:, :, m:m+1, :, :].detach().cpu(), b[:, :, m:m+1, :, :].detach().cpu(), poly_powers_x, poly_powers_y)
             # Plot
             plt.plot(wx_arc.squeeze(), wy_arc.squeeze(), '-', linewidth=0.5)
             plt.plot(wx_grid.squeeze(), wy_grid.squeeze(), '-w', linewidth=0.5)
@@ -295,14 +294,14 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
         x_grid = torch.linspace(-1, 0, 11).view(1, -1, 1, 1, 1)  # Normalized x coords
         y_grid = torch.linspace(-1, 1, 21).view(-1, 1, 1, 1, 1)  # Normalized y coords
         r_mask = x_grid * x_grid + y_grid * y_grid > 1.01
-        wx_grid, wy_grid = coord_transform(x_grid, y_grid, a[:, :, 0:1, :, :].detach().cpu(), b[:, :, 0:1, :, :].detach().cpu(), pow_factor=pow_factor)
+        wx_grid, wy_grid = coord_transform(x_grid, y_grid, a[:, :, 0:1, :, :].detach().cpu(), b[:, :, 0:1, :, :].detach().cpu(), poly_powers_x, poly_powers_y)
         wx_grid[r_mask] = np.nan
         wy_grid[r_mask] = np.nan
         # Warped arc
         phi_arc = torch.linspace(np.pi / 2, 3 * np.pi / 2, 80)
         x_arc = torch.cos(phi_arc).view(-1, 1, 1, 1, 1)
         y_arc = torch.sin(phi_arc).view(-1, 1, 1, 1, 1)
-        wx_arc, wy_arc = coord_transform(x_arc, y_arc, a[:, :, 0:1, :, :].detach().cpu(), b[:, :, 0:1, :, :].detach().cpu(), pow_factor=pow_factor)
+        wx_arc, wy_arc = coord_transform(x_arc, y_arc, a[:, :, 0:1, :, :].detach().cpu(), b[:, :, 0:1, :, :].detach().cpu(), poly_powers_x, poly_powers_y)
         # Plot
         plt.plot(wx_arc.squeeze(), wy_arc.squeeze(), '-', linewidth=1)
         plt.plot(wx_grid.squeeze(), wy_grid.squeeze(), '-k', linewidth=1)
@@ -339,8 +338,8 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
         poly_degree: The polynomial degree of the bivariate polynomial transform.
         poly_per_mode: If True, each mode will have its own unique transform. If False, one transform is used for every
             mode.
-        pow_factor: Multiplication factor for the polynom powers. Setting this to 2 restricts the polynom transform to
-            even powers.
+        poly_powers_x: Polynomial powers for x in coordinate transform.
+        poly_powers_y: Polynomial powers for y in coordinate transform.
         extra_params: Extra parameters to optimize with the optimization algorithm.
         similarity_weight: Weight factor for the mode similarity.
         phase_grad_weight: Weight factor for the phase gradient.
@@ -430,8 +429,9 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
         if do_plot and it % plot_per_its == 0:
             plot_mode_optimization(it=it, iterations=iterations, modes=new_modes, init_gram=init_gram, gram=gram,
                                    init_non_orthogonality=init_non_orthogonality, non_orthogonality=non_orthogonality,
-                                   phase_grad_magsq=phase_grad_magsq, errors=errors, non_orthogonalities=non_orthogonalities,
-                                   phase_grad_magsqs=phase_grad_magsqs, scale=60, a=a, b=b, pow_factor=pow_factor,
+                                   phase_grad_magsq=phase_grad_magsq, errors=errors,
+                                   non_orthogonalities=non_orthogonalities, phase_grad_magsqs=phase_grad_magsqs,
+                                   scale=60, a=a, b=b, poly_powers_x=poly_powers_x, poly_powers_y=poly_powers_y,
                                    do_save_plot=do_save_plot, save_path_plot=save_path_plot, nrows=nrows, ncols=ncols,
                                    do_plot_all_modes=do_plot_all_modes, save_filename_plot=save_filename_plot)
 
