@@ -44,9 +44,9 @@ waist = waist_m / (NA * f_obj1_m)
 k_max = 4
 
 # Coefficients
-poly_degree = 6  # Sqrt of number of polynomial terms
-poly_per_mode = True
-pow_factor = 2
+poly_powers_x = (0, 1, 2, 3, 4, 5, 6)
+poly_powers_y = (0, 2, 4, 6, 8)
+poly_per_mode = True    # If True, every mode has its own transform polynomial
 
 # Optimization parameters
 learning_rate = 3.0e-2
@@ -96,7 +96,7 @@ ncols = 15
 # ====== Optimize modes ====== #
 a, b, new_modes, init_modes = optimize_modes(
     domain=domain, amplitude_func=apo_gaussian, amplitude_kwargs=amplitude_kwargs, phase_func=phase_gradient,
-    phase_kwargs=phase_kwargs, poly_degree=poly_degree, poly_per_mode=poly_per_mode, pow_factor=pow_factor,
+    phase_kwargs=phase_kwargs, poly_per_mode=poly_per_mode, poly_powers_x=poly_powers_x, poly_powers_y=poly_powers_y,
     phase_grad_weight=phase_grad_weight, iterations=iterations,
     learning_rate=learning_rate, plot_per_its=plot_per_its, do_save_plot=do_save_plot, do_plot=do_plot,
     save_path_plot=save_path_plot, save_filename_plot=save_filename_plot, ncols=ncols, nrows=nrows,

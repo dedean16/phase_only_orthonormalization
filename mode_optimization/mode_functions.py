@@ -29,12 +29,14 @@ def apo_gaussian(x: tt, y: tt, waist, r_pupil):
     return torch.exp(-(r_sq / waist**2)) * (r_sq <= r_pupil)
 
 
-def warp_func(x, y, a, b, pow_factor):
+def coord_transform(x: tt, y: tt, a: tt, b: tt, poly_powers_x: Tuple[int, ...], poly_powers_y: Tuple[int, ...]):
     """
     x: Xx1x1x1x1
     y: 1xYx1x1x1
     a: 1x1xMxNxN or 1x1x1xNxN
     b: 1x1xMxNxN or 1x1x1xNxN
+    poly_powers_x: polynomial powers for x
+    poly_powers_y: polynomial powers for y
     """
     if isinstance(a, np.ndarray):
         a = torch.from_numpy(a)
@@ -44,8 +46,8 @@ def warp_func(x, y, a, b, pow_factor):
 
     # Create arrays of powers
     # Note: a pow_factor 2 means that the indexing is different from the paper by a factor of 2!
-    xpows = torch.tensor(range(a.shape[3])).view(1, 1, 1, -1, 1) * pow_factor
-    ypows = torch.tensor(range(a.shape[4])).view(1, 1, 1, 1, -1) * pow_factor
+    xpows = torch.tensor(poly_powers_x).view(1, 1, 1, -1, 1)
+    ypows = torch.tensor(poly_powers_y).view(1, 1, 1, 1, -1)
 
     # Raise x and y to even powers
     x_to_powers = x ** xpows
@@ -293,14 +295,14 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
         x_grid = torch.linspace(-1, 0, 11).view(1, -1, 1, 1, 1)  # Normalized x coords
         y_grid = torch.linspace(-1, 1, 21).view(-1, 1, 1, 1, 1)  # Normalized y coords
         r_mask = x_grid * x_grid + y_grid * y_grid > 1.01
-        wx_grid, wy_grid = warp_func(x_grid, y_grid, a[:, :, 0:1, :, :].detach().cpu(), b[:, :, 0:1, :, :].detach().cpu(), pow_factor=pow_factor)
+        wx_grid, wy_grid = coord_transform(x_grid, y_grid, a[:, :, 0:1, :, :].detach().cpu(), b[:, :, 0:1, :, :].detach().cpu(), pow_factor=pow_factor)
         wx_grid[r_mask] = np.nan
         wy_grid[r_mask] = np.nan
         # Warped arc
         phi_arc = torch.linspace(np.pi / 2, 3 * np.pi / 2, 80)
         x_arc = torch.cos(phi_arc).view(-1, 1, 1, 1, 1)
         y_arc = torch.sin(phi_arc).view(-1, 1, 1, 1, 1)
-        wx_arc, wy_arc = warp_func(x_arc, y_arc, a[:, :, 0:1, :, :].detach().cpu(), b[:, :, 0:1, :, :].detach().cpu(), pow_factor=pow_factor)
+        wx_arc, wy_arc = coord_transform(x_arc, y_arc, a[:, :, 0:1, :, :].detach().cpu(), b[:, :, 0:1, :, :].detach().cpu(), pow_factor=pow_factor)
         # Plot
         plt.plot(wx_arc.squeeze(), wy_arc.squeeze(), '-', linewidth=1)
         plt.plot(wx_grid.squeeze(), wy_grid.squeeze(), '-k', linewidth=1)
@@ -320,11 +322,11 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
 
 
 def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable, amplitude_kwargs: dict = {},
-                   phase_kwargs: dict = {}, poly_degree: int = 3, poly_per_mode: bool = True, pow_factor=2,
-                   extra_params: dict = {}, phase_grad_weight: float = 0.1,
-                   iterations: int = 500, learning_rate: float = 0.02, optimizer: Optimizer = None,
-                   do_plot: bool = True, plot_per_its: int = 10, do_save_plot: bool = False, save_path_plot: str = '.',
-                   nrows=3, ncols=5, do_plot_all_modes=True, save_filename_plot='mode_optimization_it'):
+                   phase_kwargs: dict = {}, poly_per_mode: bool = True, poly_powers_x: Tuple = (0, 2, 4, 6),
+                   poly_powers_y: Tuple = (0, 2, 4, 6), extra_params: dict = {}, phase_grad_weight: float = 0.1,
+                   iterations: int = 500, learning_rate: float = 0.02, optimizer: Optimizer = None, do_plot: bool =
+                   True, plot_per_its: int = 10, do_save_plot: bool = False, save_path_plot: str = '.', nrows=3,
+                   ncols=5, do_plot_all_modes=True, save_filename_plot='mode_optimization_it'):
     """
     Optimize modes
 
@@ -368,11 +370,12 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
 
     # Determine coefficients shape
     M = init_modes.shape[2]
-    N = poly_degree
+    Nx = len(poly_powers_x)
+    Ny = len(poly_powers_y)
     if poly_per_mode:
-        shape = (1, 1, M, N, N)             # (num_x, num_y, num_modes, poly_degree, poly_degree)
+        shape = (1, 1, M, Nx, Ny)             # (num_x, num_y, num_modes, poly_degree, poly_degree)
     else:
-        shape = (1, 1, 1, N, N)
+        shape = (1, 1, 1, Nx, Ny)
 
     # Initialize coefficient arrays
     a = torch.zeros(shape)
@@ -410,7 +413,7 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
     # Gradient descent loop
     for it in range(iterations):
         # Compute transformed coordinates and modes
-        wx, wy = warp_func(x, y, a, b, pow_factor=pow_factor)
+        wx, wy = coord_transform(x, y, a, b, poly_powers_x, poly_powers_y)
         new_modes, new_phase_grad0, new_phase_grad1 = compute_modes(amplitude, phase_func, phase_kwargs, wx, wy)
 
         # Compute error

@@ -42,9 +42,9 @@ waist_m = 2 * 5.9e-3  # Fit beam profile gaussian width in m
 waist = waist_m / (NA * f_obj1_m)
 
 # Coefficients
-poly_degree = 5         # Sqrt of number of polynomial terms
+poly_powers_x = (0, 2, 4, 6, 8, 10)
+poly_powers_y = (0, 2, 4, 6, 8, 10)
 poly_per_mode = True    # If True, every mode has its own transform polynomial
-pow_factor = 2
 
 # Optimization parameters
 learning_rate = 2.0e-2
@@ -100,7 +100,7 @@ def zernike_phases(x, y, phase_coeffs, js, dtype=torch.float32):
 # ====== Optimize modes ====== #
 a, b, new_modes, init_modes = optimize_modes(
     domain=domain, amplitude_func=apo_gaussian, amplitude_kwargs=amplitude_kwargs, phase_func=zernike_phases,
-    phase_kwargs=phase_kwargs, poly_degree=poly_degree, poly_per_mode=poly_per_mode, pow_factor=pow_factor,
+    phase_kwargs=phase_kwargs, poly_per_mode=poly_per_mode, poly_powers_x=poly_powers_x, poly_powers_y=poly_powers_y,
     phase_grad_weight=phase_grad_weight, iterations=iterations,
     learning_rate=learning_rate, extra_params=extra_params, plot_per_its=plot_per_its, do_plot=do_plot, nrows=nrows,
     ncols=ncols, do_plot_all_modes=do_plot_all_modes, do_save_plot=do_save_plot, save_path_plot=save_path_plot)
