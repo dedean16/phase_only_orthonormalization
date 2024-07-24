@@ -47,16 +47,16 @@ poly_powers_y = (0, 2, 4, 6, 8, 10)
 poly_per_mode = True    # If True, every mode has its own transform polynomial
 
 # Optimization parameters
-learning_rate = 2.0e-2
-iterations = 2000
-phase_grad_weight = 3.0
+learning_rate = 1.5e-2
+iterations = 8000
+phase_grad_weight = 2.0
 
 
 # ====== Initial basis ====== #
 amplitude_kwargs = {'waist': waist, 'r_pupil': 1}
 
 num_of_j = 10
-phase_coeffs = torch.tensor([1.5*np.pi]*num_of_j + [-1.5*np.pi]*(num_of_j-1))
+phase_coeffs = torch.tensor([2*np.pi]*num_of_j + [-2*np.pi]*(num_of_j-1))
 js = torch.tensor([*range(1, num_of_j+1), *range(2, num_of_j+1)])
 phase_kwargs = {'phase_coeffs': phase_coeffs, 'js': js}
 phase_coeffs.requires_grad = False
