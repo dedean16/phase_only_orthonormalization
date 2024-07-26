@@ -1,6 +1,6 @@
 [tool.poetry]
-name = "mode_optimization"
-version = "0.2.0"
+name = "phase_only_optimization"
+version = "0.3.0"
 description = ""
 authors = ["Daniel Cox <danielcox16@hotmail.com>"]
 readme = "README.rst"
