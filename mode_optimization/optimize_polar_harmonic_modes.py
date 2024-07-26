@@ -27,11 +27,11 @@ save_path_coeffs = 'C:/LocalData'  # Where to save output
 # Domain
 domain = {
     'x_min': -1,
-    'x_max': 1,
+    'x_max': 0,
     'y_min': -1,
     'y_max': 1,
     'r_pupil': 1,
-    'yxshape': (100, 100),           # Number of samples in each spatial direction
+    'yxshape': (200, 100),           # Number of samples in each spatial direction
 }
 
 # Gaussian shape parameters
@@ -41,8 +41,8 @@ waist_m = 2 * 5.9e-3  # Fit beam profile gaussian width in m
 waist = waist_m / (NA * f_obj1_m)
 
 # Coefficients
-poly_powers_x = (0, 2, 4)
-poly_powers_y = (0, 2, 4)
+poly_powers_x = (0, 2, 4, 6)
+poly_powers_y = (0, 2, 4, 6)
 poly_per_mode = False    # If True, every mode has its own transform polynomial
 
 # Optimization parameters
@@ -67,7 +67,7 @@ def phase_gradient(x, y, k_r, k_t):
 amplitude_kwargs = {'waist': waist, 'r_pupil': 1}
 
 k_r = torch.tensor(np.arange(-2, 3).reshape(-1, 1))
-k_t = torch.tensor(np.arange(-2, 3).reshape(1, -1))
+k_t = torch.tensor(np.arange(-4, 5, 2).reshape(1, -1))
 phase_kwargs = {'k_r': k_r, 'k_t': k_t}
 
 # Mode plotting
