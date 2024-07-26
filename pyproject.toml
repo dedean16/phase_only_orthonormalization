@@ -21,10 +21,10 @@ optional = true
 pytest = "~7.0.0"
 
 
-[tool.poetry.group.default]
+[tool.poetry.group.torchdefault]
 optional = true
 
-[tool.poetry.group.default.dependencies]
+[tool.poetry.group.torchdefault.dependencies]
 torch = "^2.3.0"                # Platform default torch version = non-CUDA for Windows
 
 
