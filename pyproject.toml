@@ -1,5 +1,5 @@
 [tool.poetry]
-name = "phase_only_optimization"
+name = "phase_only_orthonormalization"
 version = "0.3.0"
 description = ""
 authors = ["Daniel Cox <danielcox16@hotmail.com>"]
