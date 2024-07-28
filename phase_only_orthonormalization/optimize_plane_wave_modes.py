@@ -116,8 +116,8 @@ if do_plot_end:
     subplot_index = (1 + np.flip(np.arange(n_rows * n_cols_basis).reshape((n_rows, n_cols_basis)), axis=0)
                      + (n_cols_basis+2) * np.flip(np.expand_dims(np.arange(n_rows), axis=1), axis=0)).ravel()
 
-    plt.figure(figsize=(16, 8))
-    plt.subplots_adjust(left=0.02, right=0.98, top=0.98, bottom=0.02)
+    fig = plt.figure(figsize=(16, 8))
+    plt.subplots_adjust(left=0.01, right=0.99, top=0.96, bottom=0.01)
 
     # Plot init functions
     for m, spi in enumerate(subplot_index):
@@ -138,7 +138,8 @@ if do_plot_end:
     ax_cw = plt.subplot(n_rows, 2*n_cols_basis+2, (center_spi, center_spi+1))
     complex_colorwheel(ax=ax_cw, shape=(150, 150))
 
-    #
+    # Title
+    fig.text(0.23, 0.985, 'a. Initial functions', ha='center', va='center', fontsize=14)
+    fig.text(0.77, 0.985, 'b. Our orthonormalized functions', ha='center', va='center', fontsize=14)
 
-plt.show()
-pass
+    plt.show()

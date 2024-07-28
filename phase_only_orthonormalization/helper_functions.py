@@ -105,11 +105,11 @@ def complex_colorwheel(ax: Axes = plt.gca(), shape: Tuple[int, int] = (100, 100)
     # Add arrows with annotations
     ax.annotate('', xy=(-0.98/np.sqrt(2),)*2, xytext=(0, 0), arrowprops={'color': 'white', 'width': 1.8,
         'headwidth': 5.0, 'headlength': 6.0, **arrow_props})
-    ax.text(-0.4, -0.8, amplitude_str, **{'color': 'white', 'fontsize': 15, **text_kwargs})
+    ax.text(**{'x': -0.4, 'y': -0.8, 's': amplitude_str, 'color': 'white', 'fontsize': 15, **text_kwargs})
     ax.annotate('', xy=(0, 0.9), xytext=(0.9, 0),
                 arrowprops={'connectionstyle': 'arc3,rad=0.4', 'color': 'white', 'width': 1.8, 'headwidth': 5.0,
                             'headlength': 6.0, **arrow_props})
-    ax.text(0.1, 0.5, phase_str, **{'color': 'white', 'fontsize': 15, **text_kwargs})
+    ax.text(**{'x': 0.1, 'y': 0.5, 's': phase_str, 'color': 'white', 'fontsize': 15, **text_kwargs})
 
     # Hide axes spines and ticks
     ax.set_xticks([])
