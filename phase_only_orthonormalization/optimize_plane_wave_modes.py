@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from mode_functions import optimize_modes, apo_gaussian
-from helper_functions import plot_field
+from helper_functions import plot_field, complex_colorwheel
 
 
 # ====== Settings ====== #
@@ -50,7 +50,8 @@ poly_per_mode = True    # If True, every mode has its own transform polynomial
 
 # Optimization parameters
 learning_rate = 2.0e-2
-iterations = 8001
+# iterations = 8001
+iterations = 5
 phase_grad_weight = 0.1
 
 
@@ -108,32 +109,36 @@ print('\nb:', b)
 
 # Plot end result
 if do_plot_end:
-    nrows = 5
-    ncols = 9
-    scale = 60
+    n_rows = 5
+    n_cols_basis = 9
+    scale = 1 / np.abs(init_modes[:, :, 0]).max()
 
-    plt.figure(figsize=(16, 6), dpi=80)
-    plt.tight_layout()
-    plt.subplots_adjust(left=0.04, right=0.96, top=0.96, bottom=0.04)
-    plt.suptitle('Initial modes')
+    subplot_index = (1 + np.flip(np.arange(n_rows * n_cols_basis).reshape((n_rows, n_cols_basis)), axis=0)
+                     + (n_cols_basis+2) * np.flip(np.expand_dims(np.arange(n_rows), axis=1), axis=0)).ravel()
 
-    # Loop over modes
-    for i in range(init_modes.shape[2]):
-        plt.subplot(nrows, ncols, i+1)
-        plot_field(init_modes[:, :, i], scale=scale)
+    plt.figure(figsize=(16, 8))
+    plt.subplots_adjust(left=0.02, right=0.98, top=0.98, bottom=0.02)
+
+    # Plot init functions
+    for m, spi in enumerate(subplot_index):
+        plt.subplot(n_rows, 2*n_cols_basis+2, spi)
+        plot_field(init_modes[:, :, m], scale=scale)
         plt.xticks([])
         plt.yticks([])
 
-
-    plt.figure(figsize=(16, 6), dpi=80)
-    plt.tight_layout()
-    plt.subplots_adjust(left=0.04, right=0.96, top=0.96, bottom=0.04)
-    plt.suptitle('New modes')
-
-    for i in range(new_modes.shape[2]):
-        plt.subplot(nrows, ncols, i+1)
-        plot_field(new_modes[:, :, i].detach(), scale=scale)
+    # Plot final functions
+    for m, spi in enumerate(subplot_index):
+        plt.subplot(n_rows, 2*n_cols_basis+2, spi+n_cols_basis+2)
+        plot_field(new_modes[:, :, m].detach(), scale=scale)
         plt.xticks([])
         plt.yticks([])
 
-    plt.show()
+    # Complex colorwheel
+    center_spi = int(n_cols_basis + 1 + np.floor(n_rows/2) * (2*n_cols_basis+2))
+    ax_cw = plt.subplot(n_rows, 2*n_cols_basis+2, (center_spi, center_spi+1))
+    complex_colorwheel(ax=ax_cw, shape=(150, 150))
+
+    #
+
+plt.show()
+pass
