@@ -410,17 +410,21 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
 
         # Original Gram matrix
         plt.subplot(1, 3, 1)
-        plt.imshow(init_gram.detach().cpu().abs())
-        plt.xlabel('index m')
-        plt.ylabel('index n')
+        plt.imshow(init_gram.detach().cpu().abs(), extent=(0.5, M+0.5, M+0.5, 0.5))
+        plt.xticks([])
+        plt.yticks([])
+        plt.xlabel('index n')
+        plt.ylabel('index m')
         plt.title(f'a. Initial Gram matrix')
         plt.colorbar()
 
         # New Gram matrix
         plt.subplot(1, 3, 2)
-        plt.imshow(gram.detach().cpu().abs())
-        plt.xlabel('index m')
-        plt.ylabel('index n')
+        plt.imshow(gram.detach().cpu().abs(), extent=(0.5, M+0.5, M+0.5, 0.5))
+        plt.xticks([])
+        plt.yticks([])
+        plt.xlabel('index n')
+        plt.ylabel('index m')
         plt.title(f'b. New Gram matrix')
         plt.colorbar()
 
