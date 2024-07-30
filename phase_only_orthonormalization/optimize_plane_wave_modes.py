@@ -96,7 +96,7 @@ ncols = 15
 
 
 # ====== Optimize modes ====== #
-a, b, new_modes, init_modes, x, y, wx, wy = optimize_modes(
+a, b, new_modes, init_modes = optimize_modes(
     domain=domain, amplitude_func=apo_gaussian, amplitude_kwargs=amplitude_kwargs, phase_func=phase_gradient,
     phase_kwargs=phase_kwargs, poly_per_mode=poly_per_mode, poly_powers_x=poly_powers_x, poly_powers_y=poly_powers_y,
     phase_grad_weight=phase_grad_weight, iterations=iterations,
@@ -112,6 +112,7 @@ print('\nb:', b)
 if do_plot_end:
     n_rows = 5
     n_cols_basis = 9
+    n_cols_total = 2 + 2*n_cols_basis
     scale = 1 / np.abs(init_modes[:, :, 0]).max()
 
     subplot_index = (1 + np.flip(np.arange(n_rows * n_cols_basis).reshape((n_rows, n_cols_basis)), axis=0)
@@ -122,21 +123,21 @@ if do_plot_end:
 
     # Plot init functions
     for m, spi in enumerate(subplot_index):
-        plt.subplot(n_rows, 2*n_cols_basis+2, spi)
+        plt.subplot(n_rows, n_cols_total, spi)
         plot_field(init_modes[:, :, m], scale=scale)
         plt.xticks([])
         plt.yticks([])
 
     # Plot final functions
     for m, spi in enumerate(subplot_index):
-        plt.subplot(n_rows, 2*n_cols_basis+2, spi+n_cols_basis+2)
+        plt.subplot(n_rows, n_cols_total, spi+n_cols_basis+2)
         plot_field(new_modes[:, :, m].detach(), scale=scale)
         plt.xticks([])
         plt.yticks([])
 
     # Complex colorwheel
-    center_spi = int(n_cols_basis + 1 + np.floor(n_rows/2) * (2*n_cols_basis+2))
-    ax_cw = plt.subplot(n_rows, 2*n_cols_basis+2, (center_spi, center_spi+1))
+    center_spi = int(n_cols_basis + 1 + np.floor(n_rows/2) * n_cols_total)
+    ax_cw = plt.subplot(n_rows, n_cols_total, (center_spi, center_spi+1))
     complex_colorwheel(ax=ax_cw, shape=(150, 150))
 
     # Title

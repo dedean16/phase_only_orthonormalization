@@ -476,4 +476,4 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
         plt.legend()
         plt.title('c. Error convergence')
 
-    return a, b, new_modes.squeeze(), init_modes.squeeze(), x, y, wx, wy
+    return a, b, new_modes.squeeze(), init_modes.squeeze()
