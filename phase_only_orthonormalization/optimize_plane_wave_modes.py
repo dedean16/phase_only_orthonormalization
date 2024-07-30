@@ -2,8 +2,8 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 
-from mode_functions import optimize_modes, apo_gaussian, coord_transform
-from helper_functions import complex_to_rgb, complex_colorwheel, grid_bitmap
+from mode_functions import optimize_modes, apo_gaussian
+from helper_functions import plot_field, complex_colorwheel
 
 
 # ====== Settings ====== #
@@ -67,14 +67,14 @@ def build_square_k_space(k_min, k_max):
         k_space (np.ndarray): A 2xN array of k-space coordinates.
     """
     # Generate kx and ky coordinates
-    kx_angles = np.arange(k_min, k_max + 1, 1)
+    ky_angles = np.arange(k_min, k_max + 1, 1)
     k_angles_min_even = (k_min if k_min % 2 == 0 else k_min + 1)        # Must be even
-    ky_angles = np.arange(k_angles_min_even, k_max + 1, 2)              # Steps of 2
+    kx_angles = np.arange(k_angles_min_even, k_max + 1, 2)              # Steps of 2
 
-    # Combine kx and ky coordinates into pairs
-    k_x = np.repeat(np.array(kx_angles)[np.newaxis, :], len(ky_angles), axis=0).flatten()
-    k_y = np.repeat(np.array(ky_angles)[:, np.newaxis], len(kx_angles), axis=1).flatten()
-    k_space = np.vstack((k_x, k_y))
+    # Combine ky and kx coordinates into pairs
+    k_y = np.repeat(np.array(ky_angles)[np.newaxis, :], len(kx_angles), axis=0).flatten()
+    k_x = np.repeat(np.array(kx_angles)[:, np.newaxis], len(ky_angles), axis=1).flatten()
+    k_space = np.vstack((k_y, k_x))
     return k_space
 
 
@@ -110,10 +110,6 @@ print('\nb:', b)
 
 # Plot end result
 if do_plot_end:
-    grid_length = 0.333
-    # line_width = 0.025
-    line_width = 0.0
-
     n_rows = 5
     n_cols_basis = 9
     scale = 1 / np.abs(init_modes[:, :, 0]).max()
@@ -125,20 +121,16 @@ if do_plot_end:
     plt.subplots_adjust(left=0.01, right=0.99, top=0.96, bottom=0.01)
 
     # Plot init functions
-    init_grid_image = grid_bitmap(x.detach().numpy(), y.detach().numpy(), grid_length, line_width)[:, :, :, 0, 0]
     for m, spi in enumerate(subplot_index):
         plt.subplot(n_rows, 2*n_cols_basis+2, spi)
-        init_rgb = np.clip(complex_to_rgb(init_modes[:, :, m].detach(), scale=scale) + init_grid_image, a_min=0, a_max=1)
-        plt.imshow(init_rgb)
+        plot_field(init_modes[:, :, m], scale=scale)
         plt.xticks([])
         plt.yticks([])
 
     # Plot final functions
-    new_grid_images = grid_bitmap(wx.detach().numpy(), wy.detach().numpy(), grid_length, line_width)[:, :, :, :, 0]
     for m, spi in enumerate(subplot_index):
         plt.subplot(n_rows, 2*n_cols_basis+2, spi+n_cols_basis+2)
-        new_rgb = np.clip(complex_to_rgb(new_modes[:, :, m].detach(), scale=scale) + new_grid_images[:, :, m], a_min=0, a_max=1)
-        plt.imshow(new_rgb)
+        plot_field(new_modes[:, :, m].detach(), scale=scale)
         plt.xticks([])
         plt.yticks([])
 
