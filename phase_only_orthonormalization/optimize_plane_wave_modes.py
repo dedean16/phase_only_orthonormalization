@@ -2,8 +2,8 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 
-from mode_functions import optimize_modes, apo_gaussian
-from helper_functions import plot_field, complex_colorwheel
+from mode_functions import optimize_modes, apo_gaussian, coord_transform
+from helper_functions import complex_to_rgb, complex_colorwheel, grid_bitmap
 
 
 # ====== Settings ====== #
@@ -20,6 +20,7 @@ do_plot_end = True
 save_path_plot = 'C:/LocalData/mode_optimization_frames_tilt'
 save_filename_plot = 'mode_optimization_it'
 save_path_coeffs = 'C:/LocalData'  # Where to save output
+plt.rcParams['font.size'] = 12
 
 # Note: Figures saved as images can be turned into a video with ffmpeg:
 # e.g.: ffmpeg -i mode_optimization_it%04d.png -framerate 60 -c:v libx265 -pix_fmt yuv420p -crf 20 mode_optimization.mp4
@@ -50,8 +51,8 @@ poly_per_mode = True    # If True, every mode has its own transform polynomial
 
 # Optimization parameters
 learning_rate = 2.0e-2
-# iterations = 8001
-iterations = 5
+iterations = 8001
+# iterations = 10
 phase_grad_weight = 0.1
 
 
@@ -95,7 +96,7 @@ ncols = 15
 
 
 # ====== Optimize modes ====== #
-a, b, new_modes, init_modes = optimize_modes(
+a, b, new_modes, init_modes, x, y, wx, wy = optimize_modes(
     domain=domain, amplitude_func=apo_gaussian, amplitude_kwargs=amplitude_kwargs, phase_func=phase_gradient,
     phase_kwargs=phase_kwargs, poly_per_mode=poly_per_mode, poly_powers_x=poly_powers_x, poly_powers_y=poly_powers_y,
     phase_grad_weight=phase_grad_weight, iterations=iterations,
@@ -109,6 +110,10 @@ print('\nb:', b)
 
 # Plot end result
 if do_plot_end:
+    grid_length = 0.333
+    # line_width = 0.025
+    line_width = 0.0
+
     n_rows = 5
     n_cols_basis = 9
     scale = 1 / np.abs(init_modes[:, :, 0]).max()
@@ -120,16 +125,20 @@ if do_plot_end:
     plt.subplots_adjust(left=0.01, right=0.99, top=0.96, bottom=0.01)
 
     # Plot init functions
+    init_grid_image = grid_bitmap(x.detach().numpy(), y.detach().numpy(), grid_length, line_width)[:, :, :, 0, 0]
     for m, spi in enumerate(subplot_index):
         plt.subplot(n_rows, 2*n_cols_basis+2, spi)
-        plot_field(init_modes[:, :, m], scale=scale)
+        init_rgb = np.clip(complex_to_rgb(init_modes[:, :, m].detach(), scale=scale) + init_grid_image, a_min=0, a_max=1)
+        plt.imshow(init_rgb)
         plt.xticks([])
         plt.yticks([])
 
     # Plot final functions
+    new_grid_images = grid_bitmap(wx.detach().numpy(), wy.detach().numpy(), grid_length, line_width)[:, :, :, :, 0]
     for m, spi in enumerate(subplot_index):
         plt.subplot(n_rows, 2*n_cols_basis+2, spi+n_cols_basis+2)
-        plot_field(new_modes[:, :, m].detach(), scale=scale)
+        new_rgb = np.clip(complex_to_rgb(new_modes[:, :, m].detach(), scale=scale) + new_grid_images[:, :, m], a_min=0, a_max=1)
+        plt.imshow(new_rgb)
         plt.xticks([])
         plt.yticks([])
 

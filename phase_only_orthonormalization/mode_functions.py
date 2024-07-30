@@ -7,7 +7,7 @@ import numpy as np
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
-from helper_functions import plot_field, mse
+from helper_functions import plot_field
 
 
 def inner(a, b, dim):
@@ -446,7 +446,7 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
 
     if do_plot:
         # Gram matrices and error evolution
-        plt.figure(figsize=(13, 4))
+        plt.figure(figsize=(13, 4), dpi=120)
         plt.subplots_adjust(left=0.05, right=0.98, top=0.93, bottom=0.13)
 
         # Original Gram matrix
@@ -455,6 +455,7 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
         plt.xlabel('index m')
         plt.ylabel('index n')
         plt.title(f'a. Initial Gram matrix')
+        plt.colorbar()
 
         # New Gram matrix
         plt.subplot(1, 3, 2)
@@ -462,16 +463,17 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
         plt.xlabel('index m')
         plt.ylabel('index n')
         plt.title(f'b. New Gram matrix')
+        plt.colorbar()
 
         # Error convergence
         plt.subplot(1, 3, 3)
+        plt.plot(errors, color='tab:red', label='Error=$\\mathcal{N} + w\\mathcal{G}$')
         plt.plot(non_orthogonalities, '--', color='tab:blue', label='$\\mathcal{N}$')
         plt.plot(phase_grad_weight*np.asarray(phase_grad_magsqs), ':', color='tab:green', label='$w\\mathcal{G}$')
-        plt.plot(errors, color='tab:red', label='Error=$\\mathcal{N} + w\\mathcal{G}$')
         plt.yscale('log')
         plt.xlim((0, iterations))
         plt.xlabel('Iteration')
         plt.legend()
         plt.title('c. Error convergence')
 
-    return a, b, new_modes.squeeze(), init_modes.squeeze()
+    return a, b, new_modes.squeeze(), init_modes.squeeze(), x, y, wx, wy

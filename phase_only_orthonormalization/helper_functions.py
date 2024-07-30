@@ -120,6 +120,24 @@ def complex_colorwheel(ax: Axes = plt.gca(), shape: Tuple[int, int] = (100, 100)
     ax.spines['bottom'].set_visible(False)
 
 
+def grid_bitmap(x, y, grid_length, line_width):
+    """
+    Create a bitmap image of a grid. The grid lines are set to 1. The grid cells interior to 0.
+
+    Args:
+        x: Input coordinate x.
+        y: Input coordinate y.
+        grid_length: Length of one grid cell.
+        line_width: Width of one grid line.
+
+    Returns:
+        Bitmap image of a grid.
+    """
+    x_map = (x % grid_length) > line_width
+    y_map = (y % grid_length) > line_width
+    return 1 - x_map * y_map
+
+
 def gitinfo() -> dict:
     """
     Return a dict with info about the current git commit and repository.
