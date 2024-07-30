@@ -1,4 +1,4 @@
-from typing import Tuple
+from typing import Tuple, Dict
 
 import torch
 from torch import Tensor as tt
@@ -184,12 +184,12 @@ def compute_modes(amplitude: tt, phase_func: callable, phase_kwargs: dict, x: tt
 
 
 def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, gram: tt, init_non_orthogonality: tt,
-                           non_orthogonality: tt, phase_grad_magsq: tt, errors,
+                           non_orthogonality: tt, phase_grad_magsq: tt, errors, domain: Dict,
                            non_orthogonalities, phase_grad_magsqs, scale, a, b, poly_powers_x, poly_powers_y,
                            do_plot_all_modes=True, nrows=3, ncols=5,
                            do_save_plot=False, save_path_plot='.', save_filename_plot='mode_optimization_it'):
     # Original Gram matrix
-    plt.subplot(nrows-1, 4, 1)
+    plt.subplot(nrows-1, 3, 1)
     plt.cla()
     plt.imshow(init_gram.detach().cpu().abs())
     plt.xlabel('mode index')
@@ -197,7 +197,7 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
     plt.title(f'Original Gram matrix\nnon-orthogonality = {init_non_orthogonality:.2f}')
 
     # New Gram matrix
-    plt.subplot(nrows-1, 4, 2)
+    plt.subplot(nrows-1, 3, 2)
     plt.cla()
     plt.imshow(gram.detach().cpu().abs())
     plt.xlabel('mode index')
@@ -205,27 +205,16 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
     plt.title(f'Gram matrix, it {it}\nnon-orthogonality = {non_orthogonality.detach().cpu():.5f}')
 
     # Error convergence
-    plt.subplot(nrows-1, 4, 3)
+    plt.subplot(nrows-1, 3, 3)
     plt.cla()
     plt.plot(errors, 'r', label='Error function')
-    plt.yscale('log')
-    plt.xlim((0, iterations))
-    plt.xlabel('Iteration')
-    plt.ylim((min([*errors, 0]), max(errors)))
-    plt.legend()
-    plt.title('Error convergence')
-
-    # Error term evolution
-    plt.subplot(nrows-1, 4, 4)
-    plt.cla()
     plt.plot(np.asarray(non_orthogonalities), label='non-orthogonality')
     plt.plot(np.asarray(phase_grad_magsqs), label='mean phase gradient')
     plt.yscale('log')
     plt.xlim((0, iterations))
     plt.xlabel('Iteration')
-    plt.ylim((0, 1))
     plt.legend()
-    plt.title('Error terms')
+    plt.title('Error convergence')
 
     if do_plot_all_modes:
         scale = 1 / modes[:, :, 0].abs().max().detach().cpu()
@@ -234,12 +223,15 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
         for i in range(modes.shape[2]):
             plt.subplot(nrows+1, ncols, i + 2*ncols + 1)
             plt.cla()
-            plot_field(modes[:, :, i, 0, 0].detach().cpu(), scale=scale, imshow_kwargs={'extent': (-1, 0, -1, 1)})
+            plot_field(modes[:, :, i, 0, 0].detach().cpu(), scale=scale,
+                       imshow_kwargs={'extent': (domain['x_min'], domain['x_max'], domain['y_min'], domain['y_max'])})
             plt.xticks([])
             plt.yticks([])
 
-            x_grid = torch.linspace(-1, 0, 1+8).view(1, -1, 1, 1, 1)  # Normalized x coords
-            y_grid = torch.linspace(-1, 1, 1+16).view(-1, 1, 1, 1, 1)  # Normalized y coords
+            grid_x = 1 + 8 * (domain['x_max'] - domain['x_min'])
+            grid_y = 1 + 8 * (domain['y_max'] - domain['y_min'])
+            x_grid = torch.linspace(domain['x_min'], domain['x_max'], grid_x).view(1, -1, 1, 1, 1)  # Normalized x
+            y_grid = torch.linspace(domain['y_min'], domain['y_max'], grid_y).view(-1, 1, 1, 1, 1)  # Normalized y
             r_mask = x_grid * x_grid + y_grid * y_grid > 1.01
             if a.shape[2] == 1:
                 m = 0
@@ -259,14 +251,14 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
             plt.plot(wx_grid.squeeze(), wy_grid.squeeze(), '-w', linewidth=0.5)
             plt.plot(wx_grid.squeeze().T, wy_grid.squeeze().T, '-w', linewidth=0.5)
             plt.plot()
-            plt.xlim((-1.05, 0.05))
-            plt.ylim((-1.05, 1.05))
+            plt.xlim((1.1 * domain['x_min'], 1.1 * domain['x_max']))
+            plt.ylim((1.1 * domain['y_min'], 1.1 * domain['y_max']))
 
     else:       # Plot only a few modes and a transform
         # Example mode 1
         plt.subplot(2, 4, 5)
         plt.cla()
-        mode1 = modes[:,:,0,0,0].detach().cpu()
+        mode1 = modes[:, :, 0, 0, 0].detach().cpu()
         plot_field(mode1, scale)
         plt.xticks([])
         plt.yticks([])
@@ -293,8 +285,10 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
 
         # Warped grid
         ### TODO: make arguments available
-        x_grid = torch.linspace(-1, 0, 11).view(1, -1, 1, 1, 1)  # Normalized x coords
-        y_grid = torch.linspace(-1, 1, 21).view(-1, 1, 1, 1, 1)  # Normalized y coords
+        grid_x = 1 + 8 * (domain['x_max'] - domain['x_min'])
+        grid_y = 1 + 8 * (domain['y_max'] - domain['y_min'])
+        x_grid = torch.linspace(domain['x_min'], domain['x_max'], grid_x).view(1, -1, 1, 1, 1)  # Normalized x coords
+        y_grid = torch.linspace(domain['y_min'], domain['y_max'], grid_y).view(-1, 1, 1, 1, 1)  # Normalized y coords
         r_mask = x_grid * x_grid + y_grid * y_grid > 1.01
         wx_grid, wy_grid = coord_transform(x_grid, y_grid, a[:, :, 0:1, :, :].detach().cpu(), b[:, :, 0:1, :, :].detach().cpu(), poly_powers_x, poly_powers_y)
         wx_grid[r_mask] = np.nan
@@ -309,14 +303,14 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
         plt.plot(wx_grid.squeeze(), wy_grid.squeeze(), '-k', linewidth=1)
         plt.plot(wx_grid.squeeze().T, wy_grid.squeeze().T, '-k', linewidth=1)
         plt.plot()
-        plt.xlim((-1.25, 0.1))
-        plt.ylim((-1.25, 1.25))
+        plt.xlim((1.2 * domain['x_min'], 1.2 * domain['x_max']))
+        plt.ylim((1.2 * domain['y_min'], 1.2 * domain['y_max']))
         plt.gca().set_aspect(1)
         plt.xlabel('warped x')
         plt.ylabel('warped y')
         plt.title('Warped pupil coords')
 
-    plt.pause(0.03)
+    plt.pause(0.05)
 
     if do_save_plot:
         plt.savefig(f'{save_path_plot}/{save_filename_plot}{it:04d}.png')
@@ -431,7 +425,7 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
         if do_plot and it % plot_per_its == 0:
             plot_mode_optimization(it=it, iterations=iterations, modes=new_modes, init_gram=init_gram, gram=gram,
                                    init_non_orthogonality=init_non_orthogonality, non_orthogonality=non_orthogonality,
-                                   phase_grad_magsq=phase_grad_magsq, errors=errors,
+                                   phase_grad_magsq=phase_grad_magsq, errors=errors, domain=domain,
                                    non_orthogonalities=non_orthogonalities, phase_grad_magsqs=phase_grad_magsqs,
                                    scale=60, a=a, b=b, poly_powers_x=poly_powers_x, poly_powers_y=poly_powers_y,
                                    do_save_plot=do_save_plot, save_path_plot=save_path_plot, nrows=nrows, ncols=ncols,
