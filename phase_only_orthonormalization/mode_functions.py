@@ -10,20 +10,30 @@ import matplotlib.pyplot as plt
 from helper_functions import plot_field
 
 
-def inner(a, b, dim):
-    """Inner product."""
-    return (a * b.conj()).sum(dim=dim)
+def inner(A: tt, B: tt, dim):
+    """
+    Inner product.
+
+    Args:
+        A, B: Tensors containields to compute inner product for.
+        dim: Tensor dimension to take the inner product over.
+
+    Returns: Inner product (Surprise, surprise!)
+    """
+    return (A * B.conj()).sum(dim=dim)
 
 
 def apo_gaussian(x: tt, y: tt, waist, r_pupil):
     """
-    Compute an apodized gaussian on the given x & y coordinates.
+    Compute an apodized Gaussian on the given x & y coordinates.
 
     Args:
-        x
-        y
-        waist
-        r_pupil
+        x: Tensor containing the x spatial coordinates.
+        y: Tensor containing the y spatial coordinates.
+        waist: Gaussian waist.
+        r_pupil: Pupil radius for apodization.
+    
+    Returns: Values for apodized Gaussian beam profile.
     """
     r_sq = x ** 2 + y ** 2
     return torch.exp(-(r_sq / waist**2)) * (r_sq <= r_pupil)
@@ -31,12 +41,20 @@ def apo_gaussian(x: tt, y: tt, waist, r_pupil):
 
 def coord_transform(x: tt, y: tt, a: tt, b: tt, poly_powers_x: Tuple[int, ...], poly_powers_y: Tuple[int, ...]):
     """
-    x: Xx1x1x1x1
-    y: 1xYx1x1x1
-    a: 1x1xMxNxN or 1x1x1xNxN
-    b: 1x1xMxNxN or 1x1x1xNxN
-    poly_powers_x: polynomial powers for x
-    poly_powers_y: polynomial powers for y
+    Bivariate polynomial coordinate transform.
+
+    Dim 0 and 1 are used for spatial coordinate index. Dim 2 for mode index. Dim 3 and 4 for polynomial power index.
+
+    Args:
+        x: 5D Tensor containing the x spatial coordinates.
+        y: 5D Tensor containing the y spatial coordinates.
+        a: 5D Tensor containing the x polynomial coefficients
+        b: 5D Tensor containing the y polynomial coefficients
+        poly_powers_x: polynomial powers for x
+        poly_powers_y: polynomial powers for y
+
+    Returns:
+        wx, wy: The transformed (warped) coordinates x' and y'.
     """
     if isinstance(a, np.ndarray):
         a = torch.from_numpy(a)
@@ -64,8 +82,8 @@ def compute_gram(modes: tt) -> tt:
     Compute Gram matrix from collection of modes.
 
     Args:
-        modes: a 3D tensor containing all 2D modes. Axis 0 and 1 are used for spatial axis,
-            and axis 2 is the mode index.
+        modes: a 3D tensor containing all 2D modes. Dim 0 and 1 are used for spatial coordinates,
+            and dim 2 is the mode index.
 
     Returns:
         gram: Gram matrix
@@ -84,36 +102,35 @@ def compute_non_orthonormality(modes: tt) -> Tuple[tt, tt]:
     """
     Compute non-orthonormality
 
-    Compute the non-orthonormality of a set of normalized modes. For orthonormal bases, this value is 0.
+    Compute the non-orthonormality of a set of modes. For orthonormal bases, this value is 0.
 
     Args:
-        modes: a 3D tensor containing all 2D modes. Axis 0 and 1 are used for spatial axis,
-            and axis 2 is the mode index.
+        modes: a tensor containing all 2D modes. Dim 0 and 1 are used for spatial coordinates,
+            and dim 2 is the mode index.
 
     Returns:
-        non_orthogonality: A measure for non-orthogonality of the input modes.
+        non_orthonormality: A measure for non-orthogonality of the input modes.
         gram: The Gram matrix for the input modes.
     """
     gram = compute_gram(modes.squeeze())
     M = gram.shape[0]
-    # norm_factor = M * (M-1)
     norm_factor = M
-    non_orthogonality = ((gram - torch.eye(*gram.shape)).abs().pow(2)).sum() / norm_factor
-    return non_orthogonality, gram
+    non_orthonormality = ((gram - torch.eye(*gram.shape)).abs().pow(2)).sum() / norm_factor
+    return non_orthonormality, gram
 
 
-def compute_phase_grad_magsq(amplitude, phase_grad0: tt, phase_grad1: tt, num_of_modes) -> tt:
+def compute_phase_grad_magsq(amplitude, phase_grad0: tt, phase_grad1: tt, num_of_modes: int) -> tt:
     """
-    Compute mode-mean squared error of x,y-mean squared phase gradients
+    Compute amplitude-weighted mean of the phase gradient magnitude squared.
 
     Args:
-        amplitude:
-        phase_grad0
-        phase_grad1
-        num_of_modes
+        amplitude: Tensor containing the amplitude.
+        phase_grad0: Phase gradient in dim 0 direction.
+        phase_grad1: Phase gradient in dim 1 direction.
+        num_of_modes: Number of modes.
 
     Returns:
-
+        The amplitude-weighted mean of the phase gradient magnitude squared.
     """
     norm_factor = amplitude.sum() * num_of_modes
     phase_grad_magsq = phase_grad0.abs().pow(2) + phase_grad1.abs().pow(2)
@@ -137,9 +154,9 @@ def compute_modes(amplitude: tt, phase_func: callable, phase_kwargs: dict, x: tt
         y: y coordinates for phase function.
 
     Returns:
-        modes:
-        phase_grad0:
-        phase_grad1:
+        modes: Tensor containing the modes (fields). Dim 0 and 1 are for the spatial coordinates. Dim 2 the mode index.
+        phase_grad0: Phase gradients in dim 0 direction.
+        phase_grad1: Phase gradients in dim 1 direction.
     """
     phase = phase_func(x, y, **phase_kwargs)
     modes = amplitude * torch.exp(1j * phase)
@@ -292,18 +309,16 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
     Optimize modes
 
     Args:
-        domain: Specifies x,y limits.
+        domain: Dict that specifies x,y limits.
         amplitude_func: Function that returns the amplitude on given x,y coordinates.
         phase_func: Function that returns the phase on given x,y coordinates.
         amplitude_kwargs: Keyword arguments for the amplitude function.
         phase_kwargs: Keyword arguments for the phase function.
-        poly_degree: The polynomial degree of the bivariate polynomial transform.
         poly_per_mode: If True, each mode will have its own unique transform. If False, one transform is used for every
             mode.
         poly_powers_x: Polynomial powers for x in coordinate transform.
         poly_powers_y: Polynomial powers for y in coordinate transform.
         extra_params: Extra parameters to optimize with the optimization algorithm.
-        similarity_weight: Weight factor for the mode similarity.
         phase_grad_weight: Weight factor for the phase gradient.
         iterations: Number of iterations for the optimizer.
         learning_rate: Learning rate for the optimizer.
@@ -316,6 +331,12 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
         ncols: Number of columns in the plot.
         do_plot_all_modes: If True, plot all modes, instead of a few selected ones.
         save_filename_plot: Filename for each plot. A suffix with the iteration number will be added.
+
+    Returns:
+        a: x transform coefficients
+        b: y transform coefficients
+        new_modes: Array containing the new orthonormal modes
+        init_modes: Array containing the initial modes
     """
     # Compute initial coordinates and amplitude profile
     x = torch.linspace(domain['x_min'], domain['x_max'], domain['yxshape'][1]).view(1, -1, 1, 1, 1)  # x coords
@@ -326,8 +347,6 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
     # Compute initial modes
     init_modes_graph, init_phase_grad0_graph, init_phase_grad1_graph = compute_modes(amplitude, phase_func, phase_kwargs, x, y)
     init_modes = init_modes_graph.detach()
-    init_phase_grad0 = init_phase_grad0_graph.detach()
-    init_phase_grad1 = init_phase_grad1_graph.detach()
 
     # Determine coefficients shape
     M = init_modes.shape[2]
