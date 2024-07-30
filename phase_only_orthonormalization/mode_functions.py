@@ -424,8 +424,8 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
 
     if do_plot:
         # Gram matrices and error evolution
-        plt.figure(figsize=(13, 4), dpi=120)
-        plt.subplots_adjust(left=0.05, right=0.98, top=0.93, bottom=0.13)
+        plt.figure(figsize=(14, 4), dpi=120)
+        plt.subplots_adjust(left=0.06, right=0.98, top=0.93, bottom=0.13)
 
         # Original Gram matrix
         plt.subplot(1, 3, 1)
