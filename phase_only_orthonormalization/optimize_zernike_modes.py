@@ -32,7 +32,6 @@ domain = {
     'x_max': 1,
     'y_min': -1,
     'y_max': 1,
-    'r_pupil': 1,
     'yxshape': (100, 100),           # Number of samples in each spatial direction
 }
 

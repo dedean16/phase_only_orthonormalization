@@ -80,11 +80,11 @@ def compute_gram(modes: tt) -> tt:
     return gram
 
 
-def compute_non_orthogonality(modes: tt) -> Tuple[tt, tt]:
+def compute_non_orthonormality(modes: tt) -> Tuple[tt, tt]:
     """
-    Compute non-orthogonality
+    Compute non-orthonormality
 
-    Compute the non-orthogonality of a set of normalized modes. For orthonormal bases, this value is 0.
+    Compute the non-orthonormality of a set of normalized modes. For orthonormal bases, this value is 0.
 
     Args:
         modes: a 3D tensor containing all 2D modes. Axis 0 and 1 are used for spatial axis,
@@ -100,21 +100,6 @@ def compute_non_orthogonality(modes: tt) -> Tuple[tt, tt]:
     norm_factor = M
     non_orthogonality = ((gram - torch.eye(*gram.shape)).abs().pow(2)).sum() / norm_factor
     return non_orthogonality, gram
-
-
-def compute_similarity(modes1: tt, modes2: tt) -> tt:
-    """
-    Compute the similarity between two sets of normalized modes. If modes1 and modes2 are equal and normalized,
-    this function returns 1.
-
-    Args:
-        modes1 and modes2: 3D arrays containing all 2D modes. Axis 0 and 1 are used for spatial axis,
-            and axis 2 is the mode index.
-
-    Returns:
-        similarity
-    """
-    return inner(modes1, modes2, dim=(0, 1)).abs().sum() / modes1.shape[2]
 
 
 def compute_phase_grad_magsq(amplitude, phase_grad0: tt, phase_grad1: tt, num_of_modes) -> tt:
@@ -134,25 +119,6 @@ def compute_phase_grad_magsq(amplitude, phase_grad0: tt, phase_grad1: tt, num_of
     phase_grad_magsq = phase_grad0.abs().pow(2) + phase_grad1.abs().pow(2)
     mean_phase_grad_magsq = (amplitude * phase_grad_magsq).sum() / norm_factor
     return mean_phase_grad_magsq
-
-
-def compute_coordinate_similarity(x_init: tt, y_init: tt, x_new: tt, y_new: tt, amplitude: tt, num_modes: int | tt) \
-        -> tt:
-    """
-    Compute coordinate similarity, i.e. a metric of how close the transformed coordinates are to the initial ones. The
-    coordinate similarity is computed as the weighted mean square error of the initial and new coordinates.
-
-    Args:
-        x_init, y_init: Tensor of initial x,y coordinates.
-        x_new, y_new: Tensor of transformed x,y coordinates.
-        amplitude: Tensor containing the amplitude at x_init, y_init.
-        num_modes: Number of modes.
-
-    Returns:
-        coordinate similarity
-    """
-    norm_factor = amplitude.sum() * x_init.shape[2]
-    return (amplitude * ((x_init - x_new).abs().pow(2) + (y_init - y_new).abs().pow(2))).sum() / norm_factor
 
 
 def compute_modes(amplitude: tt, phase_func: callable, phase_kwargs: dict, x: tt, y: tt) -> Tuple[tt, tt, tt]:
@@ -381,8 +347,7 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
     b.requires_grad = True
 
     # Compute initial values
-    init_non_orthogonality, init_gram = compute_non_orthogonality(init_modes)
-    init_similarity = compute_similarity(init_modes, init_modes)
+    init_non_orthogonality, init_gram = compute_non_orthonormality(init_modes)
 
     # Create dictionary of parameters to optimize
     params = [{'lr': learning_rate, 'params': [a, b]}, {'lr': learning_rate, 'params': extra_params.values()}]
@@ -412,7 +377,7 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
         new_modes, new_phase_grad0, new_phase_grad1 = compute_modes(amplitude, phase_func, phase_kwargs, wx, wy)
 
         # Compute error
-        non_orthogonality, gram = compute_non_orthogonality(new_modes)
+        non_orthogonality, gram = compute_non_orthonormality(new_modes)
         phase_grad_magsq = compute_phase_grad_magsq(amplitude, new_phase_grad0, new_phase_grad1, M)
         error = non_orthogonality + phase_grad_weight * phase_grad_magsq
 
