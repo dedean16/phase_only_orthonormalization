@@ -73,13 +73,14 @@ def zernike_phases(x, y, phase_coeffs, js, dtype=torch.float32):
     Compute the phases of a set of zernike modes.
 
     Args:
-        x and y:
-        phase_coeffs:
-        js:
-        dtype:
+        x and y: 5D torch tensors containing the spatial coordinates. Dim 0 and 1 are for spatial coordinates. Dim 2 is
+            for the mode index.
+        phase_coeffs: Coefficient to multiply with the Zernike polynomial.
+        js: Zernike polynomial indices.
+        dtype: Data type.
 
     Returns:
-
+        Torch tensor of Zernike polynomials.
     """
     phases = torch.zeros(y.shape[0], x.shape[1], phase_coeffs.shape[0], 1, 1, dtype=dtype)
     for i_mode in range(phase_coeffs.shape[0]):         # Loop over modes
@@ -113,18 +114,21 @@ print('\nphase_coeffs:', phase_coeffs)
 
 # Plot end result
 if do_plot_end:
+    # Prepare layout
     n_rows = 4
     n_cols_basis = 5                                                # Number of columns on one side
     n_cols_total = 1 + 2*n_cols_basis                               # Number of columns on whole subplot grid
     spi_skip = 10                                                   # Skip this subplot position
-    scale = 1 / np.abs(init_modes[:, :, 0]).max()
 
+    # Prepare subplot indices
     subplot_index_half_grid = 1 + np.arange(n_rows * n_cols_basis).reshape((n_rows, n_cols_basis))
     subplot_index = np.delete(((subplot_index_half_grid
         + (n_cols_basis + 1) * np.expand_dims(np.arange(n_rows), axis=1)).ravel()), spi_skip)
 
+    # Initialize figure with subplots
     fig = plt.figure(figsize=(16, 6.2))
     plt.subplots_adjust(left=0.01, right=0.99, top=0.95, bottom=0.02, wspace=0.05, hspace=0.01)
+    scale = 1 / np.abs(init_modes[:, :, 0]).max()
 
     # Plot init functions
     for m, spi in enumerate(subplot_index):
@@ -141,7 +145,6 @@ if do_plot_end:
         plt.yticks([])
 
     # Complex colorwheel
-    # center_spi = int(n_cols_basis + 1 + np.floor(n_rows/2) * n_cols_total)
     center_spi = int(np.ceil(n_cols_total / 2))
     ax_cw = plt.subplot(1, n_cols_total, center_spi)
     complex_colorwheel(ax=ax_cw, shape=(150, 150))
