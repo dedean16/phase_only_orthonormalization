@@ -6,7 +6,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 
 from zernike_functions import zernike_cart, zernike_order
-from helper_functions import plot_field
+from helper_functions import plot_field, complex_colorwheel
 from mode_functions import optimize_modes, apo_gaussian
 
 
@@ -24,6 +24,7 @@ do_save_plot = False
 save_path_plot = 'C:/LocalData/mode_optimization_frames'   ### TODO: check if directory exists
 save_filename_plot = 'mode_optimization_zernike_it'
 save_path_coeffs = 'C:/LocalData'  # Where to save output
+plt.rcParams['font.size'] = 12
 
 # Domain
 domain = {
@@ -49,6 +50,7 @@ poly_per_mode = True    # If True, every mode has its own transform polynomial
 # Optimization parameters
 learning_rate = 1.5e-2
 iterations = 8000
+# iterations = 10
 phase_grad_weight = 2.0
 
 
@@ -112,32 +114,41 @@ print('\nphase_coeffs:', phase_coeffs)
 
 # Plot end result
 if do_plot_end:
-    nrows = 2
-    ncols = num_of_j
-    scale = 60
+    n_rows = 4
+    n_cols_basis = 5                                                # Number of columns on one side
+    n_cols_total = 1 + 2*n_cols_basis                               # Number of columns on whole subplot grid
+    spi_skip = 10                                                   # Skip this subplot position
+    scale = 1 / np.abs(init_modes[:, :, 0]).max()
 
-    plt.figure(figsize=(16, 6), dpi=80)
-    plt.tight_layout()
-    plt.subplots_adjust(left=0.04, right=0.96, top=0.96, bottom=0.04)
-    plt.suptitle('Initial modes')
+    subplot_index_half_grid = 1 + np.arange(n_rows * n_cols_basis).reshape((n_rows, n_cols_basis))
+    subplot_index = np.delete(((subplot_index_half_grid
+        + (n_cols_basis + 1) * np.expand_dims(np.arange(n_rows), axis=1)).ravel()), spi_skip)
 
-    # Loop over modes
-    for i in range(init_modes.shape[2]):
-        plt.subplot(nrows, ncols, i+1)
-        plot_field(init_modes[:, :, i], scale=scale)
+    fig = plt.figure(figsize=(16, 6.2))
+    plt.subplots_adjust(left=0.01, right=0.99, top=0.95, bottom=0.02, wspace=0.05, hspace=0.01)
+
+    # Plot init functions
+    for m, spi in enumerate(subplot_index):
+        plt.subplot(n_rows, n_cols_total, spi)
+        plot_field(init_modes[:, :, m], scale=scale)
         plt.xticks([])
         plt.yticks([])
 
-
-    plt.figure(figsize=(16, 6), dpi=80)
-    plt.tight_layout()
-    plt.subplots_adjust(left=0.04, right=0.96, top=0.96, bottom=0.04)
-    plt.suptitle('New modes')
-
-    for i in range(new_modes.shape[2]):
-        plt.subplot(nrows, ncols, i+1)
-        plot_field(new_modes[:, :, i].detach(), scale=scale)
+    # Plot final functions
+    for m, spi in enumerate(subplot_index):
+        plt.subplot(n_rows, n_cols_total, spi + n_cols_basis + 1)
+        plot_field(new_modes[:, :, m].detach(), scale=scale)
         plt.xticks([])
         plt.yticks([])
+
+    # Complex colorwheel
+    # center_spi = int(n_cols_basis + 1 + np.floor(n_rows/2) * n_cols_total)
+    center_spi = int(np.ceil(n_cols_total / 2))
+    ax_cw = plt.subplot(1, n_cols_total, center_spi)
+    complex_colorwheel(ax=ax_cw, shape=(150, 150))
+
+    # Title
+    fig.text(0.23, 0.98, 'a. Initial functions', ha='center', va='center', fontsize=14)
+    fig.text(0.77, 0.98, 'b. Our orthonormalized functions', ha='center', va='center', fontsize=14)
 
     plt.show()
