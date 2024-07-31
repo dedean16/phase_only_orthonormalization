@@ -37,8 +37,14 @@ domain = {
 # Gaussian shape parameters
 NA = 0.8  # Numerical Aperture
 f_obj1_m = 12.5e-3  # Objective focal length in m
-waist_m = 2 * 5.9e-3  # Fit beam profile gaussian width in m
-waist = waist_m / (NA * f_obj1_m)
+pupil_radius_m = NA * f_obj1_m  # Radius of the objective pupil in meters
+waist_radius_m = 2 * 5.9e-3  # Gaussian waist radius of amplitude profile on pupil plane in meters.
+waist = waist_radius_m / pupil_radius_m  # Normalized waist radius for amplitude profile on pupil plane
+
+# Note:
+# (waist_radius_m for amplitude on pupil) = 2 * sqrt(2) * (waist_radius_m for intensity on SLM)
+# Factor 2 is from SLM to pupil magnification (focal distances are 150mm and 300mm)
+# Factor sqrt(2) is from intensity Gaussian profile to amplitude Gaussian profile
 
 # Mode settings
 k_max = 4
