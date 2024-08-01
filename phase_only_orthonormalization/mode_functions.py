@@ -132,9 +132,8 @@ def compute_phase_grad_magsq(amplitude, phase_grad0: tt, phase_grad1: tt, num_of
     Returns:
         The amplitude-weighted mean of the phase gradient magnitude squared.
     """
-    norm_factor = amplitude.sum() * num_of_modes
     phase_grad_magsq = phase_grad0.abs().pow(2) + phase_grad1.abs().pow(2)
-    mean_phase_grad_magsq = (amplitude * phase_grad_magsq).sum() / norm_factor
+    mean_phase_grad_magsq = (amplitude.abs().pow(2) * phase_grad_magsq).sum() / num_of_modes
     return mean_phase_grad_magsq
 
 
