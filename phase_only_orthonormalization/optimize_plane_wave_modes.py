@@ -50,15 +50,15 @@ waist = waist_radius_m / pupil_radius_m  # Normalized waist radius for amplitude
 k_max = 4
 
 # Coefficients
-poly_powers_x = (0, 2, 4, 6, 8, 10)
+poly_powers_x = (0, 1, 2, 3, 4, 5, 6, 7)
 poly_powers_y = (0, 2, 4, 6, 8, 10)
 poly_per_mode = True    # If True, every mode has its own transform polynomial
 
 # Optimization parameters
-learning_rate = 2.0e-2
+learning_rate = 1.0e-2
 iterations = 8001
 # iterations = 10
-phase_grad_weight = 0.1
+phase_grad_weight = 0.2
 
 
 # ====== Initial basis ====== #
