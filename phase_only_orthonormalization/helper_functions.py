@@ -98,9 +98,8 @@ def complex_colorwheel(ax: Axes = plt.gca(), shape: Tuple[int, int] = (100, 100)
     rgb = complex_to_rgb(z, scale=1)
     step_width = 1.5 / shape[1]
     blend = np.expand_dims(slope_step(1 - np.abs(z) - step_width, width=step_width), axis=2)
-    rgb_wheel = linear_blend(rgb, 1, blend)
-    rgb_wheel[np.abs(z) >= 1] = np.nan
-    ax.imshow(rgb_wheel, extent=(-1, 1, -1, 1), **imshow_kwargs)
+    rgba_wheel = np.concatenate((rgb, blend), axis=2)
+    ax.imshow(rgba_wheel, extent=(-1, 1, -1, 1), **imshow_kwargs)
 
     # Add arrows with annotations
     ax.annotate('', xy=(-0.98/np.sqrt(2),)*2, xytext=(0, 0), arrowprops={'color': 'white', 'width': 1.8,
