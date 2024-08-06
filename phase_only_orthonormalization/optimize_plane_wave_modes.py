@@ -153,9 +153,27 @@ if do_plot_end:
     # === Jacobian === #
     x, y = get_coords(domain)
     wx, wy, jacobian = coord_transform(x=x, y=y, a=a, b=b, p_tuple=p_tuple, q_tuple=q_tuple, compute_jacobian=True)
+    amplitude_unnorm = trunc_gaussian(x, y, **amplitude_kwargs)
 
     plt.figure()
     plt.imshow(jacobian[:, :, 0, 0, 0].abs().detach(), vmin=0, vmax=10)
+    plt.title('$|J|$')
+    plt.xticks([])
+    plt.yticks([])
+    plt.colorbar()
+
+    plt.figure()
+    plt.imshow(amplitude_unnorm[:, :, 0, 0, 0].detach(), vmin=0, vmax=1)
+    plt.title('$A/A_0$')
+    plt.xticks([])
+    plt.yticks([])
+    plt.colorbar()
+
+    plt.figure()
+    plt.imshow((amplitude_unnorm*jacobian.abs())[:, :, 0, 0, 0].detach(), vmin=0, vmax=3)
+    plt.title('$A|J|/A_0$')
+    plt.xticks([])
+    plt.yticks([])
     plt.colorbar()
 
     plt.show()
