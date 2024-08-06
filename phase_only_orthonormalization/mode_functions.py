@@ -23,38 +23,67 @@ def inner(A: tt, B: tt, dim):
     return (A * B.conj()).sum(dim=dim)
 
 
-def apo_gaussian(x: tt, y: tt, waist, r_pupil):
+def get_coords(domain: dict):
     """
-    Compute an apodized Gaussian on the given x & y coordinates.
+    Get x, y coordinates as specified with a domain dictionary.
+
+    Args:
+        domain: Dictionary defining the domain and sampling resolution, with keys:
+            'x_min': Minimum x value.
+            'x_max': Maximum x value.
+            'y_min': Minimum y value.
+            'y_max': Maximum y value.
+            'yxshape': Tuple that defines the number of samples in y and x.
+
+    Returns:
+        x, y: Tensors containing coordinates.
+    """
+    x = torch.linspace(domain['x_min'], domain['x_max'], domain['yxshape'][1]).view(1, -1, 1, 1, 1)  # x coords
+    y = torch.linspace(domain['y_min'], domain['y_max'], domain['yxshape'][0]).view(-1, 1, 1, 1, 1)  # y coords
+    return x, y
+
+
+def trunc_gaussian(x: tt, y: tt, waist, r_pupil):
+    """
+    Compute an truncated Gaussian on the given x & y coordinates.
 
     Args:
         x: Tensor containing the x spatial coordinates.
         y: Tensor containing the y spatial coordinates.
         waist: Gaussian waist.
-        r_pupil: Pupil radius for apodization.
+        r_pupil: Pupil radius for truncation.
     
-    Returns: Values for apodized Gaussian beam profile.
+    Returns: Values for truncated Gaussian beam profile.
     """
     r_sq = x ** 2 + y ** 2
     return torch.exp(-(r_sq / waist**2)) * (r_sq <= r_pupil)
 
 
-def coord_transform(x: tt, y: tt, a: tt, b: tt, poly_powers_x: Tuple[int, ...], poly_powers_y: Tuple[int, ...]):
+def coord_transform(x: tt, y: tt, a: tt, b: tt, p_tuple: Tuple[int, ...], q_tuple: Tuple[int, ...],
+                    compute_jacobian: bool = False):
     """
-    Bivariate polynomial coordinate transform.
+    Coordinate transform.
+
+    Bivariate polynomial coordinate transform of the form:
+        x' = x ∑∑ α x^p y^q
+        y' = y ∑∑ ϐ x^p y^q
+    where α,ϐ contain the polynomial coefficients, and have indices m, p, q. m is the mode index. The double sum ∑∑ run
+    over all p, q.
 
     Dim 0 and 1 are used for spatial coordinate index. Dim 2 for mode index. Dim 3 and 4 for polynomial power index.
 
     Args:
         x: 5D Tensor containing the x spatial coordinates.
         y: 5D Tensor containing the y spatial coordinates.
-        a: 5D Tensor containing the x polynomial coefficients
-        b: 5D Tensor containing the y polynomial coefficients
-        poly_powers_x: polynomial powers for x
-        poly_powers_y: polynomial powers for y
+        a: 5D Tensor containing the x polynomial coefficients (alpha)
+        b: 5D Tensor containing the y polynomial coefficients (beta)
+        p_tuple: list of polynomial powers for x
+        q_tuple: list of polynomial powers for y
+        compute_jacobian: If True, also compute and return the
 
     Returns:
         wx, wy: The transformed (warped) coordinates x' and y'.
+        jacobian: Returned if compute_jacobian is True. Jacobian of the transformation.
     """
     if isinstance(a, np.ndarray):
         a = torch.from_numpy(a)
@@ -63,18 +92,30 @@ def coord_transform(x: tt, y: tt, a: tt, b: tt, poly_powers_x: Tuple[int, ...], 
     assert a.shape == b.shape
 
     # Create arrays of powers
-    xpows = torch.tensor(poly_powers_x).view(1, 1, 1, -1, 1)
-    ypows = torch.tensor(poly_powers_y).view(1, 1, 1, 1, -1)
+    p = torch.tensor(p_tuple).view(1, 1, 1, -1, 1)    # p
+    q = torch.tensor(q_tuple).view(1, 1, 1, 1, -1)    # q
 
     # Raise x and y to even powers
-    x_to_powers = x ** xpows
-    y_to_powers = y ** ypows
+    x_pow_p = x ** p    # x^p
+    y_pow_q = y ** q    # y^q
 
     # Multiply all factors and sum to create the polynomial
-    wx = (a * x * x_to_powers * y_to_powers).sum(dim=(3, 4), keepdim=True)
-    wy = (b * y * x_to_powers * y_to_powers).sum(dim=(3, 4), keepdim=True)
+    wx = (a * x * x_pow_p * y_pow_q).sum(dim=(3, 4), keepdim=True)
+    wy = (b * y * x_pow_p * y_pow_q).sum(dim=(3, 4), keepdim=True)
 
-    return wx, wy
+    # Compute and return Jacobian, only if requested
+    if compute_jacobian:
+        # Derivatives
+        dwx_dx = ((p+1) * a * x_pow_p * y_pow_q).sum(dim=(3, 4), keepdim=True)
+        dwx_dy = (q * x * a * x_pow_p * y**(q-1)).sum(dim=(3, 4), keepdim=True)
+        dwy_dy = ((q+1) * b * y_pow_q * x_pow_p).sum(dim=(3, 4), keepdim=True)
+        dwy_dx = (p * y * b * y_pow_q * x**(p-1)).sum(dim=(3, 4), keepdim=True)
+
+        jacobian = dwx_dx * dwy_dy - dwx_dy * dwy_dx
+        return wx, wy, jacobian
+
+    else:
+        return wx, wy
 
 
 def compute_gram(modes: tt) -> tt:
@@ -167,7 +208,7 @@ def compute_modes(amplitude: tt, phase_func: callable, phase_kwargs: dict, x: tt
 
 def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, gram: tt, init_non_orthogonality: tt,
                            non_orthogonality: tt, phase_grad_magsq: tt, errors, domain: Dict,
-                           non_orthogonalities, phase_grad_magsqs, scale, a, b, poly_powers_x, poly_powers_y,
+                           non_orthogonalities, phase_grad_magsqs, scale, a, b, p_tuple, q_tuple,
                            do_plot_all_modes=True, nrows=3, ncols=5,
                            do_save_plot=False, save_path_plot='.', save_filename_plot='mode_optimization_it'):
     # Original Gram matrix
@@ -220,14 +261,14 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
             else:
                 m = i
 
-            wx_grid, wy_grid = coord_transform(x_grid, y_grid, a[:, :, m:m+1, :, :].detach().cpu(), b[:, :, m:m+1, :, :].detach().cpu(), poly_powers_x, poly_powers_y)
+            wx_grid, wy_grid = coord_transform(x_grid, y_grid, a[:, :, m:m+1, :, :].detach().cpu(), b[:, :, m:m+1, :, :].detach().cpu(), p_tuple, q_tuple)
             wx_grid[r_mask] = np.nan
             wy_grid[r_mask] = np.nan
             # Warped arc
             phi_arc = torch.linspace(np.pi / 2, 3 * np.pi / 2, 60)
             x_arc = torch.cos(phi_arc).view(-1, 1, 1, 1, 1)
             y_arc = torch.sin(phi_arc).view(-1, 1, 1, 1, 1)
-            wx_arc, wy_arc = coord_transform(x_arc, y_arc, a[:, :, m:m+1, :, :].detach().cpu(), b[:, :, m:m+1, :, :].detach().cpu(), poly_powers_x, poly_powers_y)
+            wx_arc, wy_arc = coord_transform(x_arc, y_arc, a[:, :, m:m+1, :, :].detach().cpu(), b[:, :, m:m+1, :, :].detach().cpu(), p_tuple, q_tuple)
             # Plot
             plt.plot(wx_arc.squeeze(), wy_arc.squeeze(), '-', linewidth=0.5)
             plt.plot(wx_grid.squeeze(), wy_grid.squeeze(), '-w', linewidth=0.5)
@@ -272,14 +313,14 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
         x_grid = torch.linspace(domain['x_min'], domain['x_max'], grid_x).view(1, -1, 1, 1, 1)  # Normalized x coords
         y_grid = torch.linspace(domain['y_min'], domain['y_max'], grid_y).view(-1, 1, 1, 1, 1)  # Normalized y coords
         r_mask = x_grid * x_grid + y_grid * y_grid > 1.01
-        wx_grid, wy_grid = coord_transform(x_grid, y_grid, a[:, :, 0:1, :, :].detach().cpu(), b[:, :, 0:1, :, :].detach().cpu(), poly_powers_x, poly_powers_y)
+        wx_grid, wy_grid = coord_transform(x_grid, y_grid, a[:, :, 0:1, :, :].detach().cpu(), b[:, :, 0:1, :, :].detach().cpu(), p_tuple, q_tuple)
         wx_grid[r_mask] = np.nan
         wy_grid[r_mask] = np.nan
         # Warped arc
         phi_arc = torch.linspace(np.pi / 2, 3 * np.pi / 2, 80)
         x_arc = torch.cos(phi_arc).view(-1, 1, 1, 1, 1)
         y_arc = torch.sin(phi_arc).view(-1, 1, 1, 1, 1)
-        wx_arc, wy_arc = coord_transform(x_arc, y_arc, a[:, :, 0:1, :, :].detach().cpu(), b[:, :, 0:1, :, :].detach().cpu(), poly_powers_x, poly_powers_y)
+        wx_arc, wy_arc = coord_transform(x_arc, y_arc, a[:, :, 0:1, :, :].detach().cpu(), b[:, :, 0:1, :, :].detach().cpu(), p_tuple, q_tuple)
         # Plot
         plt.plot(wx_arc.squeeze(), wy_arc.squeeze(), '-', linewidth=1)
         plt.plot(wx_grid.squeeze(), wy_grid.squeeze(), '-k', linewidth=1)
@@ -299,8 +340,8 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
 
 
 def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable, amplitude_kwargs: dict = {},
-                   phase_kwargs: dict = {}, poly_per_mode: bool = True, poly_powers_x: Tuple = (0, 2, 4, 6),
-                   poly_powers_y: Tuple = (0, 2, 4, 6), extra_params: dict = {}, phase_grad_weight: float = 0.1,
+                   phase_kwargs: dict = {}, poly_per_mode: bool = True, p_tuple: Tuple = (0, 2, 4, 6),
+                   q_tuple: Tuple = (0, 2, 4, 6), extra_params: dict = {}, phase_grad_weight: float = 0.1,
                    iterations: int = 500, learning_rate: float = 0.02, optimizer: Optimizer = None, do_plot: bool =
                    True, plot_per_its: int = 10, do_save_plot: bool = False, save_path_plot: str = '.', nrows=3,
                    ncols=5, do_plot_all_modes=True, save_filename_plot='mode_optimization_it'):
@@ -308,17 +349,17 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
     Optimize modes
 
     Args:
-        domain: Dict that specifies x,y limits.
+        domain: Dict that specifies x,y limits and sampling, see get_coords documentation for detailed info.
         amplitude_func: Function that returns the amplitude on given x,y coordinates.
         phase_func: Function that returns the phase on given x,y coordinates.
         amplitude_kwargs: Keyword arguments for the amplitude function.
         phase_kwargs: Keyword arguments for the phase function.
         poly_per_mode: If True, each mode will have its own unique transform. If False, one transform is used for every
             mode.
-        poly_powers_x: Polynomial powers for x in coordinate transform.
-        poly_powers_y: Polynomial powers for y in coordinate transform.
+        p_tuple: Polynomial powers for x in coordinate transform.
+        q_tuple: Polynomial powers for y in coordinate transform.
         extra_params: Extra parameters to optimize with the optimization algorithm.
-        phase_grad_weight: Weight factor for the phase gradient.
+        phase_grad_weight: Weight factor for the phase gradient. 1/w² in the paper.
         iterations: Number of iterations for the optimizer.
         learning_rate: Learning rate for the optimizer.
         optimizer: If not None, overrides the default optimizer instance.
@@ -338,8 +379,7 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
         init_modes: Array containing the initial modes
     """
     # Compute initial coordinates and amplitude profile
-    x = torch.linspace(domain['x_min'], domain['x_max'], domain['yxshape'][1]).view(1, -1, 1, 1, 1)  # x coords
-    y = torch.linspace(domain['y_min'], domain['y_max'], domain['yxshape'][0]).view(-1, 1, 1, 1, 1)  # y coords
+    x, y = get_coords(domain)
     amplitude_unnorm = amplitude_func(x, y, **amplitude_kwargs)
     amplitude = amplitude_unnorm / amplitude_unnorm.abs().pow(2).sum().sqrt()
 
@@ -349,8 +389,8 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
 
     # Determine coefficients shape
     M = init_modes.shape[2]
-    Nx = len(poly_powers_x)
-    Ny = len(poly_powers_y)
+    Nx = len(p_tuple)
+    Ny = len(q_tuple)
     if poly_per_mode:
         shape = (1, 1, M, Nx, Ny)             # (num_x, num_y, num_modes, poly_degree, poly_degree)
     else:
@@ -391,7 +431,7 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
     # Gradient descent loop
     for it in range(iterations):
         # Compute transformed coordinates and modes
-        wx, wy = coord_transform(x, y, a, b, poly_powers_x, poly_powers_y)
+        wx, wy = coord_transform(x, y, a, b, p_tuple, q_tuple)
         new_modes, new_phase_grad0, new_phase_grad1 = compute_modes(amplitude, phase_func, phase_kwargs, wx, wy)
 
         # Compute error
@@ -410,7 +450,7 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
                                    init_non_orthogonality=init_non_orthogonality, non_orthogonality=non_orthogonality,
                                    phase_grad_magsq=phase_grad_magsq, errors=errors, domain=domain,
                                    non_orthogonalities=non_orthogonalities, phase_grad_magsqs=phase_grad_magsqs,
-                                   scale=60, a=a, b=b, poly_powers_x=poly_powers_x, poly_powers_y=poly_powers_y,
+                                   scale=60, a=a, b=b, p_tuple=p_tuple, q_tuple=q_tuple,
                                    do_save_plot=do_save_plot, save_path_plot=save_path_plot, nrows=nrows, ncols=ncols,
                                    do_plot_all_modes=do_plot_all_modes, save_filename_plot=save_filename_plot)
 

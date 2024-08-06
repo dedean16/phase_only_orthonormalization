@@ -7,7 +7,7 @@ import matplotlib.pyplot as plt
 
 from zernike_functions import zernike_cart, zernike_order
 from helper_functions import plot_field, complex_colorwheel
-from mode_functions import optimize_modes, apo_gaussian
+from mode_functions import optimize_modes, trunc_gaussian
 
 
 # ====== Settings ====== #
@@ -47,9 +47,9 @@ waist = waist_radius_m / pupil_radius_m  # Normalized waist radius for amplitude
 # Factor 2 is from SLM to pupil magnification (focal distances are 150mm and 300mm)
 # Factor sqrt(2) is from intensity Gaussian profile to amplitude Gaussian profile
 
-# Coefficients
-poly_powers_x = (0, 2, 4, 6, 8, 10)
-poly_powers_y = (0, 2, 4, 6, 8, 10)
+# Polynomial coefficients for transform
+p_tuple = (0, 2, 4, 6, 8, 10)
+q_tuple = (0, 2, 4, 6, 8, 10)
 poly_per_mode = True    # If True, every mode has its own transform polynomial
 
 # Optimization parameters
@@ -107,8 +107,8 @@ def zernike_phases(x, y, phase_coeffs, js, dtype=torch.float32):
 
 # ====== Optimize modes ====== #
 a, b, new_modes, init_modes = optimize_modes(
-    domain=domain, amplitude_func=apo_gaussian, amplitude_kwargs=amplitude_kwargs, phase_func=zernike_phases,
-    phase_kwargs=phase_kwargs, poly_per_mode=poly_per_mode, poly_powers_x=poly_powers_x, poly_powers_y=poly_powers_y,
+    domain=domain, amplitude_func=trunc_gaussian, amplitude_kwargs=amplitude_kwargs, phase_func=zernike_phases,
+    phase_kwargs=phase_kwargs, poly_per_mode=poly_per_mode, p_tuple=p_tuple, q_tuple=q_tuple,
     phase_grad_weight=phase_grad_weight, iterations=iterations,
     learning_rate=learning_rate, extra_params=extra_params, plot_per_its=plot_per_its, do_plot=do_plot, nrows=nrows,
     ncols=ncols, do_plot_all_modes=do_plot_all_modes, do_save_plot=do_save_plot, save_path_plot=save_path_plot)

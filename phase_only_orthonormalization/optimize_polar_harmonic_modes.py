@@ -2,7 +2,7 @@ import torch
 import numpy as np
 import matplotlib.pyplot as plt
 
-from mode_functions import optimize_modes, apo_gaussian
+from mode_functions import optimize_modes, trunc_gaussian
 from helper_functions import plot_field
 
 
@@ -47,9 +47,9 @@ waist = waist_radius_m / pupil_radius_m  # Normalized waist radius for amplitude
 # Factor sqrt(2) is from intensity Gaussian profile to amplitude Gaussian profile
 # Gaussian shape parameters
 
-# Coefficients
-poly_powers_x = (0, 2, 4, 6)
-poly_powers_y = (0, 2, 4, 6)
+# Polynomial coefficients for transform
+p_tuple = (0, 2, 4, 6)
+q_tuple = (0, 2, 4, 6)
 poly_per_mode = False    # If True, every mode has its own transform polynomial
 
 # Optimization parameters
@@ -85,8 +85,8 @@ ncols = 5
 
 # ====== Optimize modes ====== #
 a, b, new_modes, init_modes = optimize_modes(
-    domain=domain, amplitude_func=apo_gaussian, amplitude_kwargs=amplitude_kwargs, phase_func=phase_gradient,
-    phase_kwargs=phase_kwargs, poly_per_mode=poly_per_mode, poly_powers_x=poly_powers_x, poly_powers_y=poly_powers_y,
+    domain=domain, amplitude_func=trunc_gaussian, amplitude_kwargs=amplitude_kwargs, phase_func=phase_gradient,
+    phase_kwargs=phase_kwargs, poly_per_mode=poly_per_mode, p_tuple=p_tuple, q_tuple=q_tuple,
     phase_grad_weight=phase_grad_weight, iterations=iterations,
     learning_rate=learning_rate, plot_per_its=plot_per_its, do_save_plot=do_save_plot, do_plot=do_plot,
     save_path_plot=save_path_plot, save_filename_plot=save_filename_plot, ncols=ncols, nrows=nrows,
