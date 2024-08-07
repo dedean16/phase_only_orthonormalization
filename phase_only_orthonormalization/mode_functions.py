@@ -4,18 +4,19 @@ import torch
 from torch import Tensor as tt
 from torch.optim import Optimizer
 import numpy as np
+from numpy import ndarray as nd
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
 from helper_functions import plot_field
 
 
-def inner(A: tt, B: tt, dim):
+def inner(A: tt, B: tt, dim) -> tt:
     """
     Inner product.
 
     Args:
-        A, B: Tensors containields to compute inner product for.
+        A, B: Tensors containing fields to compute inner product for.
         dim: Tensor dimension to take the inner product over.
 
     Returns: Inner product (Surprise, surprise!)
@@ -23,7 +24,7 @@ def inner(A: tt, B: tt, dim):
     return (A * B.conj()).sum(dim=dim)
 
 
-def get_coords(domain: dict):
+def get_coords(domain: dict) -> Tuple[tt, tt]:
     """
     Get x, y coordinates as specified with a domain dictionary.
 
@@ -43,7 +44,7 @@ def get_coords(domain: dict):
     return x, y
 
 
-def trunc_gaussian(x: tt, y: tt, waist, r_pupil):
+def trunc_gaussian(x: tt, y: tt, waist, r_pupil) -> tt:
     """
     Compute an truncated Gaussian on the given x & y coordinates.
 
@@ -59,7 +60,7 @@ def trunc_gaussian(x: tt, y: tt, waist, r_pupil):
     return torch.exp(-(r_sq / waist**2)) * (r_sq <= r_pupil)
 
 
-def coord_transform(x: tt, y: tt, a: tt, b: tt, p_tuple: Tuple[int, ...], q_tuple: Tuple[int, ...],
+def coord_transform(x: tt, y: tt, a: tt | nd, b: tt | nd, p_tuple: Tuple[int, ...], q_tuple: Tuple[int, ...],
                     compute_jacobian: bool = False):
     """
     Coordinate transform.
@@ -356,8 +357,8 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
         phase_kwargs: Keyword arguments for the phase function.
         poly_per_mode: If True, each mode will have its own unique transform. If False, one transform is used for every
             mode.
-        p_tuple: Polynomial powers for x in coordinate transform.
-        q_tuple: Polynomial powers for y in coordinate transform.
+        p_tuple: Polynomial powers for x for coordinate transform.
+        q_tuple: Polynomial powers for y for coordinate transform.
         extra_params: Extra parameters to optimize with the optimization algorithm.
         phase_grad_weight: Weight factor for the phase gradient. 1/w² in the paper.
         iterations: Number of iterations for the optimizer.
