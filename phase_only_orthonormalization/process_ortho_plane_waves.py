@@ -1,7 +1,6 @@
 """
 Plot the orthonormalized plane wave basis and export a high-resolution version of the basis.
 """
-import torch
 import numpy as np
 import matplotlib.pyplot as plt
 import h5py
@@ -20,8 +19,8 @@ with h5py.File(filepath, 'r') as f:
     new_modes = f['new_modes'][()]
     a = f['a'][()]
     b = f['b'][()]
-    p_tuple = f['p_tuple']
-    q_tuple = f['q_tuple']
+    p_tuple = f['p_tuple'][()]
+    q_tuple = f['q_tuple'][()]
     domain = get_dict_from_hdf5(f['domain'])
     amplitude_kwargs = get_dict_from_hdf5(f['amplitude_kwargs'])
 
@@ -49,7 +48,7 @@ if do_plot_functions:
     # Plot final functions
     for m, spi in enumerate(subplot_index):
         plt.subplot(n_rows, n_cols_total, spi+n_cols_basis+2)
-        plot_field(new_modes[:, :, m].detach(), scale=scale)
+        plot_field(new_modes[:, :, m], scale=scale)
         plt.xticks([])
         plt.yticks([])
 
@@ -69,21 +68,21 @@ if do_plot_functions:
     amplitude_unnorm = trunc_gaussian(x, y, **amplitude_kwargs)
 
     plt.figure()
-    plt.imshow(jacobian[:, :, 0, 0, 0].abs().detach(), vmin=0, vmax=10)
+    plt.imshow(jacobian[:, :, 0, 0, 0].abs(), vmin=0, vmax=10)
     plt.title('$|J|$')
     plt.xticks([])
     plt.yticks([])
     plt.colorbar()
 
     plt.figure()
-    plt.imshow(amplitude_unnorm[:, :, 0, 0, 0].detach(), vmin=0, vmax=1)
+    plt.imshow(amplitude_unnorm[:, :, 0, 0, 0], vmin=0, vmax=1)
     plt.title('$A/A_0$')
     plt.xticks([])
     plt.yticks([])
     plt.colorbar()
 
     plt.figure()
-    plt.imshow((amplitude_unnorm*jacobian.abs())[:, :, 0, 0, 0].detach(), vmin=0, vmax=3)
+    plt.imshow((amplitude_unnorm*jacobian.abs())[:, :, 0, 0, 0], vmin=0, vmax=3)
     plt.title('$A|J|/A_0$')
     plt.xticks([])
     plt.yticks([])

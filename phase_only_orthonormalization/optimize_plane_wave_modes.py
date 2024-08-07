@@ -16,7 +16,7 @@ if prefer_gpu and torch.cuda.is_available():
 do_plot = True
 plot_per_its = 50  # Plot every this many iterations
 do_save_plot = False
-do_save_result = False
+do_save_result = True
 do_plot_all_modes = True
 save_path_plot = 'C:/LocalData/ortho-plane-waves-frames'
 save_filename_plot = 'ortho-plane-waves-it'
