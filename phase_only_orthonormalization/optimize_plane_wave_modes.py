@@ -130,6 +130,7 @@ if do_save_result:
         f.create_dataset('poly_per_mode', data=poly_per_mode)
         f.create_dataset('learning_rate', data=learning_rate)
         f.create_dataset('phase_grad_weight', data=phase_grad_weight)
+        f.create_dataset('iterations', data=iterations)
         f.create_dataset('amplitude_func_name', data=trunc_gaussian.__name__)
         f.create_dataset('phase_func_name', data=phase_gradient.__name__)
 
