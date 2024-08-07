@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 from matplotlib.colors import hsv_to_rgb
 from matplotlib.axes import Axes
 import git
+import h5py
 
 
 def slope_step(a, width=0.1):
@@ -176,3 +177,39 @@ def t_abs(x):
 def mse(a, b, dim=None):
     """Mean Squared |Error|"""
     return (a-b).abs().pow(2).mean(dim=dim)
+
+
+def add_dict_as_hdf5group(name: str, dic: dict, hdf: h5py.File | h5py.Group):
+    """
+    Add python dictionary as group to HDF5 file. Supports nested dictionaries.
+
+    Args:
+        name: Name of the group
+        dic: Dictionary to add.
+        hdf: HDF5 file or group to add to.
+    """
+    subgroup = hdf.create_group(name)
+    for key, value in dic.items():
+        if isinstance(value, dict):
+            add_dict_as_hdf5group(name=key, dic=value, hdf=subgroup)
+        else:
+            subgroup.create_dataset(key, data=value)
+
+
+def get_dict_from_hdf5(group: h5py.Group) -> dict:
+    """
+    Retrieve a hdf5 file or group as a dictionary. Supports nested dictionaries. Can be used on the main group as well
+    to get a dictionary of the whole hdf5 structure.
+
+    Args:
+        group: hdf5 group.
+
+    Returns: the group as dictionary
+    """
+    dic = {}
+    for key in group.keys():
+        if group[key].__class__.__name__ == 'Group':
+            dic[key] = get_dict_from_hdf5(group[key])
+        else:
+            dic[key] = group[key][()]
+    return dic

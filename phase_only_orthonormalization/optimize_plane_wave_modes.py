@@ -1,9 +1,10 @@
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
+import h5py
 
 from mode_functions import optimize_modes, trunc_gaussian, get_coords, coord_transform
-from helper_functions import plot_field, complex_colorwheel
+from helper_functions import add_dict_as_hdf5group, gitinfo
 
 
 # ====== Settings ====== #
@@ -15,15 +16,15 @@ if prefer_gpu and torch.cuda.is_available():
 do_plot = True
 plot_per_its = 50  # Plot every this many iterations
 do_save_plot = False
+do_save_result = False
 do_plot_all_modes = True
-do_plot_end = True
-save_path_plot = 'C:/LocalData/mode_optimization_frames_tilt'
-save_filename_plot = 'mode_optimization_it'
-save_path_coeffs = 'C:/LocalData'  # Where to save output
+save_path_plot = 'C:/LocalData/ortho-plane-waves-frames'
+save_filename_plot = 'ortho-plane-waves-it'
+save_filepath_result = 'C:/LocalData/ortho-plane-waves.hdf5'  # Where to save output
 plt.rcParams['font.size'] = 12
 
 # Note: Figures saved as images can be turned into a video with ffmpeg:
-# e.g.: ffmpeg -i mode_optimization_it%04d.png -framerate 60 -c:v libx265 -pix_fmt yuv420p -crf 20 mode_optimization.mp4
+# e.g.: ffmpeg -i ortho-plane-waves-it%04d.png -framerate 60 -c:v libx265 -pix_fmt yuv420p -crf 20 ortho-plane-waves.mp4
 
 # Domain
 domain = {
@@ -113,67 +114,27 @@ a, b, new_modes, init_modes = optimize_modes(
 print('\na:', a)
 print('\nb:', b)
 
-# Plot end result
-if do_plot_end:
-    n_rows = 5
-    n_cols_basis = 9
-    n_cols_total = 2 + 2*n_cols_basis
-    scale = 1 / np.abs(init_modes[:, :, 0]).max()
 
-    subplot_index = (1 + np.flip(np.arange(n_rows * n_cols_basis).reshape((n_rows, n_cols_basis)), axis=0)
-                     + (n_cols_basis+2) * np.flip(np.expand_dims(np.arange(n_rows), axis=1), axis=0)).ravel()
+# Save result
+if do_save_result:
+    with h5py.File(save_filepath_result, 'w') as f:
+        # Coefficients and modes
+        f.create_dataset('a', data=a.detach().numpy())
+        f.create_dataset('b', data=b.detach().numpy())
+        f.create_dataset('new_modes', data=new_modes.detach().numpy())
+        f.create_dataset('init_modes', data=init_modes.detach().numpy())
 
-    fig = plt.figure(figsize=(16, 8))
-    plt.subplots_adjust(left=0.01, right=0.99, top=0.96, bottom=0.01)
+        # Parameters
+        f.create_dataset('p_tuple', data=p_tuple)
+        f.create_dataset('q_tuple', data=q_tuple)
+        f.create_dataset('poly_per_mode', data=poly_per_mode)
+        f.create_dataset('learning_rate', data=learning_rate)
+        f.create_dataset('phase_grad_weight', data=phase_grad_weight)
+        f.create_dataset('amplitude_func_name', data=trunc_gaussian.__name__)
+        f.create_dataset('phase_func_name', data=phase_gradient.__name__)
 
-    # Plot init functions
-    for m, spi in enumerate(subplot_index):
-        plt.subplot(n_rows, n_cols_total, spi)
-        plot_field(init_modes[:, :, m], scale=scale)
-        plt.xticks([])
-        plt.yticks([])
-
-    # Plot final functions
-    for m, spi in enumerate(subplot_index):
-        plt.subplot(n_rows, n_cols_total, spi+n_cols_basis+2)
-        plot_field(new_modes[:, :, m].detach(), scale=scale)
-        plt.xticks([])
-        plt.yticks([])
-
-    # Complex colorwheel
-    center_spi = int(n_cols_basis + 1 + np.floor(n_rows/2) * n_cols_total)
-    ax_cw = plt.subplot(n_rows, n_cols_total, (center_spi, center_spi+1))
-    complex_colorwheel(ax=ax_cw, shape=(150, 150))
-
-    # Title
-    fig.text(0.23, 0.985, 'a. Initial functions', ha='center', va='center', fontsize=14)
-    fig.text(0.77, 0.985, 'b. Our orthonormalized functions', ha='center', va='center', fontsize=14)
-
-
-    # === Jacobian === #
-    x, y = get_coords(domain)
-    wx, wy, jacobian = coord_transform(x=x, y=y, a=a, b=b, p_tuple=p_tuple, q_tuple=q_tuple, compute_jacobian=True)
-    amplitude_unnorm = trunc_gaussian(x, y, **amplitude_kwargs)
-
-    plt.figure()
-    plt.imshow(jacobian[:, :, 0, 0, 0].abs().detach(), vmin=0, vmax=10)
-    plt.title('$|J|$')
-    plt.xticks([])
-    plt.yticks([])
-    plt.colorbar()
-
-    plt.figure()
-    plt.imshow(amplitude_unnorm[:, :, 0, 0, 0].detach(), vmin=0, vmax=1)
-    plt.title('$A/A_0$')
-    plt.xticks([])
-    plt.yticks([])
-    plt.colorbar()
-
-    plt.figure()
-    plt.imshow((amplitude_unnorm*jacobian.abs())[:, :, 0, 0, 0].detach(), vmin=0, vmax=3)
-    plt.title('$A|J|/A_0$')
-    plt.xticks([])
-    plt.yticks([])
-    plt.colorbar()
-
-    plt.show()
+        # Dictionaries
+        add_dict_as_hdf5group(name='domain', dic=domain, hdf=f)
+        add_dict_as_hdf5group(name='amplitude_kwargs', dic=amplitude_kwargs, hdf=f)
+        add_dict_as_hdf5group(name='phase_kwargs', dic=phase_kwargs, hdf=f)
+        add_dict_as_hdf5group(name='git_info', dic=gitinfo(), hdf=f)
