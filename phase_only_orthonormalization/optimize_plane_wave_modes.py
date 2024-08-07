@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import h5py
 
-from mode_functions import optimize_modes, trunc_gaussian, get_coords, coord_transform
+from mode_functions import optimize_modes, trunc_gaussian
 from helper_functions import add_dict_as_hdf5group, gitinfo
 
 
