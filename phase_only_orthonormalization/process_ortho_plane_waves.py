@@ -19,8 +19,12 @@ do_plot_transformed_gridmap = False
 filepath = '/home/dani/LocalData/ortho-plane-waves-1.hdf5'
 
 # Transformed grids
-arc_linewidth = 1.6
-grid_linewidth = 0.7
+num_grid_cells = 6
+arc_linewidth = 1.8
+grid_linewidth = 0.8
+arccolor = 'tab:blue'
+arcstyle = '--'
+gridstyle = '-k'
 
 # Jacobian plot
 cmap = 'magma'
@@ -93,11 +97,11 @@ if do_plot_bases:
 if do_plot_transform_jacobian:
     # Prepare plot
     fig = plt.figure(figsize=(16, 8))
-    plt.subplots_adjust(left=0.01, right=0.99, top=0.96, bottom=0.01)
+    plt.subplots_adjust(left=0.01, right=0.99, top=0.92, bottom=0.01)
 
     # === Plot transformed grid === #
-    gridsize_x = 1 + 8 * (domain['x_max'] - domain['x_min'])
-    gridsize_y = 1 + 8 * (domain['y_max'] - domain['y_min'])
+    gridsize_x = 1 + num_grid_cells * (domain['x_max'] - domain['x_min'])
+    gridsize_y = 1 + num_grid_cells * (domain['y_max'] - domain['y_min'])
     x_grid_lin = torch.linspace(domain['x_min'], domain['x_max'], gridsize_x)
     x_grid = x_grid_lin.view(1, -1, 1, 1, 1).broadcast_to((gridsize_y, gridsize_x, 1, 1, 1))
     y_grid_lin = torch.linspace(domain['y_min'], domain['y_max'], gridsize_y)
@@ -117,9 +121,9 @@ if do_plot_transform_jacobian:
 
     for m, spi in enumerate(subplot_index):
         plt.subplot(n_rows, n_cols_total, spi)
-        plt.plot(wx_arc[:, :, m, 0, 0], wy_arc[:, :, m, 0, 0], '-', color='tab:blue', linewidth=arc_linewidth)
-        plt.plot(wx_grid[:, :, m, 0, 0], wy_grid[:, :, m, 0, 0], '-k', linewidth=grid_linewidth)
-        plt.plot(wx_grid[:, :, m, 0, 0].T, wy_grid[:, :, m, 0, 0].T, '-k', linewidth=grid_linewidth)
+        plt.plot(wx_arc[:, :, m, 0, 0], wy_arc[:, :, m, 0, 0], arcstyle, color=arccolor, linewidth=arc_linewidth)
+        plt.plot(wx_grid[:, :, m, 0, 0], wy_grid[:, :, m, 0, 0], gridstyle, linewidth=grid_linewidth)
+        plt.plot(wx_grid[:, :, m, 0, 0].T, wy_grid[:, :, m, 0, 0].T, gridstyle, linewidth=grid_linewidth)
         plt.xlim((domain['x_min'], domain['x_max']))
         plt.ylim((domain['y_min'], domain['y_max']))
         plt.xticks([])
@@ -133,10 +137,10 @@ if do_plot_transform_jacobian:
     y_grid_disk = y_grid.clone()
     x_grid_disk[r_mask] = np.nan
     y_grid_disk[r_mask] = np.nan
-    plt.plot(x_arc[:, :, 0, 0, 0], y_arc[:, :, 0, 0, 0], '-', color='tab:blue', linewidth=arc_linewidth)
-    plt.plot(x_grid_disk[:, :, 0, 0, 0], y_grid_disk[:, :, 0, 0, 0], '-k', linewidth=grid_linewidth)
-    plt.plot(x_grid_disk[:, :, 0, 0, 0].T, y_grid_disk[:, :, 0, 0, 0].T, '-k', linewidth=grid_linewidth)
-    plt.title('b. Grids (x, y)')
+    plt.plot(x_arc[:, :, 0, 0, 0], y_arc[:, :, 0, 0, 0], arcstyle, color=arccolor, linewidth=arc_linewidth)
+    plt.plot(x_grid_disk[:, :, 0, 0, 0], y_grid_disk[:, :, 0, 0, 0], gridstyle, linewidth=grid_linewidth)
+    plt.plot(x_grid_disk[:, :, 0, 0, 0].T, y_grid_disk[:, :, 0, 0, 0].T, gridstyle, linewidth=grid_linewidth)
+    plt.title('b. Arc and\ngrid (x, y)')
     plt.xlim((domain['x_min'], domain['x_max']))
     plt.ylim((domain['y_min'], domain['y_max']))
     plt.xticks([])
@@ -172,7 +176,7 @@ if do_plot_transform_jacobian:
     plt.subplot(n_rows, n_cols_total, (center_spi, center_spi+1))
     plt.imshow(amp_sq[:, :, 0, 0, 0], vmin=0, vmax=vmax, cmap=cmap, extent=(-1, 0, -1, 1))
     draw_circle('--w', 1, np.pi / 2, 3 * np.pi / 2)
-    plt.title('d. $A(x, y)$')
+    plt.title('d. $A^2(x, y)$')
     plt.xticks([])
     plt.yticks([])
 
@@ -180,8 +184,8 @@ if do_plot_transform_jacobian:
     plt.colorbar(cax=ax_cb)
     plt.yticks((0, 0.5, 1.0, vmax), ('0.0', '0.5', '1.0', f'$\\geq${vmax:.1f}'))
 
-    fig.text(0.23, 0.985, "a. Transformed grids (x', y')", ha='center', va='center', fontsize=14)
-    fig.text(0.77, 0.985, "c. $A_R(x', y')\\cdot |\\,J\,|$", ha='center', va='center', fontsize=14)
+    fig.text(0.23, 0.96, "a. Transformed arcs and grids (x', y')", ha='center', va='center', fontsize=14)
+    fig.text(0.77, 0.96, "c. $A_R^2(x', y')\\cdot |\\,J\,|$", ha='center', va='center', fontsize=14)
 
 
 # Plot a transformed bitmap image of a grid
