@@ -1,4 +1,4 @@
-from typing import Tuple, Dict
+from typing import Tuple, Dict, Sequence
 
 import torch
 from torch import Tensor as tt
@@ -11,9 +11,10 @@ import matplotlib.pyplot as plt
 from helper_functions import plot_field
 
 
-def inner(A: tt, B: tt, dim) -> tt:
+def inner(A: tt, B: tt, dim: Sequence) -> tt:
     """
-    Inner product.
+    Inner product. This inner product is defined as sum of all element-wise products ∑ᵢ A*ᵢ ⋅ Bᵢ. Ensure to normalize
+    A and B correspondingly.
 
     Args:
         A, B: Tensors containing fields to compute inner product for.
@@ -42,6 +43,26 @@ def get_coords(domain: dict) -> Tuple[tt, tt]:
     x = torch.linspace(domain['x_min'], domain['x_max'], domain['yxshape'][1]).view(1, -1, 1, 1, 1)  # x coords
     y = torch.linspace(domain['y_min'], domain['y_max'], domain['yxshape'][0]).view(-1, 1, 1, 1, 1)  # y coords
     return x, y
+
+
+def amplitude_rectangle(x: tt, y: tt, domain: dict):
+    """
+    Create a normalized constant amplitude function for a rectangular domain.
+
+    Args:
+        x: Tensor containing the x spatial coordinates.
+        y: Tensor containing the y spatial coordinates.
+        domain: Dictionary defining the domain and sampling resolution, with keys:
+            'x_min': Minimum x value.
+            'x_max': Maximum x value.
+            'y_min': Minimum y value.
+            'y_max': Maximum y value.
+            'yxshape': Tuple that defines the number of samples in y and x.
+
+    Returns: Tensor containing amplitude at the requested coordinates
+    """
+    value = 1 / np.sqrt(np.prod(domain['yxshape']))
+    return value * (x >= domain['x_min']) * (x <= domain['x_max']) * (y >= domain['y_min']) * (y <= domain['y_max'])
 
 
 def trunc_gaussian(x: tt, y: tt, waist, r_pupil) -> tt:
@@ -347,7 +368,12 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
                    True, plot_per_its: int = 10, do_save_plot: bool = False, save_path_plot: str = '.', nrows=3,
                    ncols=5, do_plot_all_modes=True, save_filename_plot='mode_optimization_it'):
     """
-    Optimize modes
+    Optimize modes.
+
+    Orthonormalize a set of 2D functions where every function has the same amplitude profile.
+
+    Note: The returned fields are normalized for the inner product ∑ᵢ A*ᵢ Bᵢ. To get the functions normalized for the
+    area integral inner product ∬ A*(x,y) B(x,y) dx dy, multiply the fields by a factor of num_samples / domain area.
 
     Args:
         domain: Dict that specifies x,y limits and sampling, see get_coords documentation for detailed info.

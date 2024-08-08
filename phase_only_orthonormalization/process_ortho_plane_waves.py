@@ -5,15 +5,21 @@ import numpy as np
 import matplotlib.pyplot as plt
 import h5py
 
-from mode_functions import get_coords, coord_transform, trunc_gaussian
+from mode_functions import get_coords, coord_transform, trunc_gaussian, amplitude_rectangle
 from helper_functions import plot_field, complex_colorwheel, get_dict_from_hdf5
 
 
 # Settings
-do_plot_functions = True
-filepath = 'C:/LocalData/ortho-plane-waves.hdf5'
+do_plot_bases = False
+do_plot_jacobian = True
+# filepath = 'C:/LocalData/ortho-plane-waves.hdf5'
+filepath = '/home/dani/LocalData/ortho-plane-waves-1.hdf5'
+
+# Jacobian plot
+cmap = 'magma'
 
 
+# Import variables
 with h5py.File(filepath, 'r') as f:
     init_modes = f['init_modes'][()]
     new_modes = f['new_modes'][()]
@@ -26,7 +32,7 @@ with h5py.File(filepath, 'r') as f:
 
 
 # Plot end result
-if do_plot_functions:
+if do_plot_bases:
     n_rows = 5
     n_cols_basis = 9
     n_cols_total = 2 + 2*n_cols_basis
@@ -62,28 +68,37 @@ if do_plot_functions:
     fig.text(0.77, 0.985, 'b. Our orthonormalized functions', ha='center', va='center', fontsize=14)
 
 
-    # === Jacobian === #
+# === Jacobian === #
+if do_plot_jacobian:
+    # Normalization
+    area = (domain['x_max'] - domain['x_min']) * (domain['y_max'] - domain['y_min'])
+    num_samples = np.prod(domain['yxshape'])
+    norm_factor = num_samples / area
+
+    # Amplitude
     x, y = get_coords(domain)
+    amp_unnorm_sq = trunc_gaussian(x, y, **amplitude_kwargs) ** 2       # Non-normalized amplitude squared
+    amp_sq = amp_unnorm_sq * norm_factor / amp_unnorm_sq.sum()          # Normalized amplitude
+
+    # Amplitude rectangle
     wx, wy, jacobian = coord_transform(x=x, y=y, a=a, b=b, p_tuple=p_tuple, q_tuple=q_tuple, compute_jacobian=True)
-    amplitude_unnorm = trunc_gaussian(x, y, **amplitude_kwargs)
+    amp_rect_sq_transformed = amplitude_rectangle(x=wx, y=wy, domain=domain) ** 2   # Transformed amplitude rectangle
+    amp_sq_approx = norm_factor * (amp_rect_sq_transformed * jacobian.abs())        # Approx. to original amplitude²
 
-    plt.figure()
-    plt.imshow(jacobian[:, :, 0, 0, 0].abs(), vmin=0, vmax=10)
-    plt.title('$|J|$')
+    vmax = amp_sq.max() * 1.1
+
+    #
+    plt.figure(figsize=(14, 6))
+    plt.subplot(1, 3, 1)
+    plt.imshow((amp_sq)[:, :, 0, 0, 0], vmin=0, vmax=vmax, cmap=cmap)
+    plt.title('$A(x, y)$')
     plt.xticks([])
     plt.yticks([])
     plt.colorbar()
 
-    plt.figure()
-    plt.imshow(amplitude_unnorm[:, :, 0, 0, 0], vmin=0, vmax=1)
-    plt.title('$A/A_0$')
-    plt.xticks([])
-    plt.yticks([])
-    plt.colorbar()
-
-    plt.figure()
-    plt.imshow((amplitude_unnorm*jacobian.abs())[:, :, 0, 0, 0], vmin=0, vmax=3)
-    plt.title('$A|J|/A_0$')
+    plt.subplot(1, 3, 2)
+    plt.imshow(amp_sq_approx[:, :, 2, 0, 0], vmin=0, vmax=vmax, cmap=cmap)
+    plt.title("$A_R(x', y')\\cdot|J|$")
     plt.xticks([])
     plt.yticks([])
     plt.colorbar()
