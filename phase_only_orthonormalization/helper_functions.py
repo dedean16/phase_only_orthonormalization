@@ -48,10 +48,10 @@ def plot_field(array, scale, imshow_kwargs={}):
     Args:
         array(ndarray): complex array to be plotted.
         scale(float): scaling factor for the magnitude. The final value is clipped to the range [0, 1].
+        imshow_kwargs: Keyword arguments for matplotlib's imshow.
     """
     rgb = complex_to_rgb(array, scale)
     plt.imshow(rgb, **imshow_kwargs)
-    # plt.set_cmap('hsv')
 
 
 def plot_scatter_field(x, y, array, scale, scatter_kwargs=None):
@@ -62,7 +62,6 @@ def plot_scatter_field(x, y, array, scale, scatter_kwargs=None):
         scatter_kwargs = {'s': 80}
     rgb = complex_to_rgb(array, scale, axis=1)
     plt.scatter(x, y, c=rgb, **scatter_kwargs)
-    # plt.set_cmap('hsv')
 
 
 def complex_colorbar(scale, width_inverse: int = 15):
@@ -85,14 +84,27 @@ def complex_colorbar(scale, width_inverse: int = 15):
     return ax
 
 
-def complex_colorwheel(ax: Axes = plt.gca(), shape: Tuple[int, int] = (100, 100), imshow_kwargs={},
-                       arrow_props={}, text_kwargs={}, amplitude_str='A', phase_str='$\\phi$'):
+def complex_colorwheel(ax: Axes = None, shape: Tuple[int, int] = (100, 100), imshow_kwargs: dict = {},
+                       arrow_props: dict = {}, text_kwargs: dict = {}, amplitude_str: str = 'A',
+                       phase_str: str = '$\\phi$'):
     """
     Create an rgb image for a colorwheel representing the complex unit circle.
+
+    Args:
+        ax: Matplotlib Axes.
+        shape: Number of pixels in each dimension.
+        imshow_kwargs: Keyword arguments for matplotlib's imshow.
+        arrow_props: Keyword arguments for the arrows.
+        text_kwargs: Keyword arguments for the text labels.
+        amplitude_str: Text label for the amplitude arrow.
+        phase_str: Text label for the phase arrow.
 
     Returns:
         rgb_wheel: rgb image of the colorwheel.
     """
+    if ax is None:
+        ax = plt.gca()
+
     x = np.linspace(-1, 1, shape[1]).reshape(1, -1)
     y = np.linspace(-1, 1, shape[0]).reshape(-1, 1)
     z = x + 1j*y
