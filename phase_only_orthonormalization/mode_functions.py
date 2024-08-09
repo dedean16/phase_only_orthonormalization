@@ -515,13 +515,15 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
 
         # Error convergence
         plt.subplot(1, 3, 3)
-        plt.plot(errors, color='tab:red', label='Error=$\\mathcal{N} + w\\mathcal{G}$')
+        plt.plot(errors, color='tab:red', label='Error=$\\mathcal{N} + \\mathcal{G}/w^2$')
         plt.plot(non_orthogonalities, '--', color='tab:blue', label='$\\mathcal{N}$')
-        plt.plot(phase_grad_weight*np.asarray(phase_grad_magsqs), ':', color='tab:green', label='$w\\mathcal{G}$')
+        plt.plot(phase_grad_weight*np.asarray(phase_grad_magsqs), ':', color='tab:green', label='$\\mathcal{G}/w^2$')
         plt.yscale('log')
         plt.xlim((0, iterations))
         plt.xlabel('Iteration')
         plt.legend()
         plt.title('c. Error convergence')
+
+        plt.show()
 
     return a, b, new_modes.squeeze(), init_modes.squeeze()
