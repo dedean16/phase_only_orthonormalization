@@ -81,6 +81,28 @@ def trunc_gaussian(x: tt, y: tt, waist, r_pupil) -> tt:
     return torch.exp(-(r_sq / waist**2)) * (r_sq <= r_pupil)
 
 
+def phase_gradient(x, y, kx, ky):
+    """
+    Phase gradient.
+
+    Args:
+        x: Tensor containing the x spatial coordinates.
+        y: Tensor containing the y spatial coordinates.
+        kx: Wavenumber in x.
+        ky: Wavenumber in y.
+
+    Returns:
+        A phase gradient of π * (kx*x + ky*y)
+    """
+    # Ensure Tensors
+    if not isinstance(x, tt): x = torch.tensor(x)
+    if not isinstance(y, tt): y = torch.tensor(y)
+    if not isinstance(kx, tt): kx = torch.tensor(kx)
+    if not isinstance(ky, tt): ky = torch.tensor(ky)
+
+    return np.pi * (kx*x + ky*y)
+
+
 def coord_transform(x: tt, y: tt, a: tt | nd, b: tt | nd, p_tuple: Tuple[int, ...], q_tuple: Tuple[int, ...],
                     compute_jacobian: bool = False):
     """

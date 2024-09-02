@@ -7,16 +7,20 @@ import matplotlib.pyplot as plt
 import h5py
 from skimage.transform import resize
 
-from mode_functions import get_coords, coord_transform, trunc_gaussian, amplitude_rectangle
-from helper_functions import plot_field, complex_colorwheel, get_dict_from_hdf5, grid_bitmap
+from mode_functions import get_coords, coord_transform, trunc_gaussian, amplitude_rectangle, compute_modes, \
+    phase_gradient
+from helper_functions import plot_field, complex_colorwheel, get_dict_from_hdf5, add_dict_as_hdf5group, gitinfo, \
+    grid_bitmap
 
 
 # Settings
 do_plot_bases = False
-do_plot_transform_jacobian = True
+do_plot_transform_jacobian = False
 do_plot_transformed_gridmap = False
+do_export_modes = True
 # filepath = 'C:/LocalData/ortho-plane-waves.hdf5'
-filepath = '/home/dani/LocalData/ortho-plane-waves-1.hdf5'
+load_filepath = '/home/dani/LocalData/ortho-plane-waves-1.hdf5'
+export_filepath = '/home/dani/LocalData/ortho-plane-waves-hires.hdf5'
 
 # Transformed grids
 num_grid_cells = 6
@@ -33,7 +37,7 @@ plt.rcParams['font.size'] = 12
 
 
 # Import variables
-with h5py.File(filepath, 'r') as f:
+with h5py.File(load_filepath, 'r') as f:
     init_modes = f['init_modes'][()]
     new_modes = f['new_modes'][()]
     a = f['a'][()]
@@ -42,6 +46,11 @@ with h5py.File(filepath, 'r') as f:
     q_tuple = f['q_tuple'][()]
     domain = get_dict_from_hdf5(f['domain'])
     amplitude_kwargs = get_dict_from_hdf5(f['amplitude_kwargs'])
+    phase_kwargs = get_dict_from_hdf5(f['phase_kwargs'])
+    poly_per_mode = f['poly_per_mode'][()]
+    learning_rate = f['learning_rate'][()]
+    phase_grad_weight = f['phase_grad_weight'][()]
+    iterations = f['iterations'][()]
 
 
 def draw_circle(circ_style, r_circ, theta_min, theta_max):
@@ -153,12 +162,12 @@ if do_plot_transform_jacobian:
     norm_factor = num_samples / area
 
     # Amplitude truncated Gaussian
-    x, y = get_coords(domain)
-    amp_unnorm_sq = trunc_gaussian(x, y, **amplitude_kwargs) ** 2       # Non-normalized amplitude squared
+    x_hr, y_hr = get_coords(domain)
+    amp_unnorm_sq = trunc_gaussian(x_hr, y_hr, **amplitude_kwargs) ** 2       # Non-normalized amplitude squared
     amp_sq = amp_unnorm_sq * norm_factor / amp_unnorm_sq.sum()          # Normalized amplitude
 
     # Amplitude rectangle
-    wx, wy, jacobian = coord_transform(x=x, y=y, a=a, b=b, p_tuple=p_tuple, q_tuple=q_tuple, compute_jacobian=True)
+    wx, wy, jacobian = coord_transform(x=x_hr, y=y_hr, a=a, b=b, p_tuple=p_tuple, q_tuple=q_tuple, compute_jacobian=True)
     amp_rect_sq_transformed = amplitude_rectangle(x=wx, y=wy, domain=domain) ** 2   # Transformed amplitude rectangle
     amp_sq_approx = norm_factor * (amp_rect_sq_transformed * jacobian.abs())        # Approx. to original amplitude²
 
@@ -193,14 +202,14 @@ if do_plot_transformed_gridmap:
     fig = plt.figure(figsize=(16, 8))
     plt.subplots_adjust(left=0.01, right=0.99, top=0.96, bottom=0.01)
 
-    domain_hr = {**domain, 'yxshape': (2000, 1000)}
-    x_hr, y_hr = get_coords(domain_hr)
+    domain_bitmap = {**domain, 'yxshape': (2000, 1000)}
+    x_bm, y_bm = get_coords(domain_bitmap)
 
     for m, spi in enumerate(subplot_index):
         am = a[:, :, m:m+1, :, :]
         bm = b[:, :, m:m+1, :, :]
-        wx_hr, wy_hr = coord_transform(x=x_hr, y=y_hr, a=am, b=bm, p_tuple=p_tuple, q_tuple=q_tuple)
-        gridmap_hr = grid_bitmap(wx_hr[:, :, 0, 0, 0], wy_hr[:, :, 0, 0, 0], domain_hr, 0.1, 0.002)
+        wx_bm, wy_bm = coord_transform(x=x_bm, y=y_bm, a=am, b=bm, p_tuple=p_tuple, q_tuple=q_tuple)
+        gridmap_hr = grid_bitmap(wx_bm[:, :, 0, 0, 0], wy_bm[:, :, 0, 0, 0], domain_bitmap, 0.1, 0.002)
         gridmap = np.clip(50 * resize(gridmap_hr.numpy().astype(np.float32), (200, 100)), a_min=0.0, a_max=1.0)
         plt.subplot(n_rows, n_cols_total, spi)
         plt.imshow(gridmap, cmap='gray')
@@ -208,3 +217,38 @@ if do_plot_transformed_gridmap:
         plt.yticks([])
 
 plt.show()
+
+
+if do_export_modes:
+    domain_hr = {**domain, 'yxshape': (1000, 500)}
+    x_hr, y_hr = get_coords(domain_hr)
+    amplitude = trunc_gaussian(x_hr, y_hr, **amplitude_kwargs)
+    init_modes_hr = compute_modes(amplitude, phase_gradient, phase_kwargs, x_hr, y_hr)[0]
+
+    wx, wy = coord_transform(x_hr, y_hr, a, b, p_tuple, q_tuple)
+    new_modes_hr = compute_modes(amplitude, phase_gradient, phase_kwargs, wx, wy)[0]
+
+    with h5py.File(export_filepath, 'w') as f:
+        # Coefficients and modes
+        f.create_dataset('a', data=a)
+        f.create_dataset('b', data=b)
+        f.create_dataset('new_modes_hr', data=new_modes_hr)
+        f.create_dataset('init_modes_hr', data=init_modes_hr)
+
+        # Parameters
+        f.create_dataset('p_tuple', data=p_tuple)
+        f.create_dataset('q_tuple', data=q_tuple)
+        f.create_dataset('poly_per_mode', data=poly_per_mode)
+        f.create_dataset('learning_rate', data=learning_rate)
+        f.create_dataset('phase_grad_weight', data=phase_grad_weight)
+        f.create_dataset('iterations', data=iterations)
+        f.create_dataset('amplitude_func_name', data=trunc_gaussian.__name__)
+        f.create_dataset('phase_func_name', data=phase_gradient.__name__)
+
+        # Dictionaries
+        add_dict_as_hdf5group(name='domain', dic=domain, hdf=f)
+        add_dict_as_hdf5group(name='amplitude_kwargs', dic=amplitude_kwargs, hdf=f)
+        add_dict_as_hdf5group(name='phase_kwargs', dic=phase_kwargs, hdf=f)
+        add_dict_as_hdf5group(name='git_info', dic=gitinfo(), hdf=f)
+
+        print(f'Exported hi-res modes ({domain_hr["yxshape"][0]}x{domain_hr["yxshape"][1]}) to {export_filepath}')

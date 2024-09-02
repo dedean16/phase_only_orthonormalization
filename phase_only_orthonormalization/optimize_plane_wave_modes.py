@@ -3,7 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import h5py
 
-from mode_functions import optimize_modes, trunc_gaussian
+from mode_functions import optimize_modes, trunc_gaussian, phase_gradient
 from helper_functions import add_dict_as_hdf5group, gitinfo
 
 
@@ -82,10 +82,6 @@ def build_square_k_space(k_min, k_max):
     k_x = np.repeat(np.array(kx_angles)[:, np.newaxis], len(ky_angles), axis=1).flatten()
     k_space = np.vstack((k_y, k_x))
     return k_space
-
-
-def phase_gradient(x, y, kx, ky):
-    return np.pi * (kx*x + ky*y)
 
 
 amplitude_kwargs = {'waist': waist, 'r_pupil': 1}
