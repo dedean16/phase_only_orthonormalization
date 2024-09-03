@@ -222,18 +222,20 @@ plt.show()
 if do_export_modes:
     domain_hr = {**domain, 'yxshape': (1000, 500)}
     x_hr, y_hr = get_coords(domain_hr)
-    amplitude = trunc_gaussian(x_hr, y_hr, **amplitude_kwargs)
-    init_modes_hr = compute_modes(amplitude, phase_gradient, phase_kwargs, x_hr, y_hr)[0]
+    amplitude_profile = trunc_gaussian(x_hr, y_hr, **amplitude_kwargs)
+    amplitude = torch.tensor(1.0)
+    init_phases_hr = np.angle(compute_modes(amplitude, phase_gradient, phase_kwargs, x_hr, y_hr)[0])
 
     wx, wy = coord_transform(x_hr, y_hr, a, b, p_tuple, q_tuple)
-    new_modes_hr = compute_modes(amplitude, phase_gradient, phase_kwargs, wx, wy)[0]
+    new_phases_hr = np.angle(compute_modes(amplitude, phase_gradient, phase_kwargs, wx, wy)[0])
 
     with h5py.File(export_filepath, 'w') as f:
         # Coefficients and modes
         f.create_dataset('a', data=a)
         f.create_dataset('b', data=b)
-        f.create_dataset('new_modes_hr', data=new_modes_hr)
-        f.create_dataset('init_modes_hr', data=init_modes_hr)
+        f.create_dataset('new_phases_hr', data=new_phases_hr)
+        f.create_dataset('init_phases_hr', data=init_phases_hr)
+        f.create_dataset('amplitude_profile', data=amplitude_profile)
 
         # Parameters
         f.create_dataset('p_tuple', data=p_tuple)
