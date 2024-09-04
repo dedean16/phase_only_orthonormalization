@@ -38,19 +38,25 @@ plt.rcParams['font.size'] = 12
 
 # Import variables
 with h5py.File(load_filepath, 'r') as f:
-    init_modes = f['init_modes'][()]
-    new_modes = f['new_modes'][()]
+    # Coefficients and modes
     a = f['a'][()]
     b = f['b'][()]
+    init_modes = f['init_modes'][()]
+    new_modes = f['new_modes'][()]
+
+    # Parameters
     p_tuple = f['p_tuple'][()]
     q_tuple = f['q_tuple'][()]
-    domain = get_dict_from_hdf5(f['domain'])
-    amplitude_kwargs = get_dict_from_hdf5(f['amplitude_kwargs'])
-    phase_kwargs = get_dict_from_hdf5(f['phase_kwargs'])
     poly_per_mode = f['poly_per_mode'][()]
     learning_rate = f['learning_rate'][()]
     phase_grad_weight = f['phase_grad_weight'][()]
     iterations = f['iterations'][()]
+
+    # Dictionaries
+    domain = get_dict_from_hdf5(f['domain'])
+    amplitude_kwargs = get_dict_from_hdf5(f['amplitude_kwargs'])
+    phase_kwargs = get_dict_from_hdf5(f['phase_kwargs'])
+    git_info_orthonormalization = get_dict_from_hdf5(f['git_info'])
 
 
 def draw_circle(circ_style, r_circ, theta_min, theta_max):
@@ -252,5 +258,6 @@ if do_export_modes:
         add_dict_as_hdf5group(name='amplitude_kwargs', dic=amplitude_kwargs, hdf=f)
         add_dict_as_hdf5group(name='phase_kwargs', dic=phase_kwargs, hdf=f)
         add_dict_as_hdf5group(name='git_info', dic=gitinfo(), hdf=f)
+        add_dict_as_hdf5group(name='git_info_orthonormalization', dic=git_info_orthonormalization, hdf=f)
 
         print(f'Exported hi-res modes ({domain_hr["yxshape"][0]}x{domain_hr["yxshape"][1]}) to {export_filepath}')
