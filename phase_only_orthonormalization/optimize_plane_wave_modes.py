@@ -59,7 +59,7 @@ poly_per_mode = True    # If True, every mode has its own transform polynomial
 learning_rate = 1.0e-2
 iterations = 8001
 # iterations = 10
-phase_grad_weight = 0.2
+phase_grad_weight = 0.2     # 1/w²
 
 
 # ====== Initial basis ====== #
