@@ -1,12 +1,12 @@
 [tool.poetry]
 name = "phase_only_orthonormalization"
-version = "0.3.0"
+version = "0.4.0"
 description = ""
 authors = ["Daniel Cox <danielcox16@hotmail.com>"]
 readme = "README.rst"
 
 [tool.poetry.dependencies]
-python = "~3.11"                # Currently restricted to be compatible with openwfs, also tied to torch cuda version
+python = "~3.11"                # Currently restricted to be compatible with openwfs
 numpy = "^1.26.4"               # Currently restricted to be compatible with openwfs
 matplotlib = "^3.8.3"
 tqdm = "^4.66.2"
@@ -27,6 +27,16 @@ optional = true
 
 [tool.poetry.group.torchdefault.dependencies]
 torch = "~2.3.0"                # Platform default torch version = non-CUDA for Windows
+
+
+[tool.poetry.group.experiment]
+optional = true
+
+[tool.poetry.group.experiment.dependencies]
+openwfs = { git = "https://github.com/IvoVellekoop/openwfs", rev = "6334c635ce9425ebf0efdcb27b8f0cac6fc7afbe" }
+zaber-motion = "^5.2.1"
+pyserial = "^3.5"
+pyopengl = "^3.1.7"
 
 
 [build-system]
