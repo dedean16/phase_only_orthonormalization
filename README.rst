@@ -12,12 +12,14 @@ When Poetry is installed, dependencies can be installed by running poetry
 inside the repository's directory.
 
 Install with the default PyTorch version for your platform:
- - Platform default version: ``poetry install --with torchdefault,dev``
+ - Platform default version: ``poetry install --with torchdefault,dev,experiment``
 
 Note 1: The ``dev`` group is recommended to run the unit tests.
 
 Note 2: If you want to install a different version of PyTorch,
-e.g. the CUDA11 version, exclude the ``torchdefault`` group
-(i.e. run ``poetry install`` or ``poetry install --with dev``) and
+e.g. the CUDA11 version, exclude the ``torchdefault`` group and
 install the desired ``torch`` version separately. Please see
 https://pytorch.org/ for installation instructions.
+
+Note 3: The ``experiment`` is required for running and analyzing the
+wavefront shaping experiment that uses the orthonormalized basis.
