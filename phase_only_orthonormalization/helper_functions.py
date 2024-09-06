@@ -227,3 +227,17 @@ def get_dict_from_hdf5(group: h5py.Group) -> dict:
         else:
             dic[key] = group[key][()]
     return dic
+
+
+def scalar_factor_least_squares(x, y):
+    """
+    Compute least squares solution to: y = bx, solve for b.
+
+    Args:
+        x, y: Arrays containing the data points.
+
+    Returns: The least squares solution b.
+    """
+    A = np.vstack([x]).T
+    b = np.linalg.lstsq(A, y)[0]
+    return b

@@ -65,9 +65,9 @@ def amplitude_rectangle(x: tt, y: tt, domain: dict):
     return value * (x >= domain['x_min']) * (x <= domain['x_max']) * (y >= domain['y_min']) * (y <= domain['y_max'])
 
 
-def trunc_gaussian(x: tt, y: tt, waist, r_pupil) -> tt:
+def trunc_gaussian(x: tt | nd, y: tt | nd, waist, r_pupil) -> tt:
     """
-    Compute an truncated Gaussian on the given x & y coordinates.
+    Compute a truncated Gaussian on the given x & y coordinates.
 
     Args:
         x: Tensor containing the x spatial coordinates.
