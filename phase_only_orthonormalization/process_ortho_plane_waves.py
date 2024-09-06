@@ -1,5 +1,7 @@
 """
 Plot the orthonormalized plane wave basis and export a high-resolution version of the basis.
+
+Note: Be sure to update the file paths in the settings section when running this script on a new PC.
 """
 import torch
 import numpy as np
@@ -18,8 +20,8 @@ do_plot_bases = False
 do_plot_transform_jacobian = False
 do_plot_transformed_gridmap = False
 do_export_modes = True
-# filepath = 'C:/LocalData/ortho-plane-waves.hdf5'
-load_filepath = '/home/dani/LocalData/ortho-plane-waves-1.hdf5'
+
+import_filepath = '/home/dani/LocalData/ortho-plane-waves-1.hdf5'
 export_filepath = '/home/dani/LocalData/ortho-plane-waves-hires.hdf5'
 
 # Transformed grids
@@ -37,7 +39,7 @@ plt.rcParams['font.size'] = 12
 
 
 # Import variables
-with h5py.File(load_filepath, 'r') as f:
+with h5py.File(import_filepath, 'r') as f:
     # Coefficients and modes
     a = f['a'][()]
     b = f['b'][()]
