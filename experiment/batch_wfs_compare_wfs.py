@@ -5,7 +5,7 @@ Do multiple wavefront shaping measurements at different locations and compare di
 is used to aim at different locations. A 'small' FOV laser scanner object provides feedback for the WFS algorithms.
 After optimization, a 'large' FOV laser scanner object is used to get quality images.
 
-Note: When newly running this script, make sure the defined file and folder paths are still valid, and update if required.
+Note: When newly running this script, make sure the defined file and folder paths are valid, and update if required.
 """
 # Built-in
 import time
@@ -28,13 +28,16 @@ from openwfs.utilities import Transform
 from openwfs.algorithms import CustomBlindDualReference
 
 # Internal
-from tpmpy.filters import DigitalNotchFilter
-from tpmpy.helper_classes import RandomSLMShutter, OffsetRemover
-from tpmpy.helper_functions import autodelay_scanner, gitinfo, get_com_by_vid_pid, converge_parking_spot, park_beam, \
-    measure_contrast_enhancement, get_dict_from_hdf5
+from filters import DigitalNotchFilter
+from helper_classes import RandomSLMShutter, OffsetRemover
+from phase_only_orthonormalization.helper_functions import gitinfo, get_dict_from_hdf5
+from experiment_helper_functions import get_com_by_vid_pid, autodelay_scanner, converge_parking_spot, park_beam, \
+    measure_contrast_enhancement
 
 
-# ====== Settings ====== #
+# ========== Settings ========== #
+do_quick_test = False       # False: Full measurement, True: Quick test with a few modes
+
 # Saving
 save_path = Path('C:/LocalData/')
 filename_prefix = 'wfs-comparison_'
@@ -45,10 +48,10 @@ modes_filepath = '//ad.utwente.nl/TNW/BMPI/Data/Daniel Cox/ExperimentalData/wfs-
 
 # Import variables
 with h5py.File(modes_filepath, 'r') as f:
-    phases_pw_half = f['init_phases_hr'][:,:,:,0,0]
-    phases_ortho_pw_half = f['new_phases_hr'][:,:,:,0,0]
-    git_info_process_modes = f['git_info']
-    git_info_orthonormalization = f['git_info_orthonormalization']
+    phases_pw_half = f['init_phases_hr'][:, :, :, 0, 0]
+    phases_ortho_pw_half = f['new_phases_hr'][:, :, :, 0, 0]
+    git_info_process_modes = get_dict_from_hdf5(f['git_info'])
+    git_info_orthonormalization = get_dict_from_hdf5(f['git_info_orthonormalization'])
 
 mask_shape = phases_pw_half.shape[0:2]
 
@@ -59,35 +62,46 @@ split_mask = np.concatenate((np.zeros(shape=mask_shape), np.ones(shape=mask_shap
 
 # WFS settings
 algorithms = [CustomBlindDualReference, CustomBlindDualReference]
-algorithm_kwargs = [{'phases': (phases_pw, np.flip(phases_pw))},
-                    {'phases': (phases_ortho_pw, np.flip(phases_ortho_pw))}]
-algorithm_common_kwargs = {'iterations': 6, 'phase_steps': 16, 'set1_mask': split_mask, 'do_try_full_patterns': True,
-                           'progress_bar_kwargs': {'ncols': 60, 'leave': False}}
 
+if not do_quick_test:
+    # === Full measurement settings === #
+    # Stage
+    stage_settings = {
+        'settle_time': 2 * 60 * u.s,
+        'step_size': 300 * u.um,
+        'num_steps_axis1': 5,
+        'num_steps_axis2': 5,
+    }
+
+    # WFS
+    algorithm_kwargs = [{'phases': (phases_pw, np.flip(phases_pw))},
+                        {'phases': (phases_ortho_pw, np.flip(phases_ortho_pw))}]
+    algorithm_common_kwargs = {'iterations': 6, 'phase_steps': 16, 'set1_mask': split_mask, 'do_try_full_patterns': True,
+                               'progress_bar_kwargs': {'ncols': 60, 'leave': False}}
+
+if do_quick_test:
+    # === Quick test settings === #
+    # Stage
+    stage_settings = {
+        'settle_time': 2 * u.s,
+        'step_size': 250 * u.um,
+        'num_steps_axis1': 2,
+        'num_steps_axis2': 1,
+    }
+
+    # WFS
+    algorithm_kwargs = [{'phases': (phases_pw[:, :, 0:3], np.flip(phases_pw[:, :, 0:3]))},
+                        {'phases': (phases_ortho_pw[:, :, 0:3], np.flip(phases_ortho_pw[:, :, 0:3]))}]
+    algorithm_common_kwargs = {'iterations': 2, 'phase_steps': 4, 'set1_mask': split_mask, 'do_try_full_patterns': True,
+                               'progress_bar_kwargs': {'ncols': 60, 'leave': False}}
+
+
+# Save algorithm kwargs once in separate file (contains the modes -> big!)
 np.savez(
     save_path.joinpath(f'{filename_prefix}algorithm_kwargs_t{round(time.time())}'),
     algorithm_kwargs=[algorithm_kwargs],
 )
 
-# Stage
-stage_settings = {
-    'settle_time': 2 * 60 * u.s,
-    'step_size': 250 * u.um,
-    'num_steps_axis1': 5,
-    'num_steps_axis2': 5,
-}
-
-# # Uncomment for quick test
-# stage_settings = {
-#     'settle_time': 2 * u.s,
-#     'step_size': 250 * u.um,
-#     'num_steps_axis1': 2,
-#     'num_steps_axis2': 1,
-# }
-# algorithm_kwargs = [{'phases': (phases_pw[:,:,0:3], np.flip(phases_pw[:,:,0:3]))},
-#                     {'phases': (phases_ortho_pw[:,:,0:3], np.flip(phases_ortho_pw[:,:,0:3]))}]
-# algorithm_common_kwargs = {'iterations': 2, 'phase_steps': 4, 'set1_mask': split_mask, 'do_try_full_patterns': True,
-#                            'progress_bar_kwargs': {'ncols': 60, 'leave': False}}
 
 # PMT Amplifier
 signal_gain = 0.6 * u.V
@@ -219,10 +233,11 @@ with Connection.open_serial_port(comport) as connection:            # Open conne
     # Repeat experiment on different locations. Move with Zaber stage.
     total_steps = stage_settings['num_steps_axis1'] * stage_settings['num_steps_axis2']
     progress_bar = tqdm(colour='blue', total=total_steps, ncols=60)
+
     for a1 in range(stage_settings['num_steps_axis1']):             # Loop over stage axis 1
         for a2 in range(stage_settings['num_steps_axis2']):         # Loop over stage axis 2
             print(f'\nStart measurement at axes pos. {a1}/{stage_settings["num_steps_axis1"]}, '
-                    + f'{a2}/{stage_settings["num_steps_axis2"]}')
+                  + f'{a2}/{stage_settings["num_steps_axis2"]}')
 
             print('Start converging to parking spot')
             park_location, park_imgs = converge_parking_spot(shutter=shutter, image_reader=reader,
@@ -323,4 +338,4 @@ print('--- Done! ---')
 input('Please block laser and press enter')
 shutter.open = True
 
-pass
+scanner_with_offset.close()

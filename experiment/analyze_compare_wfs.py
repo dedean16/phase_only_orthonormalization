@@ -6,7 +6,8 @@ import matplotlib.pyplot as plt
 from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
 from tqdm import tqdm
 
-from tpmpy.helper_functions import complex_to_rgb, trunc_gaussian, complex_colorwheel, scalar_factor_least_squares
+from phase_only_orthonormalization.helper_functions import complex_to_rgb, complex_colorwheel, scalar_factor_least_squares
+from phase_only_orthonormalization.mode_functions import trunc_gaussian
 
 
 # Adjust this path to point to the location of the measurement data
