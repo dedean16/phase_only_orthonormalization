@@ -29,7 +29,7 @@ from openwfs.algorithms import CustomBlindDualReference
 
 # Internal
 from filters import DigitalNotchFilter
-from helper_classes import RandomSLMShutter, OffsetRemover
+from experiment_helper_classes import RandomSLMShutter, OffsetRemover
 from phase_only_orthonormalization.helper_functions import gitinfo, get_dict_from_hdf5
 from experiment_helper_functions import get_com_by_vid_pid, autodelay_scanner, converge_parking_spot, park_beam, \
     measure_contrast_enhancement
