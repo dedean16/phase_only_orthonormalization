@@ -36,7 +36,7 @@ from experiment_helper_functions import get_com_by_vid_pid, autodelay_scanner, c
 
 
 # ========== Settings ========== #
-do_quick_test = False       # False: Full measurement, True: Quick test with a few modes
+do_quick_test = False       # False: Full measurement, True: Quick test run with a few modes
 
 # Saving
 save_path = Path('C:/LocalData/')
@@ -44,10 +44,10 @@ filename_prefix = 'wfs-comparison_'
 
 # Import modes
 print('\nStart import modes...')
-modes_filepath = '//ad.utwente.nl/TNW/BMPI/Data/Daniel Cox/ExperimentalData/wfs-OrthoFBDR-comparison/ortho-plane-waves-hires.hdf5'
+phases_filepath = '//ad.utwente.nl/TNW/BMPI/Data/Daniel Cox/ExperimentalData/wfs-OrthoFBDR-comparison/ortho-plane-waves-hires.hdf5'
 
 # Import variables
-with h5py.File(modes_filepath, 'r') as f:
+with h5py.File(phases_filepath, 'r') as f:
     phases_pw_half = f['init_phases_hr'][:, :, :, 0, 0]
     phases_ortho_pw_half = f['new_phases_hr'][:, :, :, 0, 0]
     git_info_process_modes = get_dict_from_hdf5(f['git_info'])
@@ -219,6 +219,8 @@ print(f"Scanner delay: {scanner_props['delay']}")
 # Zaber stage
 comport = get_com_by_vid_pid(vid=0x2939, pid=0x495b)                # Get COM-port of Zaber X-MCB2
 
+
+# ========= Main measurements ========= #
 with Connection.open_serial_port(comport) as connection:            # Open connection with Zaber stage
     # Zaber stage initialization
     connection.enable_alerts()
@@ -297,7 +299,7 @@ with Connection.open_serial_port(comport) as connection:            # Open conne
                 gitinfo_process_modes=[git_info_process_modes],
                 gitinfo_orthonormalization=[git_info_orthonormalization],
                 time=time.time(),
-                modes_filepath=modes_filepath,
+                modes_filepath=phases_filepath,
                 algorithm_types=[a.__name__ for a in algorithms],
                 algorithm_common_kwargs=[algorithm_common_kwargs],
                 stage_settings=[stage_settings],
