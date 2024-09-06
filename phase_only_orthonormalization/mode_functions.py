@@ -8,7 +8,7 @@ from numpy import ndarray as nd
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
-from helper_functions import plot_field
+from phase_only_orthonormalization.helper_functions import plot_field
 
 
 def inner(A: tt, B: tt, dim: Sequence) -> tt:
@@ -77,8 +77,13 @@ def trunc_gaussian(x: tt | nd, y: tt | nd, waist, r_pupil) -> tt:
     
     Returns: Values for truncated Gaussian beam profile.
     """
+    if isinstance(x, tt):
+        exp = torch.exp
+    else:
+        exp = np.exp
+
     r_sq = x ** 2 + y ** 2
-    return torch.exp(-(r_sq / waist**2)) * (r_sq <= r_pupil)
+    return exp(-(r_sq / waist**2)) * (r_sq <= r_pupil)
 
 
 def phase_gradient(x, y, kx, ky):
