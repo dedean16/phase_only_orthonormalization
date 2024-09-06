@@ -11,9 +11,10 @@ from phase_only_orthonormalization.mode_functions import trunc_gaussian
 
 
 # Adjust this path to point to the location of the measurement data
-localdata = '/home/dani/LocalData/wfs-OrthoFBDR-comparison/set6/'
+localdata = '/home/dani/LocalData/wfs-OrthoFBDR-comparison/'
 # localdata = 'C:/LocalData/wfs-wfsr-comparison/'
-stop_at_this_file = 17
+path_glob = 'set?/wfs-comparison_t*.npz'
+file_numbers_to_plot = list(range(0, 5))        # Which images to plot
 
 do_plot_parking_convergence = False
 
@@ -44,12 +45,9 @@ plt.rcParams['font.size'] = 13
 
 
 # Use os.path.join to ensure the path is constructed correctly
-npz_files = sorted(glob.glob(os.path.join(localdata, 'wfs-comparison_t*.npz')))
+npz_files = sorted(glob.glob(os.path.join(localdata, path_glob)))
 
 print(f'Found {len(npz_files)} files.')
-
-if stop_at_this_file is None:
-    stop_at_this_file = len(npz_files)
 
 # Initialize
 signal_enhancement = [[], []]
@@ -110,20 +108,17 @@ def add_scalebar(ax, width_m, height_m, pix_size_m, pad):
 
 for n_f, filepath in enumerate(tqdm(npz_files)):
 
-    if n_f >= stop_at_this_file:
-    # if n_f >= 3:
-        break  #### For this measurement, signal was lost after 16 location
-
     full_pattern_feedback_all.append([])
 
     # Load file
     npz_data = np.load(filepath, allow_pickle=True)
 
-    # Initialize plot
-    fig, axs = plt.subplots(nrows, ncols)
-    fig.set_size_inches(14.2, 6)
-    fig.set_dpi(120)
-    plt.subplots_adjust(left=0.01, right=0.93, top=0.955, bottom=0.01, wspace=0.02, hspace=0.12)
+    if n_f in file_numbers_to_plot:
+        # Initialize plot
+        fig, axs = plt.subplots(nrows, ncols)
+        fig.set_size_inches(14.2, 6)
+        fig.set_dpi(120)
+        plt.subplots_adjust(left=0.01, right=0.93, top=0.955, bottom=0.01, wspace=0.02, hspace=0.12)
 
     # Extract images
     img_shaped_wf = npz_data['contrast_results_all'][0][1]['img_shaped_wf']
@@ -137,49 +132,51 @@ for n_f, filepath in enumerate(tqdm(npz_files)):
     ypark = top + height/2
 
     # Flat wavefront
-    img_flat_wf = npz_data['contrast_results_all'][0][0]['img_flat_wf']
-    plt.subplot(nrows, ncols, 1)
-    im0 = plt.imshow(img_flat_wf[slice0, slice1], vmin=vmin, vmax=vmax, cmap=cmap)
-    plt.title(f'{image_letters[0]}{basis_names[0]}')
-    plt.xticks([])
-    plt.yticks([])
-    add_scalebar(ax=plt.gca(), **scalebar_props)
-
-    # Show phase patterns
-    scale = 1 / np.abs(amplitude).max()
-    phase_rgb = complex_to_rgb(amplitude, scale)
-    plt.subplot(nrows, ncols, ncols+1)
-    plt.imshow(phase_rgb, extent=(-1, 1, -1, 1))
-    plt.title(f'{pattern_letters[0]}')
-    plt.xticks([])
-    plt.yticks([])
-    draw_circle(circ_style, 1)
-
-    for n_alg in range(2):
-        full_pattern_feedback_all[n_f].append([])
-        alg_str = npz_data['algorithm_types'][n_alg]
-
-        # Load images
-        img_shaped_wf = npz_data['contrast_results_all'][0][n_alg]['img_shaped_wf']
-
-        # Shaped wf
-        plt.subplot(nrows, ncols, 2+n_alg)
-        im1 = plt.imshow(img_shaped_wf[slice0, slice1], vmin=vmin, vmax=vmax, cmap=cmap)
-        plt.title(f'{image_letters[1+n_alg]}{basis_names[1+n_alg]}')
+    if n_f in file_numbers_to_plot:
+        img_flat_wf = npz_data['contrast_results_all'][0][0]['img_flat_wf']
+        plt.subplot(nrows, ncols, 1)
+        im0 = plt.imshow(img_flat_wf[slice0, slice1], vmin=vmin, vmax=vmax, cmap=cmap)
+        plt.title(f'{image_letters[0]}{basis_names[0]}')
         plt.xticks([])
         plt.yticks([])
         add_scalebar(ax=plt.gca(), **scalebar_props)
 
         # Show phase patterns
-        tc = npz_data['wfs_results_all'][0][n_alg].t.conj()
-        scale = 1 / np.abs(tc).max()
-        phase_rgb = complex_to_rgb(tc, scale)
-        plt.subplot(nrows, ncols, 2+ncols+n_alg)
+        scale = 1 / np.abs(amplitude).max()
+        phase_rgb = complex_to_rgb(amplitude, scale)
+        plt.subplot(nrows, ncols, ncols+1)
         plt.imshow(phase_rgb, extent=(-1, 1, -1, 1))
-        plt.title(f'{pattern_letters[1 + n_alg]}')
+        plt.title(f'{pattern_letters[0]}')
         plt.xticks([])
         plt.yticks([])
         draw_circle(circ_style, 1)
+
+    for n_alg in range(2):
+        full_pattern_feedback_all[n_f].append([])
+        alg_str = npz_data['algorithm_types'][n_alg]
+
+        if n_f in file_numbers_to_plot:
+            # Load images
+            img_shaped_wf = npz_data['contrast_results_all'][0][n_alg]['img_shaped_wf']
+
+            # Shaped wf
+            plt.subplot(nrows, ncols, 2+n_alg)
+            im1 = plt.imshow(img_shaped_wf[slice0, slice1], vmin=vmin, vmax=vmax, cmap=cmap)
+            plt.title(f'{image_letters[1+n_alg]}{basis_names[1+n_alg]}')
+            plt.xticks([])
+            plt.yticks([])
+            add_scalebar(ax=plt.gca(), **scalebar_props)
+
+            # Show phase patterns
+            tc = npz_data['wfs_results_all'][0][n_alg].t.conj()
+            scale = 1 / np.abs(tc).max()
+            phase_rgb = complex_to_rgb(tc, scale)
+            plt.subplot(nrows, ncols, 2+ncols+n_alg)
+            plt.imshow(phase_rgb, extent=(-1, 1, -1, 1))
+            plt.title(f'{pattern_letters[1 + n_alg]}')
+            plt.xticks([])
+            plt.yticks([])
+            draw_circle(circ_style, 1)
 
         # Extract signal intensities
         signal_flat_all += [np.mean(npz_data['signal_flat'].squeeze())]
@@ -190,23 +187,24 @@ for n_f, filepath in enumerate(tqdm(npz_files)):
 
         full_pattern_feedback_all[n_f][n_alg] += [*npz_data['wfs_results_all'][0, n_alg].full_pattern_feedback]
 
-    # Colorbar
-    ax_cb = plt.axes((0.937, 0.506, 0.014, 0.451))
-    fig.colorbar(im0, cax=ax_cb)
-    ax_cb.set_ylabel('Signal')
+    if n_f in file_numbers_to_plot:
+        # Colorbar
+        ax_cb = plt.axes((0.937, 0.506, 0.014, 0.451))
+        fig.colorbar(im0, cax=ax_cb)
+        ax_cb.set_ylabel('Signal')
 
-    # Colorwheel
-    ax_cw = plt.axes((0.91, 0.01, 0.08, 0.45))
-    complex_colorwheel(ax=ax_cw, shape=(160, 160))
+        # Colorwheel
+        ax_cw = plt.axes((0.91, 0.01, 0.08, 0.45))
+        complex_colorwheel(ax=ax_cw, shape=(160, 160))
 
-    # Plot parking convergence
-    if do_plot_parking_convergence:
-        fig2, axs2 = plt.subplots(2, 3)
-        fig2.set_size_inches(14, 7)
-        for i, img in enumerate(npz_data['park_result'][0]['imgs']):
-            imshow = axs2.ravel()[i].imshow(img)
-            fig2.colorbar(imshow, ax=axs2.ravel()[i])
-            fig2.suptitle(f'{n_f}: Beam park convergence')
+        # Plot parking convergence
+        if do_plot_parking_convergence:
+            fig2, axs2 = plt.subplots(2, 3)
+            fig2.set_size_inches(14, 7)
+            for i, img in enumerate(npz_data['park_result'][0]['imgs']):
+                imshow = axs2.ravel()[i].imshow(img)
+                fig2.colorbar(imshow, ax=axs2.ravel()[i])
+                fig2.suptitle(f'{n_f}: Beam park convergence')
 
 
 
