@@ -40,7 +40,7 @@ bead_alg1_kwargs = {'color': 'tab:green', 'linestyle': 'solid'}
 scalebar_props = {
     'width_m': 10e-6,
     'height_m': 700e-9,
-    'pix_size_m': 40e-9,
+    'pix_size_m': 27.5e-9,
     'pad': 0.4,
 }
 
