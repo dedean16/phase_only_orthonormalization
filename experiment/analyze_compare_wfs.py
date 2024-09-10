@@ -14,9 +14,8 @@ from phase_only_orthonormalization.mode_functions import trunc_gaussian
 localdata = '/home/dani/LocalData/wfs-OrthoFBDR-comparison/'
 # localdata = 'C:/LocalData/wfs-wfsr-comparison/'
 path_glob = 'set?/wfs-comparison_t*.npz'
-# file_numbers_to_include = list(range(0, 15))    # Which files to read and include in graph (at least two)
-file_numbers_to_include = [1, 12]
-file_numbers_to_plot = list(range(0, 5))        # From selection, which images to plot (non-existing are ignored)
+file_numbers_to_include = list(range(0, 35))        # Which files to read and include in graph (at least two)
+file_numbers_to_plot = [12, 13]                     # From selection, which images to plot (non-existing are ignored)
 
 do_plot_parking_convergence = False
 
