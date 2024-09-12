@@ -1,9 +1,7 @@
 import numpy as np
-from numpy import ndarray as nd
-import matplotlib.pyplot as plt
+from matplotlib.image import imsave
 
-from openwfs.core import Processor
-from openwfs.utilities import project
+from openwfs.core import Processor, Detector
 from openwfs.algorithms.utilities import WFSResult
 
 
@@ -49,3 +47,33 @@ class NoWFS:
     def execute(self):
         return WFSResult(t=np.asarray((1.0,)), t_f=np.asarray((1.0, 0.0, 0.0)),
                          axis=0, fidelity_amplitude=0, fidelity_noise=0, fidelity_calibration=0, n=0)
+
+
+class SLMPatternSaver(Processor):
+    """
+    Processor that saves SLM phase pattern every time its data is fetched.
+    Then passes on its source to the next processor(s). The SLM patterns will be saved as PNG images.
+    """
+    def __init__(self, source, slm, output_filepath: str, cmap='gist_gray'):
+        """
+        Args:
+            source: Source Detector/processor from which this object will receive data.
+            slm: SLM object to save the state of.
+            output_filepath: Output filepath to save SLM patterns to. A suffix counter will be added to the filepath.
+        """
+        super().__init__(source, multi_threaded=False)
+        self.source = source
+        self.slm = slm
+        self.output_filepath = output_filepath
+        self.counter = 0
+        self.cmap = cmap
+
+    def _fetch(self, source_data: np.ndarray) -> np.ndarray:
+        # Save SLM phase pattern
+        phases_grayscale = self.slm.phases.read() * 256 / (2*np.pi)
+        filepath = f"{self.output_filepath}_{self.counter:05d}.png"
+        imsave(filepath, phases_grayscale, cmap=self.cmap)
+        self.counter += 1
+
+        # Pass on data
+        return source_data
