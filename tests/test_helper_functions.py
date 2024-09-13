@@ -1,7 +1,7 @@
 import torch
 from torch import tensor
 
-from mode_optimization.helper_functions import n_choose_k, factorial
+from phase_only_orthonormalization.helper_functions import n_choose_k, factorial
 
 
 def test_n_choose_k():

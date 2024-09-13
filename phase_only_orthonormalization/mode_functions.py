@@ -108,6 +108,68 @@ def phase_gradient(x, y, kx, ky):
     return np.pi * (kx*x + ky*y)
 
 
+def associated_laguerre_polynomials(x: tt, a, N, ndim=2):
+    """
+    Return the values of the first N associated Laguerre polynomials L_N^a(x).
+
+    Args:
+        x: 5D Tensor with input values for the associated Laguerre polynomials L_N^a(x).
+        a: Value a.
+        N: N value
+        ndim: Dimension used for index n.
+
+    Returns:
+        5D Tensor of values for L_n^a(x), where D is the number of elements of x.
+    """
+    # Initial associated Laguerre polynomials
+    L_list = [None] * max(N, 2)
+
+    L_list[0] = torch.ones(x.shape)
+    L_list[1] = 1 + a - x
+
+    # Compute the rest of the polynomials using the recurrence relation
+    for k in range(1, N):
+        L_list[k+1] = ((2*k + 1 + a - x) * L_list[k] - (k + a) * L_list[k-1]) / (k+1)
+
+    return L_list[N]
+
+
+def laguerre_gaussian_phases(x: tt, y: tt, el_max, p_max):
+    """
+    Phases of Laguerre Gaussian modes.
+
+    Args:
+        x: Tensor containing the x spatial coordinates.
+        y: Tensor containing the y spatial coordinates.
+        el_max: The maximum topological charge. This will result in the modes for el = -el_max, -el_max+1, ..., el_max.
+        p_max: The maximum radial order. This will result in the modes for p = 0, 1, ..., p_max.
+
+    Returns:
+        Phases of requested Laguerre Gaussian mode.
+    """
+    N = p_max + 1
+
+    # Polar coordinates
+    z = x + 1j*y
+    phi = z.angle()
+    r = z.abs()
+
+    # Loop over el's
+    for el in range(-el_max, el_max+1):
+        # Compute associated Laguerre polynomials for this el, for all p in the range [0, p_max]
+        a = abs(el)
+        L_els = associated_laguerre_polynomial(r, a=a, N=N, ndim=3)
+        for p in range(0, N):
+            pass  ### TODO
+
+
+    L = torch.cat(L_els, dim=3)
+    phases = L * torch.exp(1j * 1 * phi)
+
+    # Concatenate list of modes
+    return phases
+
+
 def coord_transform(x: tt, y: tt, a: tt | nd, b: tt | nd, p_tuple: Tuple[int, ...], q_tuple: Tuple[int, ...],
                     compute_jacobian: bool = False):
     """
@@ -405,7 +467,7 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
     Args:
         domain: Dict that specifies x,y limits and sampling, see get_coords documentation for detailed info.
         amplitude_func: Function that returns the amplitude on given x,y coordinates.
-        phase_func: Function that returns the phase on given x,y coordinates.
+        phase_func: Function that returns the phase on given x,y coordinates, for all modes.
         amplitude_kwargs: Keyword arguments for the amplitude function.
         phase_kwargs: Keyword arguments for the phase function.
         poly_per_mode: If True, each mode will have its own unique transform. If False, one transform is used for every
