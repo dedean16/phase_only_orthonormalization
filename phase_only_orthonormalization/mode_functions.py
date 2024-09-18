@@ -8,7 +8,7 @@ from numpy import ndarray as nd
 from tqdm import tqdm
 import matplotlib.pyplot as plt
 
-from phase_only_orthonormalization.helper_functions import plot_field
+from phase_only_orthonormalization.helper_functions import plot_field, factorial
 
 
 def inner(A: tt, B: tt, dim: Sequence) -> tt:
@@ -108,66 +108,102 @@ def phase_gradient(x, y, kx, ky):
     return np.pi * (kx*x + ky*y)
 
 
-def associated_laguerre_polynomials(x: tt, a, N, ndim=2):
+def associated_laguerre_polynomial(x: tt, a, n) -> tt:
     """
-    Return the values of the first N associated Laguerre polynomials L_N^a(x).
+    Return the value of the nth associated Laguerre polynomial L_n^a(x).
 
     Args:
-        x: 5D Tensor with input values for the associated Laguerre polynomials L_N^a(x).
+        x: 5D Tensor with input values for the associated Laguerre polynomials L_n^a(x).
         a: Value a.
-        N: N value
-        ndim: Dimension used for index n.
+        n: Value n.
 
     Returns:
         5D Tensor of values for L_n^a(x), where D is the number of elements of x.
     """
     # Initial associated Laguerre polynomials
-    L_list = [None] * max(N, 2)
+    L_list = [None] * max(n+1, 2)
 
     L_list[0] = torch.ones(x.shape)
     L_list[1] = 1 + a - x
 
     # Compute the rest of the polynomials using the recurrence relation
-    for k in range(1, N):
+    for k in range(1, n):
         L_list[k+1] = ((2*k + 1 + a - x) * L_list[k] - (k + a) * L_list[k-1]) / (k+1)
 
-    return L_list[N]
+    return L_list[n]
 
 
-def laguerre_gaussian_phases(x: tt, y: tt, el_max, p_max):
+def laguerre_gauss_mode(x: tt, y: tt, el, p, w0) -> tt:
     """
-    Phases of Laguerre Gaussian modes.
+    Laguerre Gaussian modes.
+
+    Args:
+        x: Tensor containing the x spatial coordinates.
+        y: Tensor containing the y spatial coordinates.
+        el: The topological charge.
+        p: The radial order.
+        w0: Beam waist.
+
+    Returns:
+        Requested Laguerre Gaussian mode.
+    """
+    z = x + 1j*y
+    phi = z.angle()
+    r = z.abs()
+    RR2 = (r/w0)**2                                                 # Relative Radius Squared
+    L = associated_laguerre_polynomial(2*RR2, a=abs(el), n=p)           # associated Laguerre polynomial
+    NC = (2*factorial(p) / (np.pi * factorial(p+abs(el)))).sqrt()   # Normalization Constant
+    RRPTC = (r*np.sqrt(2) / w0).pow(abs(el))                        # Rel. Radius to the Power of Topological Charge
+    return NC * RRPTC * L * torch.exp(-RR2 - 1j*el*phi)
+
+
+def laguerre_gauss_phase_factor(x: tt, y: tt, el_max, p_max, w0, step_smoothness=0.01, dtype=torch.complex128):
+    """
+    Phases of Laguerre Gauss modes.
+
+    The phase flips that occur where the Laguerre Gauss amplitude is zero, are smoothed with a smooth step function
+    (tanh).
 
     Args:
         x: Tensor containing the x spatial coordinates.
         y: Tensor containing the y spatial coordinates.
         el_max: The maximum topological charge. This will result in the modes for el = -el_max, -el_max+1, ..., el_max.
         p_max: The maximum radial order. This will result in the modes for p = 0, 1, ..., p_max.
+        w0: Beam waist.
+        step_smoothness: The amplitude of the Laguerre Gauss modes is normalized. In order to maintain a finite gradient,
+            The phase flips are smoothed with a smooth step function: new_abs = tanh(step_steepness * LG.abs()).
+        dtype: Data type of the output.
 
     Returns:
         Phases of requested Laguerre Gaussian mode.
     """
-    N = p_max + 1
+    # Total numbers
+    num_el = 2*el_max+1
+    num_p = p_max+1
+    M = num_p * num_el
 
-    # Polar coordinates
-    z = x + 1j*y
-    phi = z.angle()
-    r = z.abs()
+    # Initialize phase
+    phase_factors = torch.zeros(y.shape[0], x.shape[1], M, 1, 1, dtype=dtype)
+    i_mode = 0
+    for p in range(p_max+1):                                        # Loop over radial index p
+        for el in range(-el_max, el_max + 1):                       # Loop over topological charge
+            # Extract coords
+            if x.shape[2] > 1:                                      # Each mode has its own transformed coords
+                x_mode = x[:, :, i_mode, 0, 0]
+                y_mode = y[:, :, i_mode, 0, 0]
+            else:                                                   # One transform for all modes
+                x_mode = x[:, :, 0, 0, 0]
+                y_mode = y[:, :, 0, 0, 0]
 
-    # Loop over el's
-    for el in range(-el_max, el_max+1):
-        # Compute associated Laguerre polynomials for this el, for all p in the range [0, p_max]
-        a = abs(el)
-        L_els = associated_laguerre_polynomial(r, a=a, N=N, ndim=3)
-        for p in range(0, N):
-            pass  ### TODO
+            # Mode computation
+            LG = laguerre_gauss_mode(x_mode, y_mode, el, p, w0)     # Compute Laguerre Gauss mode
 
+            # Normalize amplitude, but with smooth steps
+            phase_factors[:, :, i_mode, 0, 0] = torch.tanh(LG.abs() / step_smoothness) * torch.exp(1j * LG.angle())
+            # phase_factors[:, :, i_mode, 0, 0] = torch.sign(LG.abs() / step_smoothness) * torch.exp(1j * LG.angle())
+            i_mode += 1
 
-    L = torch.cat(L_els, dim=3)
-    phases = L * torch.exp(1j * 1 * phi)
-
-    # Concatenate list of modes
-    return phases
+    return phase_factors
 
 
 def coord_transform(x: tt, y: tt, a: tt | nd, b: tt | nd, p_tuple: Tuple[int, ...], q_tuple: Tuple[int, ...],
@@ -289,7 +325,8 @@ def compute_phase_grad_magsq(amplitude, phase_grad0: tt, phase_grad1: tt, num_of
     return mean_phase_grad_magsq
 
 
-def compute_modes(amplitude: tt, phase_func: callable, phase_kwargs: dict, x: tt, y: tt) -> Tuple[tt, tt, tt]:
+def compute_modes(amplitude: tt, phase_func: callable, phase_kwargs: dict, x: tt, y: tt,
+                  phase_factor_func: callable = None) -> Tuple[tt, tt, tt]:
     """
     Compute modes
 
@@ -299,18 +336,26 @@ def compute_modes(amplitude: tt, phase_func: callable, phase_kwargs: dict, x: tt
     Args:
         amplitude: tensor containing the amplitude.
         phase_func: A function that computes the phase on coordinates x & y and returns a 3D tensor where the last index
-            is the mode index.
+            is the mode index. When None, phase_factor_func is used to determine the phase instead.
         phase_kwargs: Keyword arguments for the phase function.
         x: x coordinates for phase function.
         y: y coordinates for phase function.
+        phase_factor_func: A function that computes the phase factor exp(i𝜙) on coordinates x & y and returns a 3D
+            tensor where the last index is the mode index. Only used when phase_func is None.
+            instead.
 
     Returns:
         modes: Tensor containing the modes (fields). Dim 0 and 1 are for the spatial coordinates. Dim 2 the mode index.
         phase_grad0: Phase gradients in dim 0 direction.
         phase_grad1: Phase gradients in dim 1 direction.
     """
-    phase = phase_func(x, y, **phase_kwargs)
-    modes = amplitude * torch.exp(1j * phase)
+    if phase_func is None:
+        phase_factor = phase_factor_func(x, y, **phase_kwargs)
+        phase = phase_factor.angle()
+    else:
+        phase = phase_func(x, y, **phase_kwargs)
+        phase_factor = torch.exp(1j * phase)
+    modes = amplitude * phase_factor
 
     # Phase grad
     phase_grad0, phase_grad1 = torch.gradient(phase, dim=(0, 1), edge_order=2)
@@ -351,12 +396,12 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
     plt.title('Error convergence')
 
     if do_plot_all_modes:
-        scale = 1 / modes[:, :, 0].abs().max().detach().cpu()
 
         # Loop over modes
         for i in range(modes.shape[2]):
             plt.subplot(nrows+1, ncols, i + 2*ncols + 1)
             plt.cla()
+            scale = 1 / modes[:, :, i, 0, 0].abs().max().detach().cpu()
             plot_field(modes[:, :, i, 0, 0].detach().cpu(), scale=scale,
                        imshow_kwargs={'extent': (domain['x_min'], domain['x_max'], domain['y_min'], domain['y_max'])})
             plt.xticks([])
@@ -450,8 +495,9 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
         plt.savefig(f'{save_path_plot}/{save_filename_plot}{it:04d}.png')
 
 
-def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable, amplitude_kwargs: dict = {},
-                   phase_kwargs: dict = {}, poly_per_mode: bool = True, p_tuple: Tuple = (0, 2, 4, 6),
+def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
+                   amplitude_kwargs: dict = {}, phase_kwargs: dict = {}, phase_factor_func: callable = None,
+                   poly_per_mode: bool = True, p_tuple: Tuple = (0, 2, 4, 6),
                    q_tuple: Tuple = (0, 2, 4, 6), extra_params: dict = {}, phase_grad_weight: float = 0.1,
                    iterations: int = 500, learning_rate: float = 0.02, optimizer: Optimizer = None, do_plot: bool =
                    True, plot_per_its: int = 10, do_save_plot: bool = False, save_path_plot: str = '.', nrows=3,
@@ -467,9 +513,12 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
     Args:
         domain: Dict that specifies x,y limits and sampling, see get_coords documentation for detailed info.
         amplitude_func: Function that returns the amplitude on given x,y coordinates.
-        phase_func: Function that returns the phase on given x,y coordinates, for all modes.
+        phase_func: A function that computes the phase on coordinates x & y for all modes. When None, phase_factor_func
+            is used to determine the phase instead.
         amplitude_kwargs: Keyword arguments for the amplitude function.
         phase_kwargs: Keyword arguments for the phase function.
+        phase_factor_func: A function that computes the phase factor exp(i𝜙) on coordinates x & y and returns a
+            tensor where the last index is the mode index. Only used when phase_func is None.
         poly_per_mode: If True, each mode will have its own unique transform. If False, one transform is used for every
             mode.
         p_tuple: Polynomial powers for x for coordinate transform.
@@ -500,7 +549,8 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
     amplitude = amplitude_unnorm / amplitude_unnorm.abs().pow(2).sum().sqrt()
 
     # Compute initial modes
-    init_modes_graph, init_phase_grad0_graph, init_phase_grad1_graph = compute_modes(amplitude, phase_func, phase_kwargs, x, y)
+    init_modes_graph, init_phase_grad0_graph, init_phase_grad1_graph = \
+        compute_modes(amplitude, phase_func, phase_kwargs, x, y, phase_factor_func=phase_factor_func)
     init_modes = init_modes_graph.detach()
 
     # Determine coefficients shape
@@ -548,12 +598,19 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
     for it in range(iterations):
         # Compute transformed coordinates and modes
         wx, wy = coord_transform(x, y, a, b, p_tuple, q_tuple)
-        new_modes, new_phase_grad0, new_phase_grad1 = compute_modes(amplitude, phase_func, phase_kwargs, wx, wy)
+        new_modes, new_phase_grad0, new_phase_grad1 = \
+            compute_modes(amplitude, phase_func, phase_kwargs, wx, wy, phase_factor_func=phase_factor_func)
 
         # Compute error
         non_orthogonality, gram = compute_non_orthonormality(new_modes)
         phase_grad_magsq = compute_phase_grad_magsq(amplitude, new_phase_grad0, new_phase_grad1, M)
         error = non_orthogonality + phase_grad_weight * phase_grad_magsq
+
+        ###
+        print()
+        print(gram.abs().min().detach().item())
+        print(gram.abs().max().detach().item())
+        ###
 
         # Save error and terms
         errors[it] = error.detach().cpu()

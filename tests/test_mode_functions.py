@@ -3,7 +3,8 @@ import numpy as np
 import pytest
 import matplotlib.pyplot as plt
 
-from phase_only_orthonormalization.mode_functions import associated_laguerre_polynomials
+from phase_only_orthonormalization.mode_functions import associated_laguerre_polynomial, laguerre_gauss_mode
+from phase_only_orthonormalization.helper_functions import plot_field
 
 
 ### TODO: make it work for 1x5x5 bases
@@ -59,7 +60,11 @@ def test_associated_laguerre_polynomials(a):
     L[:, 2] = (x**2 - 2*(a+2)*x + (a+1)*(a+2)) / 2
     L[:, 3] = (-x**3 + 3*(a+3)*x**2 - 3*(a+2)*(a+3)*x + (a+1)*(a+2)*(a+3)) / 6
 
-    Lass = associated_laguerre_polynomials(x.view(1, -1), a, N, ndim=0).T
+    Lass = torch.zeros(x.numel(), N)
+    Lass[:, 0] = associated_laguerre_polynomial(x.view(1, -1), a=a, n=0)
+    Lass[:, 1] = associated_laguerre_polynomial(x.view(1, -1), a=a, n=1)
+    Lass[:, 2] = associated_laguerre_polynomial(x.view(1, -1), a=a, n=2)
+    Lass[:, 3] = associated_laguerre_polynomial(x.view(1, -1), a=a, n=3)
 
     if do_plot:
         plt.plot(L, label=[f'$L_{n}$' for n in range(N)])
@@ -69,3 +74,40 @@ def test_associated_laguerre_polynomials(a):
         plt.show()
 
     assert (Lass - L).abs().sum() < 1e-4
+
+
+def test_laguerre_gauss_mode():
+    """
+    Test Laguerre Gauss mode
+    """
+    do_plot = False
+
+    el_max = 2
+    p_max = 2
+    w0 = 0.3
+
+    num_el = 2*el_max+1
+    num_p = p_max+1
+
+    x = torch.linspace(-1.0, 1.0, 100).view(1, -1)
+    y = torch.linspace(-1.0, 1.0, 100).view(-1, 1)
+
+    if do_plot:
+        plt.figure(figsize=(14, 8))
+
+    count = 1
+    for p in range(p_max+1):
+        for el in range(-el_max, el_max + 1):
+            LG = laguerre_gauss_mode(x, y, el, p, w0)
+
+            if do_plot:
+                plt.subplot(num_p, num_el, count)
+                scale = 1 / LG.abs().max()
+                plot_field(LG, scale=scale)
+                plt.xticks([])
+                plt.yticks([])
+
+            count += 1
+
+    if do_plot:
+        plt.show()
