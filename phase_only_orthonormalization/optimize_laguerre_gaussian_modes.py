@@ -76,7 +76,7 @@ ncols = 5
 # ====== Optimize modes ====== #
 a, b, new_modes, init_modes = optimize_modes(
     domain=domain, amplitude_func=trunc_gaussian, amplitude_kwargs=amplitude_kwargs, phase_func=None,
-    phase_factor_func=laguerre_gauss_phase_factor,
+    phase_factor_func=laguerre_gauss_phase_factor, compute_phase_gradient=False,
     phase_kwargs=phase_kwargs, poly_per_mode=poly_per_mode, p_tuple=p_tuple, q_tuple=q_tuple,
     phase_grad_weight=phase_grad_weight, iterations=iterations,
     learning_rate=learning_rate, plot_per_its=plot_per_its, do_save_plot=do_save_plot, do_plot=do_plot,

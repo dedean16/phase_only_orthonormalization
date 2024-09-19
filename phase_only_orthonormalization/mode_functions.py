@@ -326,7 +326,7 @@ def compute_phase_grad_magsq(amplitude, phase_grad0: tt, phase_grad1: tt, num_of
 
 
 def compute_modes(amplitude: tt, phase_func: callable, phase_kwargs: dict, x: tt, y: tt,
-                  phase_factor_func: callable = None) -> Tuple[tt, tt, tt]:
+                  phase_factor_func: callable = None, compute_phase_gradient: bool = True) -> Tuple[tt, tt, tt]:
     """
     Compute modes
 
@@ -343,6 +343,7 @@ def compute_modes(amplitude: tt, phase_func: callable, phase_kwargs: dict, x: tt
         phase_factor_func: A function that computes the phase factor exp(i𝜙) on coordinates x & y and returns a 3D
             tensor where the last index is the mode index. Only used when phase_func is None.
             instead.
+        compute_phase_gradient: When False, skip phase gradient computation.
 
     Returns:
         modes: Tensor containing the modes (fields). Dim 0 and 1 are for the spatial coordinates. Dim 2 the mode index.
@@ -358,7 +359,10 @@ def compute_modes(amplitude: tt, phase_func: callable, phase_kwargs: dict, x: tt
     modes = amplitude * phase_factor
 
     # Phase grad
-    phase_grad0, phase_grad1 = torch.gradient(phase, dim=(0, 1), edge_order=2)
+    if compute_phase_gradient:
+        phase_grad0, phase_grad1 = torch.gradient(phase, dim=(0, 1), edge_order=2)
+    else:
+        phase_grad0, phase_grad1 = None, None
     return modes, phase_grad0, phase_grad1
 
 
@@ -497,6 +501,7 @@ def plot_mode_optimization(it: int, iterations: int, modes: tt, init_gram: tt, g
 
 def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
                    amplitude_kwargs: dict = {}, phase_kwargs: dict = {}, phase_factor_func: callable = None,
+                   compute_phase_gradient: bool = True,
                    poly_per_mode: bool = True, p_tuple: Tuple = (0, 2, 4, 6),
                    q_tuple: Tuple = (0, 2, 4, 6), extra_params: dict = {}, phase_grad_weight: float = 0.1,
                    iterations: int = 500, learning_rate: float = 0.02, optimizer: Optimizer = None, do_plot: bool =
@@ -521,6 +526,7 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
             tensor where the last index is the mode index. Only used when phase_func is None.
         poly_per_mode: If True, each mode will have its own unique transform. If False, one transform is used for every
             mode.
+        compute_phase_gradient: When False, skip phase gradient computation and phase gradient regularization.
         p_tuple: Polynomial powers for x for coordinate transform.
         q_tuple: Polynomial powers for y for coordinate transform.
         extra_params: Extra parameters to optimize with the optimization algorithm.
@@ -599,18 +605,17 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
         # Compute transformed coordinates and modes
         wx, wy = coord_transform(x, y, a, b, p_tuple, q_tuple)
         new_modes, new_phase_grad0, new_phase_grad1 = \
-            compute_modes(amplitude, phase_func, phase_kwargs, wx, wy, phase_factor_func=phase_factor_func)
+            compute_modes(amplitude, phase_func, phase_kwargs, wx, wy, phase_factor_func=phase_factor_func,
+                          compute_phase_gradient=compute_phase_gradient)
 
         # Compute error
         non_orthogonality, gram = compute_non_orthonormality(new_modes)
-        phase_grad_magsq = compute_phase_grad_magsq(amplitude, new_phase_grad0, new_phase_grad1, M)
-        error = non_orthogonality + phase_grad_weight * phase_grad_magsq
-
-        ###
-        print()
-        print(gram.abs().min().detach().item())
-        print(gram.abs().max().detach().item())
-        ###
+        if compute_phase_gradient:
+            phase_grad_magsq = compute_phase_grad_magsq(amplitude, new_phase_grad0, new_phase_grad1, M)
+            error = non_orthogonality + phase_grad_weight * phase_grad_magsq
+        else:
+            phase_grad_magsq = torch.tensor(torch.nan)
+            error = non_orthogonality
 
         # Save error and terms
         errors[it] = error.detach().cpu()
@@ -634,6 +639,7 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
 
         progress_bar.update()
 
+    # Final plot
     if do_plot:
         # Gram matrices and error evolution
         plt.figure(figsize=(14, 4), dpi=120)
