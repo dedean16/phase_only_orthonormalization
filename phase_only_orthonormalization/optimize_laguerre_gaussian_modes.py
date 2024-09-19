@@ -23,8 +23,7 @@ do_save_result = True
 do_plot_all_modes = True
 save_path_plot = 'C:/LocalData/ortho-lg-frames'
 save_filename_plot = 'ortho-lg-it'
-# save_filepath_result = 'C:/LocalData/ortho-lg.hdf5'  # Where to save output
-save_filepath_result = '/home/dani/LocalData/ortho-lg.hdf5'  # Where to save output
+save_filepath_result = 'C:/LocalData/ortho-lg.hdf5'  # Where to save output
 plt.rcParams['font.size'] = 12
 
 # Note: Figures saved as images can be turned into a video with ffmpeg:
@@ -57,15 +56,15 @@ q_tuple = (0, 2, 4)
 poly_per_mode = True    # If True, every mode has its own transform polynomial
 
 # Optimization parameters
-learning_rate = 5.0e-4
-iterations = 1000
+learning_rate = 1.0e-4
+iterations = 8000
 # iterations = 10
-phase_grad_weight = 0.0     # 1/w²
+phase_grad_weight = 0.4     # 1/w²
 
 
 # ====== Initial basis ====== #
 amplitude_kwargs = {'waist': waist, 'r_pupil': 1}
-phase_kwargs = {'el_max': 2, 'p_max': 2, 'w0': waist/2, 'step_smoothness': 0.01}
+phase_kwargs = {'el_max': 2, 'p_max': 2, 'w0': waist/2, 'step_smoothness': 0.05}
 
 # Mode plotting
 nrows = 4
@@ -76,7 +75,7 @@ ncols = 5
 # ====== Optimize modes ====== #
 a, b, new_modes, init_modes = optimize_modes(
     domain=domain, amplitude_func=trunc_gaussian, amplitude_kwargs=amplitude_kwargs, phase_func=None,
-    phase_factor_func=laguerre_gauss_phase_factor, compute_phase_gradient=False,
+    phase_factor_func=laguerre_gauss_phase_factor, compute_phase_gradient=True,
     phase_kwargs=phase_kwargs, poly_per_mode=poly_per_mode, p_tuple=p_tuple, q_tuple=q_tuple,
     phase_grad_weight=phase_grad_weight, iterations=iterations,
     learning_rate=learning_rate, plot_per_its=plot_per_its, do_save_plot=do_save_plot, do_plot=do_plot,
