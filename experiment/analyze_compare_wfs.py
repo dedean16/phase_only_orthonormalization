@@ -1,3 +1,7 @@
+"""
+This script is used to analyze the wavefront shaping measurements. When running this script in a new location, please
+ensure that directory paths are valid.
+"""
 import os
 import glob
 
