@@ -63,7 +63,7 @@ phase_grad_weight = 0.3     # 1/w²
 
 # ====== Initial basis ====== #
 amplitude_kwargs = {'waist': waist, 'r_pupil': 1}
-phase_kwargs = {'el_max': 3, 'p_max': 2, 'w0': waist*0.4, 'step_smoothness': 0.02}
+phase_kwargs = {'el_max': 3, 'p_max': 2, 'w0': waist/3, 'step_smoothness': 0.02}
 
 # Mode plotting
 nrows = 4
