@@ -54,7 +54,8 @@ pattern_letters = ('e. ', 'f. ', 'g. ')
 beadline_letter = 'd.'
 basis_names = ('No correction', 'Plane wave basis', 'Our orthonormal basis')
 
-plt.rcParams['font.size'] = 13
+plt.rcParams['font.size'] = 14
+colorwheel_fontsize = 17
 
 assert len(file_numbers_to_include) > 1
 
@@ -222,13 +223,13 @@ for n_f, filepath in enumerate(tqdm(npz_files_sel)):
 
     if n_f in file_numbers_to_plot:
         # Colorbar
-        ax_cb = plt.axes((0.937, 0.516, 0.014, 0.433))
+        ax_cb = plt.axes((0.937, 0.516, 0.012, 0.433))
         fig.colorbar(im0, cax=ax_cb)
-        ax_cb.set_ylabel('Signal')
+        ax_cb.set_ylabel('PMT signal')
 
         # Colorwheel
-        ax_cw = plt.axes((0.84, 0.01, 0.08, 0.45))
-        complex_colorwheel(ax=ax_cw, shape=(160, 160))
+        ax_cw = plt.axes((0.84, 0.01, 0.10, 0.45))
+        complex_colorwheel(ax=ax_cw, shape=(160, 160), text_kwargs={'fontsize': colorwheel_fontsize})
 
         # Signal intensity line through bead
         plt.axes((0.060, 0.120, 0.080, 0.282))
@@ -245,7 +246,7 @@ for n_f, filepath in enumerate(tqdm(npz_files_sel)):
         plt.plot(xrange, beadsignal_alg0, label=basis_names[1], **bead_alg0_kwargs)
         plt.plot(xrange, beadsignal_alg1, label=basis_names[2], **bead_alg1_kwargs)
         plt.xlabel('position ($\\mu m$)')
-        plt.ylabel('Signal through bead')
+        plt.ylabel('PMT signal through bead')
         plt.title(beadline_letter)
 
         # Plot parking convergence
