@@ -57,9 +57,9 @@ q_tuple = (0, 2, 4)
 poly_per_mode = True    # If True, every mode has its own transform polynomial
 
 # Optimization parameters
-learning_rate = 7.0e-5
-iterations = 12000
-phase_grad_weight = 0.3     # 1/w²
+learning_rate = 1.0e-4
+iterations = 8000
+phase_grad_weight = 0.01     # 1/w²
 
 
 # ====== Initial basis ====== #
