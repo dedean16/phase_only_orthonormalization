@@ -1,6 +1,8 @@
 """
-This script is used to analyze the wavefront shaping measurements. When running this script in a new location, please
-ensure that directory paths in directories.py and the path_glob defined below are valid.
+This script is used to analyze the wavefront shaping measurements. Before running this script, please ensure that
+directory paths in directories.py and the path matching variable path_glob defined below are valid. The variables
+file_numbers_to_include and file_numbers_to_plot define which files must be included and plotted. Plotting all 35 files
+at the same time takes up a significant amount of RAM.
 """
 import os
 import glob
@@ -18,9 +20,9 @@ from phase_only_orthonormalization.directories import localdata
 # Adjust this path to point to the location of the measurement data
 path_glob = 'wfs-comparison_t*.npz'                 # Filename glob defining which files to read
 file_numbers_to_include = list(range(0, 35))        # Which files to read and include in graph (at least two)
-file_numbers_to_plot = [12, 13]                     # From selection, which images to plot (non-existing are ignored)
+file_numbers_to_plot = [12, 13, 14]                 # From selection, which images to plot (non-existing are ignored)
 
-do_plot_parking_convergence = False
+do_plot_parking_convergence = True                  # Plot intermediate scans of auto-selecting an ROI around a bead
 
 # Image settings
 cmap = 'magma'                                      # Colormap
@@ -64,7 +66,7 @@ assert len(file_numbers_to_include) > 1
 
 # Use os.path.join to ensure the path is constructed correctly
 full_path_glob = os.path.join(localdata, path_glob)
-print(f'Searching for files matching {full_path_glob}')
+print(f'\nSearching for files matching {full_path_glob}')
 npz_files_all = sorted(glob.glob(full_path_glob))
 npz_files_sel = [npz_files_all[i] for i in file_numbers_to_include]
 
