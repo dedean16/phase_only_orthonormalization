@@ -1,6 +1,6 @@
 """
 This script is used to analyze the wavefront shaping measurements. When running this script in a new location, please
-ensure that directory paths are valid.
+ensure that directory paths in directories.py and the path_glob defined below are valid.
 """
 import os
 import glob
@@ -12,12 +12,11 @@ from tqdm import tqdm
 
 from phase_only_orthonormalization.helper_functions import complex_to_rgb, complex_colorwheel, scalar_factor_least_squares
 from phase_only_orthonormalization.mode_functions import trunc_gaussian
+from phase_only_orthonormalization.directories import localdata
 
 
 # Adjust this path to point to the location of the measurement data
-localdata = '/home/dani/LocalData/wfs-OrthoFBDR-comparison/'
-# localdata = 'C:/LocalData/wfs-wfsr-comparison/'
-path_glob = 'set?/wfs-comparison_t*.npz'
+path_glob = 'wfs-comparison_t*.npz'                 # Filename glob defining which files to read
 file_numbers_to_include = list(range(0, 35))        # Which files to read and include in graph (at least two)
 file_numbers_to_plot = [12, 13]                     # From selection, which images to plot (non-existing are ignored)
 
@@ -64,7 +63,9 @@ colorwheel_fontsize = 17
 assert len(file_numbers_to_include) > 1
 
 # Use os.path.join to ensure the path is constructed correctly
-npz_files_all = sorted(glob.glob(os.path.join(localdata, path_glob)))
+full_path_glob = os.path.join(localdata, path_glob)
+print(f'Searching for files matching {full_path_glob}')
+npz_files_all = sorted(glob.glob(full_path_glob))
 npz_files_sel = [npz_files_all[i] for i in file_numbers_to_include]
 
 print(f'Found {len(npz_files_all)} files.')
