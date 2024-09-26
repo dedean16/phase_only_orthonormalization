@@ -1,28 +1,27 @@
+"""
+Orthonormalize a polar harmonic basis for a Gaussian amplitude profile. Before running this script, ensure the
+paths in directories.py and the file paths defined in the save settings below are valid.
+"""
+import os
+
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
 
 from mode_functions import optimize_modes, trunc_gaussian
 from helper_functions import plot_field
+from directories import localdata
 
 
 # ====== Settings ====== #
-prefer_gpu = False  # Use cuda-GPU if it is available
-
-if prefer_gpu and torch.cuda.is_available():
-    torch.set_default_device('cuda')
-
 do_plot = True
-plot_per_its = 30  # Plot every this many iterations
+plot_per_its = 50  # Plot every this many iterations
 do_save_plot = False
 do_plot_all_modes = True
 do_plot_end = True
-save_path_plot = 'C:/LocalData/mode_optimization_frames_tilt'
-save_filename_plot = 'mode_optimization_it'
-save_path_coeffs = 'C:/LocalData'  # Where to save output
-
-# Note: Figures saved as images can be turned into a video with ffmpeg:
-# e.g.: ffmpeg -i mode_optimization_it%04d.png -framerate 60 -c:v libx265 -pix_fmt yuv420p -crf 20 mode_optimization.mp4
+save_path_plot = os.path.join(localdata, '/ortho-frames/')            # Plot frames path
+save_filename_plot = 'ortho-polar-it'                                 # Plot frames filename prefix
+save_filepath_result = os.path.join(localdata, 'ortho-polar.hdf5')    # Where to save output
 
 # Domain
 domain = {
@@ -31,7 +30,7 @@ domain = {
     'y_min': -1,
     'y_max': 1,
     'r_pupil': 1,
-    'yxshape': (200, 100),           # Number of samples in each spatial direction
+    'yxshape': (150, 75),           # Number of samples in each spatial direction
 }
 
 # Gaussian shape parameters
@@ -54,7 +53,7 @@ poly_per_mode = False    # If True, every mode has its own transform polynomial
 
 # Optimization parameters
 learning_rate = 2.5e-2
-iterations = 1001
+iterations = 1000
 phase_grad_weight = 0.0
 
 
@@ -100,7 +99,7 @@ print('\nb:', b)
 if do_plot_end:
     nrows = 5
     ncols = 5
-    scale = 60
+    scale = 90
 
     plt.figure(figsize=(16, 6), dpi=80)
     plt.tight_layout()

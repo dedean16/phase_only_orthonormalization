@@ -1,3 +1,9 @@
+"""
+Orthonormalize a phase-only plane wave basis for a Gaussian amplitude profile. Before running this script, ensure the
+paths in directories.py and the file paths defined in the save settings below are valid.
+"""
+import os
+
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
@@ -5,22 +11,18 @@ import h5py
 
 from mode_functions import optimize_modes, trunc_gaussian, phase_gradient
 from helper_functions import add_dict_as_hdf5group, gitinfo
+from directories import localdata
 
 
 # ====== Settings ====== #
-prefer_gpu = False  # Use cuda-GPU if it is available
-
-if prefer_gpu and torch.cuda.is_available():
-    torch.set_default_device('cuda')
-
 do_plot = True
 plot_per_its = 50  # Plot every this many iterations
 do_save_plot = False
 do_save_result = True
 do_plot_all_modes = True
-save_path_plot = 'C:/LocalData/ortho-plane-waves-frames'
-save_filename_plot = 'ortho-plane-waves-it'
-save_filepath_result = 'C:/LocalData/ortho-plane-waves.hdf5'  # Where to save output
+save_path_plot = os.path.join(localdata, '/ortho-frames/')                  # Plot frames path
+save_filename_plot = 'ortho-plane-waves-it'                                 # Plot frames filename prefix
+save_filepath_result = os.path.join(localdata, 'ortho-plane-waves.hdf5')    # Where to save output
 plt.rcParams['font.size'] = 12
 
 # Note: Figures saved as images can be turned into a video with ffmpeg:
@@ -58,7 +60,6 @@ poly_per_mode = True    # If True, every mode has its own transform polynomial
 # Optimization parameters
 learning_rate = 1.0e-2
 iterations = 8000
-# iterations = 10
 phase_grad_weight = 0.2     # 1/w²
 
 

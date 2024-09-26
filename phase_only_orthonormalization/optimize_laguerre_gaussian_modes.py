@@ -1,6 +1,9 @@
 """
-Orthonormalize a phase-only version of Laguerre Gaussian modes.
+Orthonormalize a phase-only version of Laguerre Gaussian modes, for a Gaussian amplitude profile. Before running this
+script, ensure the paths in directories.py and the file paths defined in the save settings below are valid.
 """
+import os
+
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
@@ -8,27 +11,23 @@ import h5py
 
 from mode_functions import optimize_modes, trunc_gaussian, laguerre_gauss_phase_factor
 from helper_functions import add_dict_as_hdf5group, gitinfo, plot_field, complex_colorwheel
+from directories import localdata
 
 
 # ====== Settings ====== #
-prefer_gpu = False  # Use cuda-GPU if it is available
-
-if prefer_gpu and torch.cuda.is_available():
-    torch.set_default_device('cuda')
-
 do_plot = True
 plot_per_its = 50  # Plot every this many iterations
 do_plot_end = True
 do_save_plot = False
 do_save_result = True
 do_plot_all_modes = True
-save_path_plot = 'C:/LocalData/ortho-lg-frames'
-save_filename_plot = 'ortho-lg-it'
-save_filepath_result = 'C:/LocalData/ortho-lg.hdf5'  # Where to save output
+save_path_plot = os.path.join(localdata, '/ortho-frames/')          # Plot frames path
+save_filename_plot = 'ortho-lg-it'                                  # Plot frames filename prefix
+save_filepath_result = os.path.join(localdata, 'ortho-lg.hdf5')     # Where to save output
 plt.rcParams['font.size'] = 12
 
 # Note: Figures saved as images can be turned into a video with ffmpeg:
-# e.g.: ffmpeg -i ortho-plane-waves-it%04d.png -framerate 60 -c:v libx265 -pix_fmt yuv420p -crf 20 ortho-plane-waves.mp4
+# e.g.: ffmpeg -i ortho-lg-it%04d.png -framerate 60 -c:v libx265 -pix_fmt yuv420p -crf 20 ortho-plane-waves.mp4
 
 # Domain
 domain = {

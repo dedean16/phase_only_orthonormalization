@@ -1,6 +1,6 @@
 """
-Modify Zernike modes to be orthonormal in field. Before running this script, ensure the paths in directories.py and the
-directories defined in the save settings below are valid.
+Modify Zernike modes to be orthonormal in field, for a Gaussian amplitude profile. Before running this script, ensure
+the paths in directories.py and the file paths defined in the save settings below are valid.
 """
 import os
 
@@ -20,8 +20,8 @@ plot_per_its = 50  # Plot every this many iterations
 do_plot_all_modes = True
 do_plot_end = True
 do_save_plot = False
-save_path_plot = os.path.join(localdata, '/frames/')
-save_filename_plot = 'ortho_zernike_it'
+save_path_plot = os.path.join(localdata, '/ortho-frames/')              # Plot frames path
+save_filename_plot = 'ortho_zernike_it'                                 # Plot frames filename prefix
 save_path_coeffs = localdata
 plt.rcParams['font.size'] = 12
 
