@@ -1,6 +1,9 @@
 """
-Modify Zernike modes to be orthogonal in field.
+Modify Zernike modes to be orthonormal in field. Before running this script, ensure the paths in directories.py and the
+directories defined in the save settings below are valid.
 """
+import os
+
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
@@ -8,22 +11,18 @@ import matplotlib.pyplot as plt
 from zernike_functions import zernike_cart, zernike_order
 from helper_functions import plot_field, complex_colorwheel
 from mode_functions import optimize_modes, trunc_gaussian
+from directories import localdata
 
 
 # ====== Settings ====== #
-prefer_gpu = False  # Use cuda-GPU if it is available
-
-if prefer_gpu and torch.cuda.is_available():
-    torch.set_default_device('cuda')
-
 do_plot = True
 plot_per_its = 50  # Plot every this many iterations
 do_plot_all_modes = True
 do_plot_end = True
 do_save_plot = False
-save_path_plot = 'C:/LocalData/mode_optimization_frames'   ### TODO: check if directory exists
-save_filename_plot = 'mode_optimization_zernike_it'
-save_path_coeffs = 'C:/LocalData'  # Where to save output
+save_path_plot = os.path.join(localdata, '/frames/')
+save_filename_plot = 'ortho_zernike_it'
+save_path_coeffs = localdata
 plt.rcParams['font.size'] = 12
 
 # Domain
@@ -55,7 +54,6 @@ poly_per_mode = True    # If True, every mode has its own transform polynomial
 # Optimization parameters
 learning_rate = 1.5e-2
 iterations = 8000
-# iterations = 10
 phase_grad_weight = 2.0
 
 
