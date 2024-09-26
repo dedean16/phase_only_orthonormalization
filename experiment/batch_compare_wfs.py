@@ -8,6 +8,7 @@ After optimization, a 'large' FOV laser scanner object is used to get quality im
 Note: When newly running this script, make sure the defined file and folder paths are valid, and update if required.
 """
 # Built-in
+import os
 import time
 from pathlib import Path
 
@@ -33,20 +34,22 @@ from experiment_helper_classes import RandomSLMShutter, OffsetRemover
 from phase_only_orthonormalization.helper_functions import gitinfo, get_dict_from_hdf5
 from experiment_helper_functions import get_com_by_vid_pid, autodelay_scanner, converge_parking_spot, park_beam, \
     measure_contrast_enhancement
+from phase_only_orthonormalization.directories import localdata
 
 
 # ========== Settings ========== #
 do_quick_test = False       # False: Full measurement, True: Quick test run with a few modes
 
-# Saving
-save_path = Path('C:/LocalData/')
+# Save filepath and filename prefix
+save_path = Path(localdata)
 filename_prefix = 'wfs-comparison_'
 
-# Import modes
-print('\nStart import modes...')
-phases_filepath = '//ad.utwente.nl/TNW/BMPI/Data/Daniel Cox/ExperimentalData/wfs-OrthoFBDR-comparison/ortho-plane-waves-hires.hdf5'
+# Import filepath for hi-res modes
+phases_filepath = os.path.join(localdata, 'ortho-plane-waves-hires.hdf5')
+
 
 # Import variables
+print('\nStart import modes...')
 with h5py.File(phases_filepath, 'r') as f:
     phases_pw_half = f['init_phases_hr'][:, :, :, 0, 0]
     phases_ortho_pw_half = f['new_phases_hr'][:, :, :, 0, 0]
