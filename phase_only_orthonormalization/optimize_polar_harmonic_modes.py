@@ -19,9 +19,9 @@ plot_per_its = 50  # Plot every this many iterations
 do_save_plot = False
 do_plot_all_modes = True
 do_plot_end = True
-save_path_plot = os.path.join(localdata, '/ortho-frames/')            # Plot frames path
-save_filename_plot = 'ortho-polar-it'                                 # Plot frames filename prefix
-save_filepath_result = os.path.join(localdata, 'ortho-polar.hdf5')    # Where to save output
+save_path_plot = os.path.join(localdata, 'ortho-frames')                # Plot frames path
+save_filename_plot = 'ortho-polar-it'                                   # Plot frames filename prefix
+save_filepath_result = os.path.join(localdata, 'ortho-polar.hdf5')      # Where to save output
 
 # Domain
 domain = {
