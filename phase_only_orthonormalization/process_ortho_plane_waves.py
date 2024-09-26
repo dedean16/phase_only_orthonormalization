@@ -1,8 +1,9 @@
 """
-Plot the orthonormalized plane wave basis and export a high-resolution version of the basis.
-
-Note: Be sure to update the file paths in the settings section when running this script on a new PC.
+Plot the orthonormalized plane wave basis and the jacobians and export a high-resolution version of the basis. Before
+running this script, ensure the paths in directories.py and the file paths defined in the settings below are valid.
 """
+import os
+
 import torch
 import numpy as np
 import matplotlib.pyplot as plt
@@ -13,16 +14,17 @@ from mode_functions import get_coords, coord_transform, trunc_gaussian, amplitud
     phase_gradient
 from helper_functions import plot_field, complex_colorwheel, get_dict_from_hdf5, add_dict_as_hdf5group, gitinfo, \
     grid_bitmap
+from directories import localdata
 
 
 # Settings
-do_plot_bases = False
-do_plot_transform_jacobian = False
+do_plot_bases = True
+do_plot_transform_jacobian = True
 do_plot_transformed_gridmap = False
 do_export_modes = True
 
-import_filepath = '/home/dani/LocalData/ortho-plane-waves-1.hdf5'
-export_filepath = '/home/dani/LocalData/ortho-plane-waves-hires.hdf5'
+import_filepath = os.path.join(localdata, 'ortho-plane-waves.hdf5')
+export_filepath = os.path.join(localdata, 'ortho-plane-waves-hires.hdf5')
 
 # Transformed grids
 num_grid_cells = 6
@@ -79,7 +81,6 @@ subplot_index = (1 + np.flip(np.arange(n_rows * n_cols_basis).reshape((n_rows, n
 # Plot end result
 if do_plot_bases:
     scale = 1 / np.abs(init_modes[:, :, 0]).max()
-
 
     fig = plt.figure(figsize=(16, 8))
     plt.subplots_adjust(left=0.01, right=0.99, top=0.96, bottom=0.01)
