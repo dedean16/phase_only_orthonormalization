@@ -24,7 +24,8 @@ that uses the orthonormalized basis.
 
 Running the scripts
 -------------------
-After installation is complete, run the scripts in ``phase_only_orthonormalization`` directory
+The orthonormalization scripts can be found in the ``phase_only_orthonormalization`` directory.
+After installation is complete, run the scripts
 ``optimize_plane_wave_modes.py``, ``optimize_zernike_modes.py``, ``optimize_laguerre_gaussian_modes.py``
 or ``optimize_polar_harmonic_modes.py`` to orthonormalize a basis based on plane waves, zernike polynomials,
 Laguerre Gauss modes or polar harmonics respectively.
