@@ -72,7 +72,7 @@ class SLMPatternSaver(Processor):
         # Save SLM phase pattern
         phases_grayscale = self.slm.phases.read() * 256 / (2*np.pi)
         filepath = f"{self.output_filepath}_{self.counter:05d}.png"
-        imsave(filepath, phases_grayscale, cmap=self.cmap)
+        imsave(filepath, phases_grayscale, cmap=self.cmap, vmin=0, vmax=255)
         self.counter += 1
 
         # Pass on data

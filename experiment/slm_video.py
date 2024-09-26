@@ -1,10 +1,15 @@
 """
 Create video frames showing the SLM during a wavefront shaping simulation using the orthonormalized plane wave basis.
+Before running this script, ensure the paths in directories.py and the file paths defined in the save settings below are
+valid.
 
 Please check import and output file paths before running this script. This script creates PNG files in the specified
 output folder (if it exists). These can be converted to a video with e.g. ffmpeg:
 ffmpeg -framerate 30 -i slm-pattern_%05d.png -c:v libx265 -preset slow -crf 22 slm-patterns.mp4
 """
+# Built-in
+import os
+
 # External (3rd party)
 import numpy as np
 import h5py
@@ -15,17 +20,17 @@ from openwfs.simulation import SimulatedWFS
 
 # Internal
 from experiment_helper_classes import SLMPatternSaver
+from phase_only_orthonormalization.directories import localdata
 
 
 # ========== Settings ========== #
-do_quick_test = False       # False: Full measurement, True: Quick test run with a few modes
+do_quick_test = False       # False: Full run, True: Quick test run with a few modes
 
 # Saving
-# output_filepath = "C:/LocalData/slm-patterns/slm-pattern"
-output_filepath = "/home/dani/LocalData/slm-patterns/slm-pattern"
+output_filepath = os.path.join(localdata, "slm-frames/slm-pattern")
 
 # Import modes
-phases_filepath = '//ad.utwente.nl/TNW/BMPI/Data/Daniel Cox/ExperimentalData/wfs-OrthoFBDR-comparison/ortho-plane-waves-hires.hdf5'
+phases_filepath = os.path.join(localdata, "ortho-plane-waves-hires.hdf5")
 
 size = (300, 300)
 
@@ -43,9 +48,14 @@ split_mask = np.concatenate((np.zeros(shape=mask_shape), np.ones(shape=mask_shap
 
 
 # WFS arguments
-algorithm_kwargs = {'phases': (phases_ortho_pw, np.flip(phases_ortho_pw))}
-algorithm_common_kwargs = {'iterations': 6, 'phase_steps': 16, 'set1_mask': split_mask, 'do_try_full_patterns': True,
-                           'progress_bar_kwargs': {'ncols': 60, 'leave': False}}
+if do_quick_test:
+    algorithm_kwargs = {'phases': (phases_ortho_pw[:, :, 0:25], np.flip(phases_ortho_pw[:, :, 0:25]))}
+    algorithm_common_kwargs = {'iterations': 2, 'phase_steps': 4, 'set1_mask': split_mask, 'do_try_full_patterns': True,
+                               'progress_bar_kwargs': {'ncols': 60, 'leave': False}}
+else:
+    algorithm_kwargs = {'phases': (phases_ortho_pw, np.flip(phases_ortho_pw))}
+    algorithm_common_kwargs = {'iterations': 6, 'phase_steps': 16, 'set1_mask': split_mask, 'do_try_full_patterns': True,
+                               'progress_bar_kwargs': {'ncols': 60, 'leave': False}}
 
 # Setup WFS sim
 t = np.random.normal(size=size) + 1j * np.random.normal(size=size)
