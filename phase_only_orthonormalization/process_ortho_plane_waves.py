@@ -62,7 +62,6 @@ with h5py.File(import_filepath, 'r') as f:
     phase_kwargs = get_dict_from_hdf5(f['phase_kwargs'])
     git_info_orthonormalization = get_dict_from_hdf5(f['git_info'])
 
-
 def draw_circle(circ_style, r_circ, theta_min, theta_max):
     theta_circ = np.linspace(theta_min, theta_max, 250)
     x_circ = r_circ * np.cos(theta_circ)
@@ -98,8 +97,6 @@ if do_plot_bases:
         plot_field(new_modes[:, :, m], scale=scale)
         plt.xticks([])
         plt.yticks([])
-        plt.xlim((domain['x_min'], domain['x_max']))
-        plt.ylim((domain['y_min'], domain['y_max']))
 
     # Complex colorwheel
     center_spi = int(n_cols_basis + 1 + np.floor(n_rows/2) * n_cols_total)
@@ -229,6 +226,7 @@ plt.show()
 
 
 if do_export_modes:
+    print('Generating hi-res modes...')
     domain_hr = {**domain, 'yxshape': (1000, 500)}
     x_hr, y_hr = get_coords(domain_hr)
     amplitude_profile = trunc_gaussian(x_hr, y_hr, **amplitude_kwargs)
