@@ -1,44 +1,19 @@
 import torch
-import numpy as np
 import pytest
 import matplotlib.pyplot as plt
 
-from phase_only_orthonormalization.mode_functions import associated_laguerre_polynomial, laguerre_gauss_mode
+from phase_only_orthonormalization.mode_functions import associated_laguerre_polynomial, \
+    laguerre_gauss_mode, compute_non_orthonormality
 from phase_only_orthonormalization.helper_functions import plot_field
 
 
-### TODO: make it work for 1x5x5 bases
-@pytest.mark.skip()
 def test_non_orthogonality_on_orthonormal_basis():
     """
     Construct an Euler basis and check if non_orthogonality is 0.
     """
-    a = torch.eye(5).unsqueeze(0)
-    non_orthogonality, gram = compute_non_orthogonality(a)
+    a = torch.eye(6).view(2, 3, 6)
+    non_orthogonality, gram = compute_non_orthonormality(a)
     assert non_orthogonality == 0
-
-
-@pytest.mark.skip(reason="Normalization is currently different. Output can be > 1. Fix normalization first.")
-def test_non_orthogonality_on_equal():
-    """
-    Construct a set of equal modes. The non_orthogonality should be maximal.
-    """
-    a = torch.zeros(5, 5)
-    a[2, :] = 1
-    b = a.unsqueeze(0)
-    non_orthogonality, gram = compute_non_orthogonality(b)
-    assert non_orthogonality == 1
-
-
-@pytest.mark.skip()
-def test_similarity_perfect_match():
-    """
-    Test similarity on two identical normal bases.
-    """
-    # Create normal basis
-    a = torch.tensor(((1, 0, 2), (2, 1, 0), (0, 2, 1))).unsqueeze(0) / np.sqrt(5)
-    similarity = compute_similarity(a, a)
-    assert torch.allclose(similarity, torch.tensor(1.0))
 
 
 @pytest.mark.parametrize("a", [0, 1, 2])
