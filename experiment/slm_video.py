@@ -15,7 +15,7 @@ import numpy as np
 import h5py
 
 # External (ours)
-from openwfs.algorithms import CustomBlindDualReference
+from openwfs.algorithms import DualReference
 from openwfs.simulation import SimulatedWFS
 
 # Internal
@@ -49,13 +49,11 @@ split_mask = np.concatenate((np.zeros(shape=mask_shape), np.ones(shape=mask_shap
 
 # WFS arguments
 if do_quick_test:
-    algorithm_kwargs = {'phases': (phases_ortho_pw[:, :, 0:25], np.flip(phases_ortho_pw[:, :, 0:25]))}
-    algorithm_common_kwargs = {'iterations': 2, 'phase_steps': 4, 'set1_mask': split_mask, 'do_try_full_patterns': True,
-                               'progress_bar_kwargs': {'ncols': 60, 'leave': False}}
+    algorithm_kwargs = {'phase_patterns': (phases_ortho_pw[:, :, 0:20], np.flip(phases_ortho_pw[:, :, 0:20]))}
+    algorithm_common_kwargs = {'iterations': 2, 'phase_steps': 4, 'group_mask': split_mask, 'amplitude': 'uniform'}
 else:
-    algorithm_kwargs = {'phases': (phases_ortho_pw, np.flip(phases_ortho_pw))}
-    algorithm_common_kwargs = {'iterations': 6, 'phase_steps': 16, 'set1_mask': split_mask, 'do_try_full_patterns': True,
-                               'progress_bar_kwargs': {'ncols': 60, 'leave': False}}
+    algorithm_kwargs = {'phase_patterns': (phases_ortho_pw, np.flip(phases_ortho_pw))}
+    algorithm_common_kwargs = {'iterations': 6, 'phase_steps': 16, 'group_mask': split_mask, 'amplitude': 'uniform'}
 
 # Setup WFS sim
 t = np.random.normal(size=size) + 1j * np.random.normal(size=size)
@@ -63,6 +61,6 @@ sim = SimulatedWFS(t=t)
 reader = SLMPatternSaver(source=sim, slm=sim.slm, output_filepath=output_filepath)  # Saves SLM pattern at every fetch
 
 # Run WFS
-print('Run WFS simulation...')
-alg = CustomBlindDualReference(feedback=reader, slm=sim.slm, slm_shape=size, **algorithm_common_kwargs, **algorithm_kwargs)
+print(f'Run WFS simulation... Saving frames to {output_filepath}')
+alg = DualReference(feedback=reader, slm=sim.slm, **algorithm_common_kwargs, **algorithm_kwargs)
 alg.execute()
