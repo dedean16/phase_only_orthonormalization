@@ -78,8 +78,11 @@ if not do_quick_test:
     }
 
     # WFS
-    algorithm_kwargs = [{'phase_patterns': (phases_pw, np.flip(phases_pw)), 'amplitude': 'uniform'},
-                        {'phase_patterns': (phases_ortho_pw, np.flip(phases_ortho_pw)), 'amplitude': amplitude_profile}]
+    algorithm_kwargs = [
+        {'phase_patterns': (phases_pw, np.flip(phases_pw)), 'amplitude': 'uniform'},
+        {'phase_patterns': (phases_ortho_pw, np.flip(phases_ortho_pw)),
+         'amplitude': [amplitude_profile, amplitude_profile]}
+    ]
     algorithm_common_kwargs = {'iterations': 6, 'phase_steps': 16, 'group_mask': split_mask}
 
 if do_quick_test:
