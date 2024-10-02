@@ -53,6 +53,7 @@ print('\nStart import modes...')
 with h5py.File(phases_filepath, 'r') as f:
     phases_pw_half = f['init_phases_hr'][:, :, :, 0, 0]
     phases_ortho_pw_half = f['new_phases_hr'][:, :, :, 0, 0]
+    amplitude_profile = f['amplitude_profile'][:, :, 0, 0, 0]
     git_info_process_modes = get_dict_from_hdf5(f['git_info'])
     git_info_orthonormalization = get_dict_from_hdf5(f['git_info_orthonormalization'])
 
@@ -77,10 +78,9 @@ if not do_quick_test:
     }
 
     # WFS
-    algorithm_kwargs = [{'phases': (phases_pw, np.flip(phases_pw))},
-                        {'phases': (phases_ortho_pw, np.flip(phases_ortho_pw))}]
-    algorithm_common_kwargs = {'iterations': 6, 'phase_steps': 16, 'set1_mask': split_mask, 'do_try_full_patterns': True,
-                               'progress_bar_kwargs': {'ncols': 60, 'leave': False}}
+    algorithm_kwargs = [{'phase_patterns': (phases_pw, np.flip(phases_pw)), 'amplitude': 'uniform'},
+                        {'phase_patterns': (phases_ortho_pw, np.flip(phases_ortho_pw)), 'amplitude': amplitude_profile}]
+    algorithm_common_kwargs = {'iterations': 6, 'phase_steps': 16, 'group_mask': split_mask}
 
 if do_quick_test:
     # === Quick test settings === #
@@ -93,10 +93,11 @@ if do_quick_test:
     }
 
     # WFS
-    algorithm_kwargs = [{'phases': (phases_pw[:, :, 0:3], np.flip(phases_pw[:, :, 0:3]))},
-                        {'phases': (phases_ortho_pw[:, :, 0:3], np.flip(phases_ortho_pw[:, :, 0:3]))}]
-    algorithm_common_kwargs = {'iterations': 2, 'phase_steps': 4, 'set1_mask': split_mask, 'do_try_full_patterns': True,
-                               'progress_bar_kwargs': {'ncols': 60, 'leave': False}}
+    algorithm_kwargs = [{'phase_patterns': (phases_pw[:, :, 0:3], np.flip(phases_pw[:, :, 0:3])),
+                         'amplitude': 'uniform'},
+                        {'phase_patterns': (phases_ortho_pw[:, :, 0:3], np.flip(phases_ortho_pw[:, :, 0:3])),
+                         'amplitude': amplitude_profile}]
+    algorithm_common_kwargs = {'iterations': 2, 'phase_steps': 4, 'group_mask': split_mask}
 
 
 # Save algorithm kwargs once in separate file (contains the modes -> big!)
