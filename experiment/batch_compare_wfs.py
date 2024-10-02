@@ -99,6 +99,8 @@ if do_quick_test:
                          'amplitude': amplitude_profile}]
     algorithm_common_kwargs = {'iterations': 2, 'phase_steps': 4, 'group_mask': split_mask}
 
+# WFS algorithm execute keyword arguments
+exec_kwargs = {'capture_intermediate_results': True}
 
 # Save algorithm kwargs once in separate file (contains the modes -> big!)
 np.savez(
@@ -269,7 +271,7 @@ with Connection.open_serial_port(comport) as connection:            # Open conne
                 signal_flat[n_alg] = reader.read()
 
                 # Run WFS measurement
-                wfs_result = alg.execute()
+                wfs_result = alg.execute(**exec_kwargs)
 
                 # Shaped wavefront signal
                 shaped_phases = -np.angle(wfs_result.t)
@@ -316,6 +318,7 @@ with Connection.open_serial_port(comport) as connection:            # Open conne
                 roi_kwargs=[roi_kwargs],
                 signal_flat=[signal_flat],
                 signal_shaped=[signal_shaped],
+                exec_kwargs=[exec_kwargs],
             )
 
             progress_bar.update()
