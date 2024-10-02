@@ -26,7 +26,7 @@ from zaber_motion.ascii import Connection
 from openwfs.processors import SingleRoi
 from openwfs.devices import ScanningMicroscope, Gain, SLM, Axis
 from openwfs.utilities import Transform
-from openwfs.algorithms import CustomBlindDualReference
+from openwfs.algorithms import DualReference
 
 # Internal
 from filters import DigitalNotchFilter
@@ -64,7 +64,7 @@ split_mask = np.concatenate((np.zeros(shape=mask_shape), np.ones(shape=mask_shap
 
 
 # WFS settings
-algorithms = [CustomBlindDualReference, CustomBlindDualReference]
+algorithms = [DualReference, DualReference]
 
 if not do_quick_test:
     # === Full measurement settings === #
