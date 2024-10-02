@@ -33,7 +33,7 @@ torch = "~2.3.0"                # Platform default torch version = non-CUDA for 
 optional = true
 
 [tool.poetry.group.experiment.dependencies]
-openwfs = { git = "https://github.com/IvoVellekoop/openwfs", rev = "6334c635ce9425ebf0efdcb27b8f0cac6fc7afbe" }
+openwfs = { git = "https://github.com/IvoVellekoop/openwfs", rev = "7727b33db0a48993d5aebb347233d82a25433729", extras = ["nidaq"] }
 zaber-motion = "^5.2.1"
 pyserial = "^3.5"
 pyopengl = "^3.1.7"
