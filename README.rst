@@ -34,7 +34,7 @@ Options for plotting and/or saving are available near the top of each script.
 Scripts for running and analyzing the wavefront shaping experiments can be found in the ``experiment`` directory.
 Ensure the ``experiment`` poetry group is installed. ``batch_compare_wfs.py`` is the measurement script for comparing
 wavefront shaping performance using the different bases. Note that running this script requires the corresponding
-hardware. ``analyze_compare_wfs.py`` may be used to analyze the measurement results. Lastly, ``slm_video.py`` may be
+hardware. ``analyze_compare_wfs.py`` may be used to analyze the measurement results. Lastly, ``sim_slm_video.py`` may be
 used to simulate a wavefront shaping experiment and export the SLM frames.
 
 Before running any script, please ensure the variables defined in ``phase_only_orthonormalization/directories.py``
