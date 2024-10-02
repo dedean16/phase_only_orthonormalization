@@ -1258,8 +1258,8 @@ nidaq = ["nidaqmx (>=1.0.1,<2.0.0)"]
 [package.source]
 type = "git"
 url = "https://github.com/IvoVellekoop/openwfs"
-reference = "7727b33db0a48993d5aebb347233d82a25433729"
-resolved_reference = "7727b33db0a48993d5aebb347233d82a25433729"
+reference = "b8219c039061226e280baa50a2881862af22065b"
+resolved_reference = "b8219c039061226e280baa50a2881862af22065b"
 
 [[package]]
 name = "packaging"
@@ -1964,4 +1964,4 @@ dev = ["build", "invoke", "mypy", "mypy-protobuf", "packaging", "pycodestyle", "
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.11"
-content-hash = "5c99cb4df49ce424e2c6d261ff1293eca996503730e8a0bced59bf6f07aab3f0"
+content-hash = "ce7a239383bf47a99ec8edc904cf999aa768856da733d336a57d9f7cae85bf1a"
