@@ -78,8 +78,8 @@ for r in range(runs_per_noise_level):
         noisy_detect = GaussianNoise(source=sim, std=noise_level)
 
         for a, alg_kwargs in enumerate(algorithm_kwargs):
-            # alg = DualReference(feedback=noisy_detect, slm=slm, **algorithm_common_kwargs, **alg_kwargs)
-            alg = NoWFS(feedback=noisy_detect, slm=slm)
+            alg = DualReference(feedback=noisy_detect, slm=slm, **algorithm_common_kwargs, **alg_kwargs)
+            # alg = NoWFS(feedback=noisy_detect, slm=slm)
             result = alg.execute()
 
             # Intensity with flat wavefront
@@ -103,7 +103,7 @@ mean_initial_snr_range = mean_background_signal * one_over_noise_range
 print(f'\nBackground signal: {mean_background_signal:.2f} ± {flat_signals[:, 0, 0].std():.2f}')
 
 for a, alg_label in enumerate(alg_labels):
-    plt.errorbar(mean_initial_snr_range, enhancement_means[:, a], enhancement_stds[:, a], label=alg_label)
+    plt.errorbar(mean_initial_snr_range, enhancement_means[:, a], enhancement_stds[:, a], label=alg_label, capsize=2.5)
 
 plt.xlabel('Mean Initial SNR')
 plt.ylabel('Enhancement $\\eta$')
