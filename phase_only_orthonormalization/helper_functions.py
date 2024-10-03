@@ -210,6 +210,25 @@ def add_dict_as_hdf5group(name: str, dic: dict, hdf: h5py.File | h5py.Group):
             subgroup.create_dataset(key, data=value)
 
 
+def add_dict_sequence_as_hdf5_groups(name: str, seq: list | tuple, hdf: h5py.File | h5py.Group):
+    """
+    Add list or tuple of dictionaries as group to HDF5 file. The list/tuple items will be stored as subgroups,
+    with the index numbers as keys. Supports nested dictionaries. The list/tuple may also contain items of other type,
+    as long as they are supported by h5py.
+
+    Args:
+        name: Name of the list or tuple group.
+        seq: List or tuple of dictionaries to add.
+        hdf: HDF5 file or group to add to.
+    """
+    subgroup = hdf.create_group(name)
+    for n, item in enumerate(seq):
+        if isinstance(item, dict):
+            add_dict_as_hdf5group(name=f'{n}', dic=item, hdf=subgroup)
+        else:
+            subgroup.create_dataset(name=f'{n}', data=item)
+
+
 def get_dict_from_hdf5(group: h5py.Group) -> dict:
     """
     Retrieve a hdf5 file or group as a dictionary. Supports nested dictionaries. Can be used on the main group as well

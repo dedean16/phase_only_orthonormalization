@@ -12,16 +12,20 @@ from openwfs.algorithms import DualReference
 from openwfs.simulation import SimulatedWFS
 from openwfs.simulation.mockdevices import GaussianNoise
 
+from phase_only_orthonormalization.helper_functions import add_dict_as_hdf5group, add_dict_sequence_as_hdf5_groups, \
+    gitinfo
 from phase_only_orthonormalization.directories import localdata
 from experiment_helper_classes import NoWFS
-
 
 # === Settings === #
 # Note: WFS settings further down
 phases_filepath = os.path.join(localdata, 'ortho-plane-waves-80x40.hdf5')
 
-runs_per_noise_level = 12
-one_over_noise_range = np.asarray([0.05, 0.2, 0.4, 0.7, 1.0, 1.5, 2.0, 2.5, 3.5, 5.0, 7.0, 10.0, 13.0, 16.0, 20.0]) / 1.5
+do_save_result = True
+save_filepath_result = os.path.join(localdata, 'sim-compare-wfs.hdf5')
+
+runs_per_noise_level = 20
+one_over_noise_range = np.asarray([0.05, 0.2, 0.4, 0.7, 1.0, 1.3, 1.6, 2.0, 2.5, 3.2, 4.5, 6.0, 8.0, 10.0, 12.0, 16.0, 22.0]) / 1.5
 
 # Import variables
 print('\nStart import modes...')
@@ -102,6 +106,24 @@ mean_initial_snr_range = mean_background_signal * one_over_noise_range
 
 print(f'\nBackground signal: {mean_background_signal:.2f} ± {flat_signals[:, 0, 0].std():.2f}')
 
+
+if do_save_result:
+    with h5py.File(save_filepath_result, 'w') as f:
+        f.create_dataset('phases_filepath', data=phases_filepath)
+        f.create_dataset('shaped_signals', data=shaped_signals)
+        f.create_dataset('flat_signals', data=flat_signals)
+        f.create_dataset('mean_background_signal', data=mean_background_signal)
+        f.create_dataset('enhancement_means', data=enhancement_means)
+        f.create_dataset('enhancement_stds', data=enhancement_stds)
+        f.create_dataset('mean_initial_snr_range', data=mean_initial_snr_range)
+        f.create_dataset('alg_labels', data=alg_labels)
+        f.create_dataset('runs_per_noise_level', data=runs_per_noise_level)
+
+        add_dict_sequence_as_hdf5_groups(name='algorithm_kwargs', seq=algorithm_kwargs, hdf=f)
+        add_dict_as_hdf5group(name='algorithm_common_kwargs', dic=algorithm_common_kwargs, hdf=f)
+        add_dict_as_hdf5group(name='gitinfo', dic=gitinfo(), hdf=f)
+
+# Plot
 for a, alg_label in enumerate(alg_labels):
     plt.errorbar(mean_initial_snr_range, enhancement_means[:, a], enhancement_stds[:, a], label=alg_label, capsize=2.5)
 
