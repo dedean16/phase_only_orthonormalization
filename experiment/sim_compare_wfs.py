@@ -20,7 +20,7 @@ from experiment_helper_classes import NoWFS
 # Note: WFS settings further down
 phases_filepath = os.path.join(localdata, 'ortho-plane-waves-80x40.hdf5')
 
-runs_per_noise_level = 10
+runs_per_noise_level = 12
 one_over_noise_range = np.asarray([0.05, 0.2, 0.4, 0.7, 1.0, 1.5, 2.0, 2.5, 3.5, 5.0, 7.0, 10.0, 13.0, 16.0, 20.0]) / 1.5
 
 # Import variables
@@ -55,8 +55,7 @@ algorithm_kwargs = [
     {'phase_patterns': phase_patterns_ortho_pw,
      'amplitude': amplitude}
 ]
-# algorithm_common_kwargs = {'iterations': 4, 'phase_steps': 8, 'group_mask': group_mask}
-algorithm_common_kwargs = {'iterations': 2, 'phase_steps': 4, 'group_mask': group_mask}
+algorithm_common_kwargs = {'iterations': 4, 'phase_steps': 6, 'group_mask': group_mask}
 
 # ===== Prepare simulation ===== #
 size = full_beam_amplitude.shape
@@ -111,5 +110,5 @@ plt.ylabel('Enhancement $\\eta$')
 plt.xlim((0, None))
 plt.ylim((0, None))
 plt.legend()
-plt.title('WFS performance')
+plt.title(f'WFS performance\n{runs_per_noise_level} runs per noise level')
 plt.show()
