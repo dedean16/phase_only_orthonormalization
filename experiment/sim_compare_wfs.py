@@ -13,40 +13,36 @@ from openwfs.simulation import SimulatedWFS
 from openwfs.simulation.mockdevices import GaussianNoise
 
 from phase_only_orthonormalization.directories import localdata
+from experiment_helper_classes import NoWFS
 
 
 # === Settings === #
 # Note: WFS settings further down
-phases_filepath = os.path.join(localdata, 'ortho-plane-waves.hdf5')
+phases_filepath = os.path.join(localdata, 'ortho-plane-waves-80x40.hdf5')
 
-# runs_per_noise_level = 10
-# gauss_noise_range = tuple(2 * x ** 2 for x in range(8))
-runs_per_noise_level = 2
-gauss_noise_range = tuple(2 * x ** 2 for x in range(2))
+runs_per_noise_level = 10
+one_over_noise_range = np.asarray([0.05, 0.2, 0.4, 0.7, 1.0, 1.5, 2.0, 2.5, 3.5, 5.0, 7.0, 10.0, 13.0, 16.0, 20.0]) / 1.5
 
 # Import variables
 print('\nStart import modes...')
 with h5py.File(phases_filepath, 'r') as f:
-    modes_pw_half = f['init_modes'][()]
-    modes_ortho_pw_half = f['new_modes'][()]
+    phases_pw_half = f['init_phases_hr'][:, :, :, 0, 0]
+    phases_ortho_pw_half = f['new_phases_hr'][:, :, :, 0, 0]
+    amplitude_half = f['amplitude_profile'][:, :, 0, 0, 0]
 
 # ===== Construct full SLM modes for Dual Reference ===== #
-N1, N2, M = modes_pw_half.shape
+N1, N2, M = phases_pw_half.shape
 
 # Expand half-SLM-modes to full SLM (second half are zeros)
-modes_pw = np.concatenate((modes_pw_half, np.zeros(shape=(N1, N2, M))), axis=1)
-modes_ortho_pw = np.concatenate((modes_ortho_pw_half, np.zeros(shape=(N1, N2, M))), axis=1)
-
-# Phases and amplitude of 1 group
-phases_pw = np.angle(modes_pw)
-phases_ortho_pw = np.angle(modes_ortho_pw)
-amplitude_profile = abs(modes_ortho_pw[:, :, 0])
+phases_pw = np.concatenate((phases_pw_half, np.zeros(shape=(N1, N2, M))), axis=1)
+phases_ortho_pw = np.concatenate((phases_ortho_pw_half, np.zeros(shape=(N1, N2, M))), axis=1)
+full_beam_amplitude_unnorm = np.concatenate((amplitude_half, np.flip(amplitude_half)), axis=1)
+full_beam_amplitude = full_beam_amplitude_unnorm / np.sqrt((full_beam_amplitude_unnorm**2).sum())
 
 # Phases and amplitude of both groups, both halves
 phase_patterns_pw = (phases_pw, np.flip(phases_pw))
 phase_patterns_ortho_pw = (phases_ortho_pw, np.flip(phases_ortho_pw))
-amplitude = (amplitude_profile, np.flip(amplitude_profile))
-full_beam_amplitude = amplitude[0] + amplitude[1]
+amplitude = (full_beam_amplitude, full_beam_amplitude)
 
 # Group mask
 group_mask = np.concatenate((np.zeros((N1, N2)), np.ones((N1, N2))), axis=1)
@@ -66,7 +62,7 @@ algorithm_common_kwargs = {'iterations': 2, 'phase_steps': 4, 'group_mask': grou
 size = full_beam_amplitude.shape
 
 # === Prepare result arrays === #
-flat_signals = np.zeros((runs_per_noise_level, len(gauss_noise_range), len(algorithm_kwargs)))
+flat_signals = np.zeros((runs_per_noise_level, len(one_over_noise_range), len(algorithm_kwargs)))
 shaped_signals = flat_signals.copy()
 
 # ===== Loop and simulate ===== #
@@ -78,11 +74,13 @@ for r in range(runs_per_noise_level):
     sim = SimulatedWFS(t=t, beam_amplitude=full_beam_amplitude)
     slm = sim.slm
 
-    for n, noise_level in enumerate(gauss_noise_range):
+    for n, one_over_noise in enumerate(one_over_noise_range):
+        noise_level = 1 / one_over_noise
         noisy_detect = GaussianNoise(source=sim, std=noise_level)
 
         for a, alg_kwargs in enumerate(algorithm_kwargs):
-            alg = DualReference(feedback=noisy_detect, slm=slm, **algorithm_common_kwargs, **alg_kwargs)
+            # alg = DualReference(feedback=noisy_detect, slm=slm, **algorithm_common_kwargs, **alg_kwargs)
+            alg = NoWFS(feedback=noisy_detect, slm=slm)
             result = alg.execute()
 
             # Intensity with flat wavefront
@@ -94,7 +92,6 @@ for r in range(runs_per_noise_level):
             slm.set_phases(-np.angle(result.t))
             after = sim.read()
             shaped_signals[r, n, a] = after
-            # print(f"Intensity in the target increased from {before:.3g} to {after:.3g} (factor of {after/before:.3g}x)")
 
             progress_bar.update()
 
@@ -102,12 +99,17 @@ for r in range(runs_per_noise_level):
 mean_background_signal = flat_signals[:, 0, 0].mean()
 enhancement_means = shaped_signals.mean(axis=0) / mean_background_signal
 enhancement_stds = shaped_signals.std(axis=0) / mean_background_signal
+mean_initial_snr_range = mean_background_signal * one_over_noise_range
+
+print(f'\nBackground signal: {mean_background_signal:.2f} ± {flat_signals[:, 0, 0].std():.2f}')
 
 for a, alg_label in enumerate(alg_labels):
-    plt.errorbar(gauss_noise_range, enhancement_means[:, a], enhancement_stds[:, a], label=alg_label)
+    plt.errorbar(mean_initial_snr_range, enhancement_means[:, a], enhancement_stds[:, a], label=alg_label)
 
-plt.xlabel('Gaussian noise std $\\sigma$')
+plt.xlabel('Mean Initial SNR')
 plt.ylabel('Enhancement $\\eta$')
+plt.xlim((0, None))
+plt.ylim((0, None))
 plt.legend()
 plt.title('WFS performance')
 plt.show()
