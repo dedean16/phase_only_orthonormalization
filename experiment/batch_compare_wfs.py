@@ -25,6 +25,7 @@ from zaber_motion.ascii import Connection
 # External (ours)
 from openwfs.processors import SingleRoi
 from openwfs.devices import ScanningMicroscope, Gain, SLM, Axis
+from openwfs.devices.galvo_scanner import InputChannel
 from openwfs.utilities import Transform
 from openwfs.algorithms import DualReference
 
@@ -70,9 +71,8 @@ phase_patterns_pw = (phases_pw, np.flip(phases_pw))
 phase_patterns_ortho_pw = (phases_ortho_pw, np.flip(phases_ortho_pw))
 amplitude = (full_beam_amplitude, full_beam_amplitude)
 
-
 # WFS settings
-algorithms = [DualReference, DualReference]
+algorithms = [DualReference, DualReference, DualReference]
 
 if not do_quick_test:
     # === Full measurement settings === #
@@ -158,6 +158,12 @@ scanner_props = {
     'maximum_acceleration': 5.0e4 * u.V/u.s**2,
 }
 
+input_channel_kwargs = {
+    'channel': 'Dev4/ai16',
+    'v_min': -1.0 * u.V,
+    'v_max': 1.0 * u.V,
+}
+
 park_kwargs = {
     'do_plot': False,                # For debugging
     'median_filter_size': (3, 3),
@@ -189,14 +195,15 @@ y_axis = Axis(channel='Dev4/ao2',
               maximum_acceleration=scanner_props['maximum_acceleration'],
               scale=scanner_props['scale'])
 
+pmt_input_channel = InputChannel(**input_channel_kwargs)
+
 # Define laser scanner, with offset
 scanner_with_offset = ScanningMicroscope(
     bidirectional=True,
     sample_rate=scanner_props['sample_rate'],
     y_axis=y_axis,
     x_axis=x_axis,
-    input=('Dev4/ai16', -1.0 * u.V, 1.0 * u.V),
-    scale=scanner_props['scale'],
+    input=pmt_input_channel,
     delay=scanner_props['initial_delay'],
     preprocessor=DigitalNotchFilter(**notch_kwargs),
     reference_zoom=2.0,
@@ -273,7 +280,7 @@ with Connection.open_serial_port(comport) as connection:            # Open conne
 
             for n_alg, alg_constructor in enumerate(algorithms):     # Loop over algorithms
                 # Construct algorithm
-                alg = alg_constructor(feedback=roi, slm=slm, slm_shape=slm_shape, **algorithm_common_kwargs,
+                alg = alg_constructor(feedback=roi, slm=slm, **algorithm_common_kwargs,
                                       **algorithm_kwargs[n_alg])
 
                 print(f'Start Alg.{n_alg} - {alg_constructor.__name__}...')
@@ -327,6 +334,7 @@ with Connection.open_serial_port(comport) as connection:            # Open conne
                 slm_props=[slm_props],
                 notch_kwargs=[notch_kwargs],
                 scanner_props=[scanner_props],
+                input_channel_kwargs=[input_channel_kwargs],
                 park_kwargs=[park_kwargs],
                 park_result=[park_result],
                 roi_kwargs=[roi_kwargs],
