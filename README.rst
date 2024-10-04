@@ -39,4 +39,4 @@ used to simulate a wavefront shaping experiment and export the SLM frames.
 
 Before running any script, please ensure the variables defined in ``phase_only_orthonormalization/directories.py``
 point to valid directories. Additionally, for the scripts that import/export data, please ensure that (sub)directories
-and file paths in the settings (near the top of the script) are valid.
+and file paths in the settings (near the top of each script) are valid.
