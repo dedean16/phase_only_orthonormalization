@@ -15,7 +15,7 @@ from openwfs.simulation.mockdevices import GaussianNoise
 from phase_only_orthonormalization.helper_functions import add_dict_as_hdf5group, add_dict_sequence_as_hdf5_groups, \
     gitinfo
 from phase_only_orthonormalization.directories import localdata
-from experiment_helper_classes import NoWFS
+from experiment_helper_classes import NoWFS, Squarer
 
 # === Settings === #
 # Note: WFS settings further down
@@ -25,7 +25,7 @@ do_save_result = True
 save_filepath_result = os.path.join(localdata, 'sim-compare-wfs.hdf5')
 
 runs_per_noise_level = 20
-one_over_noise_range = np.asarray([0.05, 0.2, 0.4, 0.7, 1.0, 1.3, 1.6, 2.0, 2.5, 3.2, 4.5, 6.0, 8.0, 10.0, 12.0, 16.0, 22.0]) / 1.5
+one_over_noise_range = np.asarray([0.05, 0.2, 0.4, 0.7, 1.0, 1.3, 1.6, 2.0, 2.5, 3.2, 4.5, 6.0, 8.0, 10.0, 12.0, 16.0, 22.0]) / 2.0
 
 # Import variables
 print('\nStart import modes...')
@@ -79,7 +79,8 @@ for r in range(runs_per_noise_level):
 
     for n, one_over_noise in enumerate(one_over_noise_range):
         noise_level = 1 / one_over_noise
-        noisy_detect = GaussianNoise(source=sim, std=noise_level)
+        signal_square = Squarer(source=sim)
+        noisy_detect = GaussianNoise(source=signal_square, std=noise_level)
 
         for a, alg_kwargs in enumerate(algorithm_kwargs):
             alg = DualReference(feedback=noisy_detect, slm=slm, **algorithm_common_kwargs, **alg_kwargs)

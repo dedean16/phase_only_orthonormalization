@@ -77,3 +77,13 @@ class SLMPatternSaver(Processor):
 
         # Pass on data
         return source_data
+
+
+class Squarer(Processor):
+    """Processor that squares the input."""
+    def __init__(self, source):
+        super().__init__(source, multi_threaded=False)
+        self.source = source
+
+    def _fetch(self, source_data: np.ndarray) -> np.ndarray:
+        return source_data**2
