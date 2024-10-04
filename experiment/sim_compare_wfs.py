@@ -59,7 +59,7 @@ algorithm_kwargs = [
     {'phase_patterns': phase_patterns_ortho_pw,
      'amplitude': amplitude}
 ]
-algorithm_common_kwargs = {'iterations': 4, 'phase_steps': 6, 'group_mask': group_mask}
+algorithm_common_kwargs = {'iterations': 6, 'phase_steps': 8, 'group_mask': group_mask}
 
 # ===== Prepare simulation ===== #
 size = full_beam_amplitude.shape
