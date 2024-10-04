@@ -516,27 +516,6 @@ doc = ["sphinx (==4.3.2)", "sphinx-autodoc-typehints", "sphinx-rtd-theme", "sphi
 test = ["coverage[toml]", "ddt (>=1.1.1,!=1.4.3)", "mock", "mypy", "pre-commit", "pytest (>=7.3.1)", "pytest-cov", "pytest-instafail", "pytest-mock", "pytest-sugar", "typing-extensions"]
 
 [[package]]
-name = "glfw"
-version = "2.7.0"
-description = "A ctypes-based wrapper for GLFW3."
-optional = false
-python-versions = "*"
-files = [
-    {file = "glfw-2.7.0-py2.py27.py3.py30.py31.py32.py33.py34.py35.py36.py37.py38-none-macosx_10_6_intel.whl", hash = "sha256:bd82849edcceda4e262bd1227afaa74b94f9f0731c1197863cd25c15bfc613fc"},
-    {file = "glfw-2.7.0-py2.py27.py3.py30.py31.py32.py33.py34.py35.py36.py37.py38-none-macosx_11_0_arm64.whl", hash = "sha256:56ea163c964bb0bc336def2d6a6a1bd42f9db4b870ef834ac77d7b7ee68b8dfc"},
-    {file = "glfw-2.7.0-py2.py27.py3.py30.py31.py32.py33.py34.py35.py36.py37.py38-none-manylinux2010_i686.whl", hash = "sha256:463aab9e5567c83d8120556b3a845807c60950ed0218fc1283368f46f5ece331"},
-    {file = "glfw-2.7.0-py2.py27.py3.py30.py31.py32.py33.py34.py35.py36.py37.py38-none-manylinux2010_x86_64.whl", hash = "sha256:a6f54188dfc349e5426b0ada84843f6eb35a3811d8dbf57ae49c448e7d683bb4"},
-    {file = "glfw-2.7.0-py2.py27.py3.py30.py31.py32.py33.py34.py35.py36.py37.py38-none-manylinux2014_aarch64.whl", hash = "sha256:e33568b0aba2045a3d7555f22fcf83fafcacc7c2fc4cb995741894ea51e43ab6"},
-    {file = "glfw-2.7.0-py2.py27.py3.py30.py31.py32.py33.py34.py35.py36.py37.py38-none-manylinux2014_x86_64.whl", hash = "sha256:d8630dd9673860c427abde5b79bbc348e02eccde8a3f2a802c5a2a4fb5d79fb8"},
-    {file = "glfw-2.7.0-py2.py27.py3.py30.py31.py32.py33.py34.py35.py36.py37.py38-none-win32.whl", hash = "sha256:ff92d14ac1c7afa9c5deb495c335b485868709880e6e080e99ace7026d74c756"},
-    {file = "glfw-2.7.0-py2.py27.py3.py30.py31.py32.py33.py34.py35.py36.py37.py38-none-win_amd64.whl", hash = "sha256:20d4b31a5a6a61fb787b25f8408204e0e248313cc500953071d13d30a2e5cc9d"},
-    {file = "glfw-2.7.0.tar.gz", hash = "sha256:0e209ad38fa8c5be67ca590d7b17533d95ad1eb57d0a3f07b98131db69b79000"},
-]
-
-[package.extras]
-preview = ["glfw-preview"]
-
-[[package]]
 name = "h5py"
 version = "3.12.1"
 description = "Read and write HDF5 files from Python"
@@ -1244,7 +1223,6 @@ develop = false
 [package.dependencies]
 annotated-types = "^0.7.0"
 astropy = ">=5.1.0"
-glfw = "^2.5.9"
 matplotlib = "^3.7.3"
 nidaqmx = {version = "^1.0.1", optional = true}
 numpy = ">=1.25.2"
@@ -1254,12 +1232,13 @@ scipy = "^1.11.3"
 [package.extras]
 genicam = ["harvesters (>=1.4.2,<2.0.0)"]
 nidaq = ["nidaqmx (>=1.0.1,<2.0.0)"]
+opengl = ["PyOpenGL (>=3.1.7,<4.0.0)", "glfw (>=2.5.9,<3.0.0)"]
 
 [package.source]
 type = "git"
 url = "https://github.com/IvoVellekoop/openwfs"
-reference = "5ca3011057f232bd64880e5461e103baad966c0a"
-resolved_reference = "5ca3011057f232bd64880e5461e103baad966c0a"
+reference = "94abd01ac41ee361fb7350eb647b6122138cc057"
+resolved_reference = "94abd01ac41ee361fb7350eb647b6122138cc057"
 
 [[package]]
 name = "packaging"
@@ -1964,4 +1943,4 @@ dev = ["build", "invoke", "mypy", "mypy-protobuf", "packaging", "pycodestyle", "
 [metadata]
 lock-version = "2.0"
 python-versions = "~3.11"
-content-hash = "2f38b251a578ce64fc4f68f32fe62e7cfa7a5446564ff8826f590f23ef51c67e"
+content-hash = "1e40f37a161e1575bde34e03b18debd8dd5cedfd20b296ee90526c2fb8e32337"
