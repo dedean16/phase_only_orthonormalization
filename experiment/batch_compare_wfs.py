@@ -53,7 +53,7 @@ print('\nStart import modes...')
 with h5py.File(phases_filepath, 'r') as f:
     phases_pw_half = f['init_phases_hr'][:, :, :, 0, 0]
     phases_ortho_pw_half = f['new_phases_hr'][:, :, :, 0, 0]
-    amplitude_profile = f['amplitude_profile'][:, :, 0, 0, 0]
+    amplitude_half = f['amplitude_profile'][:, :, 0, 0, 0]
     git_info_process_modes = get_dict_from_hdf5(f['git_info'])
     git_info_orthonormalization = get_dict_from_hdf5(f['git_info_orthonormalization'])
 
@@ -62,6 +62,13 @@ mask_shape = phases_pw_half.shape[0:2]
 phases_pw = np.concatenate((phases_pw_half, np.zeros(shape=phases_pw_half.shape)), axis=1)
 phases_ortho_pw = np.concatenate((phases_ortho_pw_half, np.zeros(shape=phases_pw_half.shape)), axis=1)
 split_mask = np.concatenate((np.zeros(shape=mask_shape), np.ones(shape=mask_shape)), axis=1)
+full_beam_amplitude_unnorm = np.concatenate((amplitude_half, np.flip(amplitude_half)), axis=1)
+full_beam_amplitude = full_beam_amplitude_unnorm / np.sqrt((full_beam_amplitude_unnorm**2).sum())
+
+# Phases and amplitude of both groups, both halves
+phase_patterns_pw = (phases_pw, np.flip(phases_pw))
+phase_patterns_ortho_pw = (phases_ortho_pw, np.flip(phases_ortho_pw))
+amplitude = (full_beam_amplitude, full_beam_amplitude)
 
 
 # WFS settings
@@ -79,11 +86,11 @@ if not do_quick_test:
 
     # WFS
     algorithm_kwargs = [
-        {'phase_patterns': (phases_pw, np.flip(phases_pw)), 'amplitude': 'uniform'},
-        {'phase_patterns': (phases_ortho_pw, np.flip(phases_ortho_pw)),
-         'amplitude': [amplitude_profile, amplitude_profile]}
+        {'phase_patterns': phase_patterns_pw, 'amplitude': 'uniform'},
+        {'phase_patterns': phase_patterns_ortho_pw, 'amplitude': amplitude},
+        {'phase_patterns': phase_patterns_ortho_pw, 'amplitude': amplitude}
     ]
-    algorithm_common_kwargs = {'iterations': 6, 'phase_steps': 16, 'group_mask': split_mask}
+    algorithm_common_kwargs = {'iterations': 6, 'phase_steps': 12, 'group_mask': split_mask}
 
 if do_quick_test:
     # === Quick test settings === #
@@ -98,8 +105,10 @@ if do_quick_test:
     # WFS
     algorithm_kwargs = [{'phase_patterns': (phases_pw[:, :, 0:3], np.flip(phases_pw[:, :, 0:3])),
                          'amplitude': 'uniform'},
+                        {'phase_patterns': (phases_pw[:, :, 0:3], np.flip(phases_pw[:, :, 0:3])),
+                         'amplitude': amplitude},
                         {'phase_patterns': (phases_ortho_pw[:, :, 0:3], np.flip(phases_ortho_pw[:, :, 0:3])),
-                         'amplitude': amplitude_profile}]
+                         'amplitude': amplitude}]
     algorithm_common_kwargs = {'iterations': 2, 'phase_steps': 4, 'group_mask': split_mask}
 
 # WFS algorithm execute keyword arguments
