@@ -152,7 +152,7 @@ scanner_props = {
     'resolution': 1024,
     'zoom': 15,
     'initial_delay': 100.0 * u.us,
-    'scale': 440 * u.um / u.V,
+    'scale': 428 * u.um / u.V,
     'v_min': -1.0 * u.V,
     'v_max': 1.0 * u.V,
     'maximum_acceleration': 5.0e4 * u.V/u.s**2,
@@ -179,13 +179,15 @@ x_axis = Axis(channel='Dev4/ao3',
               v_min=scanner_props['v_min'],
               v_max=scanner_props['v_max'],
               terminal_configuration=TerminalConfiguration.DEFAULT,
-              maximum_acceleration=scanner_props['maximum_acceleration'])
+              maximum_acceleration=scanner_props['maximum_acceleration'],
+              scale=scanner_props['scale'])
 
 y_axis = Axis(channel='Dev4/ao2',
               v_min=scanner_props['v_min'],
               v_max=scanner_props['v_max'],
               terminal_configuration=TerminalConfiguration.DEFAULT,
-              maximum_acceleration=scanner_props['maximum_acceleration'])
+              maximum_acceleration=scanner_props['maximum_acceleration'],
+              scale=scanner_props['scale'])
 
 # Define laser scanner, with offset
 scanner_with_offset = ScanningMicroscope(
