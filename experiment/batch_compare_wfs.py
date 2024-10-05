@@ -80,8 +80,8 @@ if not do_quick_test:
     stage_settings = {
         'settle_time': 2 * 60 * u.s,
         'step_size': 300 * u.um,
-        'num_steps_axis1': 5,
-        'num_steps_axis2': 5,
+        'num_steps_axis1': 4,
+        'num_steps_axis2': 4,
     }
 
     # WFS
@@ -90,7 +90,7 @@ if not do_quick_test:
         {'phase_patterns': phase_patterns_ortho_pw, 'amplitude': amplitude},
         {'phase_patterns': phase_patterns_ortho_pw, 'amplitude': amplitude}
     ]
-    algorithm_common_kwargs = {'iterations': 6, 'phase_steps': 12, 'group_mask': split_mask}
+    algorithm_common_kwargs = {'iterations': 6, 'phase_steps': 16, 'group_mask': split_mask}
 
 if do_quick_test:
     # === Quick test settings === #
