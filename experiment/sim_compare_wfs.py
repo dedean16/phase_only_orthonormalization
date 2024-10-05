@@ -83,8 +83,8 @@ for r in range(runs_per_noise_level):
         noisy_detect = GaussianNoise(source=signal_square, std=noise_level)
 
         for a, alg_kwargs in enumerate(algorithm_kwargs):
-            alg = DualReference(feedback=noisy_detect, slm=slm, **algorithm_common_kwargs, **alg_kwargs)
-            # alg = NoWFS(feedback=noisy_detect, slm=slm)
+            # alg = DualReference(feedback=noisy_detect, slm=slm, **algorithm_common_kwargs, **alg_kwargs)
+            alg = NoWFS(feedback=noisy_detect, slm=slm)
             result = alg.execute()
 
             # Intensity with flat wavefront
@@ -125,6 +125,7 @@ if do_save_result:
         add_dict_as_hdf5group(name='gitinfo', dic=gitinfo(), hdf=f)
 
 # Plot
+plt.figure(figsize=(14, 6))
 for a, alg_label in enumerate(alg_labels):
     plt.errorbar(mean_initial_snr_range, enhancement_means[:, a], enhancement_stds[:, a], label=alg_label, capsize=2.5)
 
@@ -133,5 +134,8 @@ plt.ylabel('Enhancement $\\eta$')
 plt.xlim((0, None))
 plt.ylim((0, None))
 plt.legend()
-plt.title(f'WFS performance\n{runs_per_noise_level} runs per noise level')
+plt.title(f'WFS performance, squared feedback'
+          f'\n{runs_per_noise_level} runs per noise level, ' +
+          f'{algorithm_common_kwargs["iterations"]} ping pong iterations, ' +
+          f'{algorithm_common_kwargs["phase_steps"]} phase steps')
 plt.show()
