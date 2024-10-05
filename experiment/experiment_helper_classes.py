@@ -45,8 +45,7 @@ class NoWFS:
         self.slm = slm
 
     def execute(self):
-        return WFSResult(t=np.asarray((1.0,)), t_f=np.asarray((1.0, 0.0, 0.0)),
-                         axis=0, fidelity_amplitude=0, fidelity_noise=0, fidelity_calibration=0, n=0)
+        return WFSResult(t=np.asarray((1.0,)), axis=0, fidelity_amplitude=0, fidelity_noise=0, fidelity_calibration=0, n=0)
 
 
 class SLMPatternSaver(Processor):
