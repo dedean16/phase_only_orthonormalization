@@ -56,8 +56,7 @@ alg_labels = ['PW uniform', 'PW trunc gauss', 'ortho PW trunc gauss']
 algorithm_kwargs = [
     {'phase_patterns': phase_patterns_pw, 'amplitude': uniform_amplitude},
     {'phase_patterns': phase_patterns_pw, 'amplitude': full_beam_amplitude},
-    {'phase_patterns': phase_patterns_ortho_pw,
-     'amplitude': full_beam_amplitude}
+    {'phase_patterns': phase_patterns_ortho_pw, 'amplitude': full_beam_amplitude}
 ]
 algorithm_common_kwargs = {'iterations': 6, 'phase_steps': 8, 'group_mask': group_mask}
 
