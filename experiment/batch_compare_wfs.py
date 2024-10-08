@@ -87,7 +87,7 @@ if not do_quick_test:
     # WFS
     algorithm_kwargs = [
         {'phase_patterns': phase_patterns_pw, 'amplitude': uniform_amplitude},
-        {'phase_patterns': phase_patterns_ortho_pw, 'amplitude': full_beam_amplitude},
+        {'phase_patterns': phase_patterns_pw, 'amplitude': full_beam_amplitude},
         {'phase_patterns': phase_patterns_ortho_pw, 'amplitude': full_beam_amplitude}
     ]
     algorithm_common_kwargs = {'iterations': 6, 'phase_steps': 16, 'group_mask': split_mask}
