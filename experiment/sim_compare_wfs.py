@@ -24,29 +24,29 @@ phases_filepath = os.path.join(localdata, 'ortho-plane-waves-80x40.hdf5')
 do_save_result = True
 save_filepath_result = os.path.join(localdata, 'sim-compare-wfs.hdf5')
 
-runs_per_noise_level = 20
-one_over_noise_range = np.asarray([0.05, 0.2, 0.4, 0.7, 1.0, 1.3, 1.6, 2.0, 2.5, 3.2, 4.5, 6.0, 8.0, 10.0, 12.0, 16.0, 22.0]) / 2.0
+runs_per_noise_level = 25
+one_over_noise_range = np.asarray([0.01, 0.02, 0.04, 0.08, 0.12, 0.2, 0.3, 0.5, 1.0, 2.0, 3.0]) / 7.5
 
 # Import variables
 print('\nStart import modes...')
 with h5py.File(phases_filepath, 'r') as f:
-    phases_pw_half = f['init_phases_hr'][:, :, :, 0, 0]
-    phases_ortho_pw_half = f['new_phases_hr'][:, :, :, 0, 0]
+    phases_pw_half = f['init_phases_hr'][:, :, :, 0, 0].transpose(2, 0, 1)
+    phases_ortho_pw_half = f['new_phases_hr'][:, :, :, 0, 0].transpose(2, 0, 1)
     amplitude_half = f['amplitude_profile'][:, :, 0, 0, 0]
 
 # ===== Construct full SLM modes for Dual Reference ===== #
-N1, N2, M = phases_pw_half.shape
+M, N1, N2 = phases_pw_half.shape
 
 # Expand half-SLM-modes to full SLM (second half are zeros)
-phases_pw = np.concatenate((phases_pw_half, np.zeros(shape=(N1, N2, M))), axis=1)
-phases_ortho_pw = np.concatenate((phases_ortho_pw_half, np.zeros(shape=(N1, N2, M))), axis=1)
+phases_pw = np.concatenate((phases_pw_half, np.zeros(shape=(M, N1, N2))), axis=2)
+phases_ortho_pw = np.concatenate((phases_ortho_pw_half, np.zeros(shape=(M, N1, N2))), axis=2)
 full_beam_amplitude_unnorm = np.concatenate((amplitude_half, np.flip(amplitude_half)), axis=1)
 full_beam_amplitude = full_beam_amplitude_unnorm / np.sqrt((full_beam_amplitude_unnorm**2).sum())
+uniform_amplitude = 2 * np.ones_like(full_beam_amplitude) / full_beam_amplitude.size
 
 # Phases and amplitude of both groups, both halves
 phase_patterns_pw = (phases_pw, np.flip(phases_pw))
 phase_patterns_ortho_pw = (phases_ortho_pw, np.flip(phases_ortho_pw))
-amplitude = (full_beam_amplitude, full_beam_amplitude)
 
 # Group mask
 group_mask = np.concatenate((np.zeros((N1, N2)), np.ones((N1, N2))), axis=1)
@@ -54,10 +54,10 @@ group_mask = np.concatenate((np.zeros((N1, N2)), np.ones((N1, N2))), axis=1)
 # ===== WFS settings ===== #
 alg_labels = ['PW uniform', 'PW trunc gauss', 'ortho PW trunc gauss']
 algorithm_kwargs = [
-    {'phase_patterns': phase_patterns_pw, 'amplitude': 'uniform'},
-    {'phase_patterns': phase_patterns_pw, 'amplitude': amplitude},
+    {'phase_patterns': phase_patterns_pw, 'amplitude': uniform_amplitude},
+    {'phase_patterns': phase_patterns_pw, 'amplitude': full_beam_amplitude},
     {'phase_patterns': phase_patterns_ortho_pw,
-     'amplitude': amplitude}
+     'amplitude': full_beam_amplitude}
 ]
 algorithm_common_kwargs = {'iterations': 6, 'phase_steps': 8, 'group_mask': group_mask}
 
@@ -83,8 +83,8 @@ for r in range(runs_per_noise_level):
         noisy_detect = GaussianNoise(source=signal_square, std=noise_level)
 
         for a, alg_kwargs in enumerate(algorithm_kwargs):
-            # alg = DualReference(feedback=noisy_detect, slm=slm, **algorithm_common_kwargs, **alg_kwargs)
-            alg = NoWFS(feedback=noisy_detect, slm=slm)
+            alg = DualReference(feedback=noisy_detect, slm=slm, **algorithm_common_kwargs, **alg_kwargs)
+            # alg = NoWFS(feedback=noisy_detect, slm=slm)
             result = alg.execute()
 
             # Intensity with flat wavefront
