@@ -52,24 +52,24 @@ phases_filepath = os.path.join(localdata, 'ortho-plane-waves-hires.hdf5')
 # Import variables
 print('\nStart import modes...')
 with h5py.File(phases_filepath, 'r') as f:
-    phases_pw_half = f['init_phases_hr'][:, :, :, 0, 0]
-    phases_ortho_pw_half = f['new_phases_hr'][:, :, :, 0, 0]
+    phases_pw_half = f['init_phases_hr'][:, :, :, 0, 0].transpose(2, 0, 1)
+    phases_ortho_pw_half = f['new_phases_hr'][:, :, :, 0, 0].transpose(2, 0, 1)
     amplitude_half = f['amplitude_profile'][:, :, 0, 0, 0]
     git_info_process_modes = get_dict_from_hdf5(f['git_info'])
     git_info_orthonormalization = get_dict_from_hdf5(f['git_info_orthonormalization'])
 
 mask_shape = phases_pw_half.shape[0:2]
 
-phases_pw = np.concatenate((phases_pw_half, np.zeros(shape=phases_pw_half.shape)), axis=1)
-phases_ortho_pw = np.concatenate((phases_ortho_pw_half, np.zeros(shape=phases_pw_half.shape)), axis=1)
+phases_pw = np.concatenate((phases_pw_half, np.zeros(shape=phases_pw_half.shape)), axis=2)
+phases_ortho_pw = np.concatenate((phases_ortho_pw_half, np.zeros(shape=phases_pw_half.shape)), axis=2)
 split_mask = np.concatenate((np.zeros(shape=mask_shape), np.ones(shape=mask_shape)), axis=1)
 full_beam_amplitude_unnorm = np.concatenate((amplitude_half, np.flip(amplitude_half)), axis=1)
 full_beam_amplitude = full_beam_amplitude_unnorm / np.sqrt((full_beam_amplitude_unnorm**2).sum())
+uniform_amplitude = 2 * np.ones_like(full_beam_amplitude) / full_beam_amplitude.size
 
 # Phases and amplitude of both groups, both halves
 phase_patterns_pw = (phases_pw, np.flip(phases_pw))
 phase_patterns_ortho_pw = (phases_ortho_pw, np.flip(phases_ortho_pw))
-amplitude = (full_beam_amplitude, full_beam_amplitude)
 
 # WFS settings
 algorithms = [DualReference, DualReference, DualReference]
@@ -86,9 +86,9 @@ if not do_quick_test:
 
     # WFS
     algorithm_kwargs = [
-        {'phase_patterns': phase_patterns_pw, 'amplitude': 'uniform'},
-        {'phase_patterns': phase_patterns_ortho_pw, 'amplitude': amplitude},
-        {'phase_patterns': phase_patterns_ortho_pw, 'amplitude': amplitude}
+        {'phase_patterns': phase_patterns_pw, 'amplitude': uniform_amplitude},
+        {'phase_patterns': phase_patterns_ortho_pw, 'amplitude': full_beam_amplitude},
+        {'phase_patterns': phase_patterns_ortho_pw, 'amplitude': full_beam_amplitude}
     ]
     algorithm_common_kwargs = {'iterations': 6, 'phase_steps': 16, 'group_mask': split_mask}
 
@@ -104,11 +104,11 @@ if do_quick_test:
 
     # WFS
     algorithm_kwargs = [{'phase_patterns': (phases_pw[:, :, 0:3], np.flip(phases_pw[:, :, 0:3])),
-                         'amplitude': 'uniform'},
+                         'amplitude': uniform_amplitude},
                         {'phase_patterns': (phases_pw[:, :, 0:3], np.flip(phases_pw[:, :, 0:3])),
-                         'amplitude': amplitude},
+                         'amplitude': full_beam_amplitude},
                         {'phase_patterns': (phases_ortho_pw[:, :, 0:3], np.flip(phases_ortho_pw[:, :, 0:3])),
-                         'amplitude': amplitude}]
+                         'amplitude': full_beam_amplitude}]
     algorithm_common_kwargs = {'iterations': 2, 'phase_steps': 4, 'group_mask': split_mask}
 
 # WFS algorithm execute keyword arguments
