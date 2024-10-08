@@ -89,12 +89,12 @@ for r in range(runs_per_noise_level):
 
             # Intensity with flat wavefront
             slm.set_phases(0)
-            before = sim.read()
+            before = signal_square.read()
             flat_signals[r, n, a] = before
 
             # Intensity with shaped wavefront
             slm.set_phases(-np.angle(result.t))
-            after = sim.read()
+            after = signal_square.read()
             shaped_signals[r, n, a] = after
 
             progress_bar.update()
@@ -130,7 +130,7 @@ for a, alg_label in enumerate(alg_labels):
     plt.errorbar(mean_initial_snr_range, enhancement_means[:, a], enhancement_stds[:, a], label=alg_label, capsize=2.5)
 
 plt.xlabel('Mean Initial SNR')
-plt.ylabel('Enhancement $\\eta$')
+plt.ylabel('Signal improvement factor')
 plt.xlim((0, None))
 plt.ylim((0, None))
 plt.legend()
