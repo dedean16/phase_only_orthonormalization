@@ -58,7 +58,7 @@ with h5py.File(phases_filepath, 'r') as f:
     git_info_process_modes = get_dict_from_hdf5(f['git_info'])
     git_info_orthonormalization = get_dict_from_hdf5(f['git_info_orthonormalization'])
 
-mask_shape = phases_pw_half.shape[0:2]
+mask_shape = phases_pw_half.shape[1:3]
 
 phases_pw = np.concatenate((phases_pw_half, np.zeros(shape=phases_pw_half.shape)), axis=2)
 phases_ortho_pw = np.concatenate((phases_ortho_pw_half, np.zeros(shape=phases_pw_half.shape)), axis=2)
@@ -103,11 +103,11 @@ if do_quick_test:
     }
 
     # WFS
-    algorithm_kwargs = [{'phase_patterns': (phases_pw[:, :, 0:3], np.flip(phases_pw[:, :, 0:3])),
+    algorithm_kwargs = [{'phase_patterns': (phases_pw[0:3, :, :], np.flip(phases_pw[0:3, :, :])),
                          'amplitude': uniform_amplitude},
-                        {'phase_patterns': (phases_pw[:, :, 0:3], np.flip(phases_pw[:, :, 0:3])),
+                        {'phase_patterns': (phases_pw[0:3, :, :], np.flip(phases_pw[0:3, :, :])),
                          'amplitude': full_beam_amplitude},
-                        {'phase_patterns': (phases_ortho_pw[:, :, 0:3], np.flip(phases_ortho_pw[:, :, 0:3])),
+                        {'phase_patterns': (phases_ortho_pw[0:3, :, :], np.flip(phases_ortho_pw[0:3, :, :])),
                          'amplitude': full_beam_amplitude}]
     algorithm_common_kwargs = {'iterations': 2, 'phase_steps': 4, 'group_mask': split_mask}
 
