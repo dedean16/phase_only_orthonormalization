@@ -235,6 +235,9 @@ print('Connected to Gain NI-DAQ')
 
 
 # ====== Preparation measurements ====== #
+print('Reading dark frame...')
+dark_frame = reader.read()
+
 shutter.open = False
 input(f'Please unblock laser and press enter')
 
@@ -341,6 +344,7 @@ with Connection.open_serial_port(comport) as connection:            # Open conne
                 signal_flat=[signal_flat],
                 signal_shaped=[signal_shaped],
                 exec_kwargs=[exec_kwargs],
+                dark_frame=[dark_frame],
             )
 
             progress_bar.update()
