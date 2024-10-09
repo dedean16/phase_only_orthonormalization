@@ -286,13 +286,17 @@ with Connection.open_serial_port(comport) as connection:            # Open conne
             print(f'Start Alg.{n_alg} - {alg_constructor.__name__}...')
             park_beam(scanner_with_offset, park_location)
 
-            # Flat wavefront signal
+            # Flat wavefront signal, before running algorithm
             shutter.open = True
             slm.set_phases(0)
-            signal_flat = reader.read()
+            signal_before_flat = reader.read()
 
             # Run WFS measurement
             wfs_result = alg.execute(**exec_kwargs)
+
+            # Flat wavefront signal, after running algorithm
+            slm.set_phases(0)
+            signal_after_flat = reader.read()
 
             # Shaped wavefront signal
             shaped_phases = -np.angle(wfs_result.t)
@@ -301,7 +305,7 @@ with Connection.open_serial_port(comport) as connection:            # Open conne
             shutter.open = False
 
             # Report and save
-            print(f'Signal enhancement: {signal_shaped.mean() / signal_flat.mean():.3f}')
+            print(f'Signal enhancement: {signal_shaped.mean() / signal_after_flat.mean():.3f}')
 
             # Full frame measurement
             print('Measure contrast enhancement...')
@@ -337,7 +341,8 @@ with Connection.open_serial_port(comport) as connection:            # Open conne
                 park_kwargs=[park_kwargs],
                 park_result=[park_result],
                 roi_kwargs=[roi_kwargs],
-                signal_flat=[signal_flat],
+                signal_before_flat=[signal_before_flat],
+                signal_after_flat=[signal_after_flat],
                 signal_shaped=[signal_shaped],
                 exec_kwargs=[exec_kwargs],
                 dark_frame=[dark_frame],
