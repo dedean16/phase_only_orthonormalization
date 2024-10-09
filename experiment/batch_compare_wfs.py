@@ -78,10 +78,10 @@ if not do_quick_test:
     # === Full measurement settings === #
     # Stage
     stage_settings = {
-        'settle_time': 2 * 60 * u.s,
-        'step_size': 300 * u.um,
-        'num_steps_axis1': 4,
-        'num_steps_axis2': 4,
+        'settle_time': 1 * 60 * u.s,
+        'step_size': 150 * u.um,
+        'num_steps_axis1': 6,
+        'num_steps_axis2': 7,
     }
 
     # WFS
@@ -97,8 +97,8 @@ if do_quick_test:
     # Stage
     stage_settings = {
         'settle_time': 2 * u.s,
-        'step_size': 250 * u.um,
-        'num_steps_axis1': 2,
+        'step_size': 100 * u.um,
+        'num_steps_axis1': 3,
         'num_steps_axis2': 1,
     }
 
@@ -265,51 +265,46 @@ with Connection.open_serial_port(comport) as connection:            # Open conne
 
     for a1 in range(stage_settings['num_steps_axis1']):             # Loop over stage axis 1
         for a2 in range(stage_settings['num_steps_axis2']):         # Loop over stage axis 2
-            print(f'\nStart measurement at axes pos. {a1}/{stage_settings["num_steps_axis1"]}, '
-                  + f'{a2}/{stage_settings["num_steps_axis2"]}')
+            print(f'\n\nStart measurement at axes pos. {a1+1}/{stage_settings["num_steps_axis1"]}, '
+                  + f'{a2+1}/{stage_settings["num_steps_axis2"]}')
 
             print('Start converging to parking spot')
             park_location, park_imgs = converge_parking_spot(shutter=shutter, image_reader=reader,
                                                              scanner=reader.source, **park_kwargs)
             print(f'Beam parking spot at {park_location}')
 
-            wfs_results_all = [None] * len(algorithms)
-            contrast_results_all = [None] * len(algorithms)
-            signal_flat = [None] * len(algorithms)
-            signal_shaped = [None] * len(algorithms)
+            n_alg = (a2 + a1 * stage_settings['num_steps_axis2']) % len(algorithms)
+            alg_constructor = algorithms[n_alg]
 
-            for n_alg, alg_constructor in enumerate(algorithms):     # Loop over algorithms
-                # Construct algorithm
-                alg = alg_constructor(feedback=roi, slm=slm, **algorithm_common_kwargs,
-                                      **algorithm_kwargs[n_alg])
+            # Construct algorithm
+            alg = alg_constructor(feedback=roi, slm=slm, **algorithm_common_kwargs,
+                                  **algorithm_kwargs[n_alg])
 
-                print(f'Start Alg.{n_alg} - {alg_constructor.__name__}...')
-                park_beam(scanner_with_offset, park_location)
+            print(f'Start Alg.{n_alg} - {alg_constructor.__name__}...')
+            park_beam(scanner_with_offset, park_location)
 
-                # Flat wavefront signal
-                shutter.open = True
-                slm.set_phases(0)
-                signal_flat[n_alg] = reader.read()
+            # Flat wavefront signal
+            shutter.open = True
+            slm.set_phases(0)
+            signal_flat = reader.read()
 
-                # Run WFS measurement
-                wfs_result = alg.execute(**exec_kwargs)
+            # Run WFS measurement
+            wfs_result = alg.execute(**exec_kwargs)
 
-                # Shaped wavefront signal
-                shaped_phases = -np.angle(wfs_result.t)
-                slm.set_phases(shaped_phases)
-                signal_shaped[n_alg] = reader.read()
-                shutter.open = False
+            # Shaped wavefront signal
+            shaped_phases = -np.angle(wfs_result.t)
+            slm.set_phases(shaped_phases)
+            signal_shaped = reader.read()
+            shutter.open = False
 
-                # Report and save
-                print(f'\nSignal enhancement: {signal_shaped[n_alg].mean() / signal_flat[n_alg].mean():.3f}')
-                wfs_results_all[n_alg] = wfs_result
+            # Report and save
+            print(f'Signal enhancement: {signal_shaped.mean() / signal_flat.mean():.3f}')
 
-                # Full frame measurement
-                print('Measure contrast enhancement...')
-                scanner_with_offset.reset_roi()
-                contrast_results = measure_contrast_enhancement(shutter, reader, scanner_with_offset, slm, shaped_phases)
-                print(f'Contrast enhancement: {contrast_results["contrast_enhancement"]:.3f}')
-                contrast_results_all[n_alg] = contrast_results
+            # Full frame measurement
+            print('Measure contrast enhancement...')
+            scanner_with_offset.reset_roi()
+            contrast_results = measure_contrast_enhancement(shutter, reader, scanner_with_offset, slm, shaped_phases)
+            print(f'Contrast enhancement: {contrast_results["contrast_enhancement"]:.3f}')
 
             # Save results
             # TODO: switch to HDF5 and/or json
@@ -320,13 +315,14 @@ with Connection.open_serial_port(comport) as connection:            # Open conne
             }
             np.savez(
                 save_path.joinpath(f'{filename_prefix}t{round(time.time())}'),
-                wfs_results_all=[wfs_results_all],
-                contrast_results_all=[contrast_results_all],
+                wfs_result=[wfs_result],
+                contrast_results_all=[contrast_results],
                 gitinfo=[gitinfo()],
                 gitinfo_process_modes=[git_info_process_modes],
                 gitinfo_orthonormalization=[git_info_orthonormalization],
                 time=time.time(),
                 modes_filepath=phases_filepath,
+                n_alg=[n_alg],
                 algorithm_types=[a.__name__ for a in algorithms],
                 algorithm_common_kwargs=[algorithm_common_kwargs],
                 stage_settings=[stage_settings],
