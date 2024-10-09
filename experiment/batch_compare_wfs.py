@@ -90,7 +90,7 @@ if not do_quick_test:
         {'phase_patterns': phase_patterns_pw, 'amplitude': full_beam_amplitude},
         {'phase_patterns': phase_patterns_ortho_pw, 'amplitude': full_beam_amplitude}
     ]
-    algorithm_common_kwargs = {'iterations': 6, 'phase_steps': 16, 'group_mask': split_mask}
+    algorithm_common_kwargs = {'iterations': 6, 'phase_steps': 12, 'group_mask': split_mask}
 
 if do_quick_test:
     # === Quick test settings === #
@@ -167,14 +167,14 @@ input_channel_kwargs = {
 park_kwargs = {
     'do_plot': False,                # For debugging
     'median_filter_size': (3, 3),
-    'target_width': 64,
+    'target_width': 32,
     'max_iterations': 15,
     'park_to_one_pixel': False,
 }
 
 roi_kwargs = {
-    'radius': 31,
-    'pos': (32, 32),
+    'radius': 15,
+    'pos': (16, 16),
 }
 
 
