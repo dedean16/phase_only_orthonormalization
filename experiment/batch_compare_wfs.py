@@ -72,7 +72,7 @@ phase_patterns_pw = (phases_pw, np.flip(phases_pw))
 phase_patterns_ortho_pw = (phases_ortho_pw, np.flip(phases_ortho_pw))
 
 # WFS settings
-algorithms = [DualReference, DualReference, DualReference]
+algorithms = [DualReference, DualReference, DualReference, DualReference]
 
 if not do_quick_test:
     # === Full measurement settings === #
@@ -86,9 +86,10 @@ if not do_quick_test:
 
     # WFS
     algorithm_kwargs = [
-        {'phase_patterns': phase_patterns_pw, 'amplitude': uniform_amplitude},
-        {'phase_patterns': phase_patterns_pw, 'amplitude': full_beam_amplitude},
-        {'phase_patterns': phase_patterns_ortho_pw, 'amplitude': full_beam_amplitude}
+        {'phase_patterns': phase_patterns_ortho_pw, 'amplitude': full_beam_amplitude},
+        {'phase_patterns': phase_patterns_ortho_pw, 'amplitude': full_beam_amplitude},
+        {'phase_patterns': phase_patterns_ortho_pw, 'amplitude': full_beam_amplitude},
+        {'phase_patterns': phase_patterns_ortho_pw, 'amplitude': full_beam_amplitude},
     ]
     algorithm_common_kwargs = {'iterations': 6, 'phase_steps': 16, 'group_mask': split_mask}
 
@@ -103,12 +104,16 @@ if do_quick_test:
     }
 
     # WFS
-    algorithm_kwargs = [{'phase_patterns': (phases_pw[0:3, :, :], np.flip(phases_pw[0:3, :, :])),
-                         'amplitude': uniform_amplitude},
-                        {'phase_patterns': (phases_pw[0:3, :, :], np.flip(phases_pw[0:3, :, :])),
-                         'amplitude': full_beam_amplitude},
-                        {'phase_patterns': (phases_ortho_pw[0:3, :, :], np.flip(phases_ortho_pw[0:3, :, :])),
-                         'amplitude': full_beam_amplitude}]
+    algorithm_kwargs = [
+        {'phase_patterns': (phases_ortho_pw[0:3, :, :], np.flip(phases_ortho_pw[0:3, :, :])),
+         'amplitude': full_beam_amplitude},
+        {'phase_patterns': (phases_ortho_pw[0:3, :, :], np.flip(phases_ortho_pw[0:3, :, :])),
+         'amplitude': full_beam_amplitude},
+        {'phase_patterns': (phases_ortho_pw[0:3, :, :], np.flip(phases_ortho_pw[0:3, :, :])),
+         'amplitude': full_beam_amplitude},
+        {'phase_patterns': (phases_ortho_pw[0:3, :, :], np.flip(phases_ortho_pw[0:3, :, :])),
+         'amplitude': full_beam_amplitude},
+        ]
     algorithm_common_kwargs = {'iterations': 2, 'phase_steps': 4, 'group_mask': split_mask}
 
 # WFS algorithm execute keyword arguments
