@@ -80,8 +80,8 @@ if not do_quick_test:
     stage_settings = {
         'settle_time': 1 * 60 * u.s,
         'step_size': 150 * u.um,
-        'num_steps_axis1': 4,
-        'num_steps_axis2': 4,
+        'num_steps_axis1': 5,
+        'num_steps_axis2': 5,
     }
 
     # WFS
