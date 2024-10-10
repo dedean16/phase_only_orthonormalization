@@ -180,6 +180,7 @@ park_kwargs = {
 roi_kwargs = {
     'radius': 3,
     'pos': (4, 4),
+    'mask_type': 'square',
 }
 
 
