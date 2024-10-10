@@ -278,7 +278,8 @@ with Connection.open_serial_port(comport) as connection:            # Open conne
 
             wfs_results_all = [None] * len(algorithms)
             contrast_results_all = [None] * len(algorithms)
-            signal_flat = [None] * len(algorithms)
+            signal_before_flat = [None] * len(algorithms)
+            signal_after_flat = [None] * len(algorithms)
             signal_shaped = [None] * len(algorithms)
 
             for n_alg, alg_constructor in enumerate(algorithms):     # Loop over algorithms
@@ -289,13 +290,17 @@ with Connection.open_serial_port(comport) as connection:            # Open conne
                 print(f'Start Alg.{n_alg} - {alg_constructor.__name__}...')
                 park_beam(scanner_with_offset, park_location)
 
-                # Flat wavefront signal
+                # Flat wavefront signal, before running the algorithm
                 shutter.open = True
                 slm.set_phases(0)
-                signal_flat[n_alg] = reader.read()
+                signal_before_flat[n_alg] = reader.read()
 
                 # Run WFS measurement
                 wfs_result = alg.execute(**exec_kwargs)
+
+                # Flat wavefront signal, after running the algorithm
+                slm.set_phases(0)
+                signal_after_flat[n_alg] = reader.read()
 
                 # Shaped wavefront signal
                 shaped_phases = -np.angle(wfs_result.t)
@@ -304,7 +309,7 @@ with Connection.open_serial_port(comport) as connection:            # Open conne
                 shutter.open = False
 
                 # Report and save
-                print(f'\nSignal enhancement: {signal_shaped[n_alg].mean() / signal_flat[n_alg].mean():.3f}')
+                print(f'\nSignal enhancement: {signal_shaped[n_alg].mean() / signal_after_flat[n_alg].mean():.3f}')
                 wfs_results_all[n_alg] = wfs_result
 
                 # Full frame measurement
@@ -341,7 +346,8 @@ with Connection.open_serial_port(comport) as connection:            # Open conne
                 park_kwargs=[park_kwargs],
                 park_result=[park_result],
                 roi_kwargs=[roi_kwargs],
-                signal_flat=[signal_flat],
+                signal_before_flat=[signal_before_flat],
+                signal_after_flat=[signal_after_flat],
                 signal_shaped=[signal_shaped],
                 exec_kwargs=[exec_kwargs],
                 dark_frame=[dark_frame],
