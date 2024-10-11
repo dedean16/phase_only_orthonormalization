@@ -172,14 +172,14 @@ input_channel_kwargs = {
 park_kwargs = {
     'do_plot': False,                # For debugging
     'median_filter_size': (3, 3),
-    'target_width': 8,
+    'target_width': 16,
     'max_iterations': 15,
-    'park_to_one_pixel': False,
+    'park_to_one_pixel': True,
 }
 
 roi_kwargs = {
-    'radius': 3,
-    'pos': (4, 4),
+    'radius': 7,
+    'pos': (8, 8),
     'mask_type': 'square',
 }
 
