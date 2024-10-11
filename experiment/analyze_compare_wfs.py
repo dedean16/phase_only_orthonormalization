@@ -18,8 +18,8 @@ from phase_only_orthonormalization.directories import localdata
 
 
 # Adjust this path to point to the location of the measurement data
-path_glob = 'set10/wfs-comparison_t*.npz'                 # Filename glob defining which files to read
-file_numbers_to_include = list(range(0, 9))        # Which files to read and include in graph (at least two)
+path_glob = 'set13/wfs-comparison_t*.npz'                 # Filename glob defining which files to read
+file_numbers_to_include = list(range(0, 25))        # Which files to read and include in graph (at least two)
 file_numbers_to_plot = []                 # From selection, which images to plot (non-existing are ignored)
 
 do_plot_parking_convergence = True                  # Plot intermediate scans of auto-selecting an ROI around a bead
@@ -32,10 +32,10 @@ circ_style = '--w'                                  # Pupil circle
 
 flat_beadline_x = (544, 613)                        # Line through bead x coords, flat wavefront
 flat_beadline_y = (257, 257)                        # Line through bead y coords, flat wavefront
-algs_beadline_x = ((534, 603), (542, 611), (1,3))          # Line through bead x coords, shaped wavefront algorithms
-algs_beadline_y = ((245, 245), (255, 255), (1,3))          # Line through bead y coords, shaped wavefront algorithms
+algs_beadline_x = ((534, 603), (542, 611), (1,3)), (1,3)          # Line through bead x coords, shaped wavefront algorithms
+algs_beadline_y = ((245, 245), (255, 255), (1,3)), (1,3)          # Line through bead y coords, shaped wavefront algorithms
 beadline_flat_kwargs = {'color': (0.0, 0.9, 1.0), 'linewidth': 0.5}
-beadline_alg_kwargs = ({'color': (1.0, 0.7, 0.0), 'linewidth': 0.5}, {'color': (0.1, 1.0, 0.1), 'linewidth': 0.5}, {})
+beadline_alg_kwargs = ({'color': (1.0, 0.7, 0.0), 'linewidth': 0.5}, {'color': (0.1, 1.0, 0.1), 'linewidth': 0.5}, {}, {})
 
 bead_flat_kwargs = {'color': 'tab:blue', 'linestyle': 'dashdot'}
 bead_alg0_kwargs = {'color': 'tab:orange', 'linestyle': 'dashed'}
@@ -51,7 +51,7 @@ scalebar_props = {
 
 # Subplot settings
 nrows = 2
-ncols = 4
+ncols = 5
 
 # Title strings
 # image_letters = ('a. ', 'b. ', 'c. ')
@@ -59,7 +59,7 @@ ncols = 4
 image_letters = ('a. ', 'b. ', 'c. ', 'x')
 pattern_letters = ('e. ', 'f. ', 'g. ', 'x')
 beadline_letter = 'd.'
-basis_names = ('No correction', 'Plane wave basis', 'Plane wave gauss', 'Our orthonormal basis')
+basis_names = ('No correction', 'Alg index 0', 'Alg index 1', 'Alg index 2', 'Alg index 3')
 
 plt.rcParams['font.size'] = 14
 colorwheel_fontsize = 17
@@ -76,11 +76,13 @@ print(f'Found {len(npz_files_all)} files.')
 print(f'Selected {len(file_numbers_to_include)} files.')
 
 # Initialize
-signal_enhancement = [[], [], []]
-signal_flat_all = []
+signal_enhancement = [[], [], [], []]
+signal_before_flat_all = []
+signal_after_flat_all = []
 signal_shaped_all = []
 intermediate_results = []
-signals_flat_photobleach = []
+signals_before_flat_photobleach = []
+signals_after_flat_photobleach = []
 
 
 # ===== Compute amplitude profile ===== #
@@ -167,7 +169,8 @@ for n_f, filepath in enumerate(tqdm(npz_files_sel)):
     xpark = left + width/2
     ypark = top + height/2
 
-    signals_flat_photobleach += [np.mean(npz_data['signal_flat'].squeeze(), axis=(1, 2))]
+    signals_before_flat_photobleach += [np.mean(npz_data['signal_before_flat'].squeeze(), axis=(1, 2))]
+    signals_after_flat_photobleach += [np.mean(npz_data['signal_after_flat'].squeeze(), axis=(1, 2))]
 
     # Flat wavefront
     if n_f in file_numbers_to_plot:
@@ -225,11 +228,12 @@ for n_f, filepath in enumerate(tqdm(npz_files_sel)):
             draw_circle(circ_style, 1)
 
         # Extract signal intensities
-        signal_flat_all += [np.mean(npz_data['signal_flat'].squeeze())]
+        signal_before_flat_all += [np.mean(npz_data['signal_before_flat'].squeeze())]
+        signal_after_flat_all += [np.mean(npz_data['signal_after_flat'].squeeze())]
         signal_shaped_all += [np.mean(npz_data['signal_shaped'].squeeze())]
 
         signal_enhancement[n_alg] += \
-            [np.mean(npz_data['signal_shaped'].squeeze()[n_alg]) / np.mean(npz_data['signal_flat'].squeeze()[n_alg])]
+            [np.mean(npz_data['signal_shaped'].squeeze()[n_alg]) / np.mean(npz_data['signal_after_flat'].squeeze()[n_alg])]
 
         intermediate_results[n_f][n_alg] += [*npz_data['wfs_results_all'][0, n_alg].intermediate_results]
 
@@ -275,6 +279,11 @@ for n_f, filepath in enumerate(tqdm(npz_files_sel)):
 # Linear Least Squares
 improvement_ratio_1 = scalar_factor_least_squares(signal_enhancement[0], signal_enhancement[1])[0]
 improvement_ratio_2 = scalar_factor_least_squares(signal_enhancement[0], signal_enhancement[2])[0]
+improvement_ratio_3 = scalar_factor_least_squares(signal_enhancement[0], signal_enhancement[3])[0]
+
+improvement_ratio_12 = scalar_factor_least_squares(signal_enhancement[1], signal_enhancement[2])[0]
+improvement_ratio_13 = scalar_factor_least_squares(signal_enhancement[1], signal_enhancement[3])[0]
+improvement_ratio_23 = scalar_factor_least_squares(signal_enhancement[2], signal_enhancement[3])[0]
 
 mean_signal_enhancement = np.mean(signal_enhancement, axis=1)
 print(f'Average signal improvement factor {npz_data["algorithm_types"][0]}: {mean_signal_enhancement[0]:.4f}')
@@ -291,7 +300,7 @@ plt.plot(signal_enhancement[0], signal_enhancement[1], '.', color='tab:blue', la
 plt.xlabel(f'{basis_names[1]}')
 plt.ylabel(f'{basis_names[2]}')
 plt.title('Signal improvement factor')
-plt.legend(loc=4)
+plt.legend()
 
 plt.figure()
 signal_enh_max = np.max(signal_enhancement)
@@ -301,28 +310,91 @@ plt.plot(signal_enhancement[0], signal_enhancement[2], '.', color='tab:blue', la
 plt.xlabel(f'{basis_names[1]}')
 plt.ylabel(f'{basis_names[3]}')
 plt.title('Signal improvement factor')
-plt.legend(loc=4)
+plt.legend()
 
 plt.figure()
-plt.plot(np.asarray(signals_flat_photobleach).T, '.-', label=[f'Location {n}' for n in range(len(signals_flat_photobleach))])
+signal_enh_max = np.max(signal_enhancement)
+plt.plot((0, signal_enh_max), (0, signal_enh_max), '--', color='#999999', label='Equality')
+plt.plot((0, signal_enh_max / improvement_ratio_3), (0, signal_enh_max), color='tab:green', label='Least squares fit')
+plt.plot(signal_enhancement[0], signal_enhancement[3], '.', color='tab:blue', label='Signal improvement')
+plt.xlabel(f'{basis_names[1]}')
+plt.ylabel(f'{basis_names[4]}')
+plt.title('Signal improvement factor')
+plt.legend()
+
+plt.figure()
+signal_enh_max = np.max(signal_enhancement)
+plt.plot((0, signal_enh_max), (0, signal_enh_max), '--', color='#999999', label='Equality')
+plt.plot((0, signal_enh_max / improvement_ratio_12), (0, signal_enh_max), color='tab:green', label='Least squares fit')
+plt.plot(signal_enhancement[1], signal_enhancement[2], '.', color='tab:blue', label='Signal improvement')
+plt.xlabel(f'{basis_names[2]}')
+plt.ylabel(f'{basis_names[3]}')
+plt.title('Signal improvement factor')
+plt.legend()
+
+plt.figure()
+signal_enh_max = np.max(signal_enhancement)
+plt.plot((0, signal_enh_max), (0, signal_enh_max), '--', color='#999999', label='Equality')
+plt.plot((0, signal_enh_max / improvement_ratio_13), (0, signal_enh_max), color='tab:green', label='Least squares fit')
+plt.plot(signal_enhancement[1], signal_enhancement[3], '.', color='tab:blue', label='Signal improvement')
+plt.xlabel(f'{basis_names[2]}')
+plt.ylabel(f'{basis_names[4]}')
+plt.title('Signal improvement factor')
+plt.legend()
+
+plt.figure()
+signal_enh_max = np.max(signal_enhancement)
+plt.plot((0, signal_enh_max), (0, signal_enh_max), '--', color='#999999', label='Equality')
+plt.plot((0, signal_enh_max / improvement_ratio_23), (0, signal_enh_max), color='tab:green', label='Least squares fit')
+plt.plot(signal_enhancement[2], signal_enhancement[3], '.', color='tab:blue', label='Signal improvement')
+plt.xlabel(f'{basis_names[3]}')
+plt.ylabel(f'{basis_names[4]}')
+plt.title('Signal improvement factor')
+plt.legend()
+
+plt.figure()
+plt.plot(np.asarray(signal_enhancement), '.-', color='gray')
+plt.plot(np.asarray(signal_enhancement).mean(axis=1), color='red', linewidth=2.5, label='Mean')
+plt.xlabel('Algorithm index')
+plt.ylabel('Signal improvement')
+plt.title('Signal improvement vs alg index')
+plt.ylim((0, None))
+plt.legend()
+
+plt.figure()
+plt.plot(np.asarray(signals_before_flat_photobleach).T, '.-', color='gray')
+plt.plot(np.asarray(signals_before_flat_photobleach).T.mean(axis=1), color='red', linewidth=2.5, label='Mean')
 plt.xlabel('Algorithm index')
 plt.ylabel('Signal')
-plt.title('Photobleaching - flat wf signal measurements')
+plt.title('Photobleaching\nflat wf signal measurements before alg')
+plt.ylim((0, None))
 plt.legend()
-plt.show()
 
 plt.figure()
-plt.plot(signal_flat_all, signal_shaped_all, '.')
-plt.xlabel('Signal flat')
+plt.plot(np.asarray(signals_after_flat_photobleach).T, '.-', color='gray')
+plt.plot(np.asarray(signals_after_flat_photobleach).T.mean(axis=1), color='red', linewidth=2.5, label='Mean')
+plt.xlabel('Algorithm index')
+plt.ylabel('Signal')
+plt.title('Photobleaching\nflat wf signal measurements after alg')
+plt.ylim((0, None))
+plt.legend()
+
+plt.figure()
+plt.plot(signal_before_flat_all, signal_shaped_all, '.')
+plt.xlabel('Signal flat (before running alg)')
 plt.ylabel('Signal shaped')
 plt.title('Signal flat vs signal shaped')
 
 plt.figure()
 plt.plot(np.asarray(intermediate_results)[:, 0, :].squeeze().T, '.-', color='#99ccff')
 plt.plot(np.asarray(intermediate_results)[:, 1, :].squeeze().T, '.-', color='#ffaaaa')
+plt.plot(np.asarray(intermediate_results)[:, 2, :].squeeze().T, '.-', color='#aaffaa')
+plt.plot(np.asarray(intermediate_results)[:, 3, :].squeeze().T, '.-', color='#eeeeaa')
 
-plt.plot(np.asarray(intermediate_results)[:, 0, :].squeeze().T.mean(axis=1), '.-', color='#3355ff', linewidth=2.5, label=f'{npz_data["algorithm_types"][0]} mean')
-plt.plot(np.asarray(intermediate_results)[:, 1, :].squeeze().T.mean(axis=1), '.-', color='#ff2222', linewidth=2.5, label=f'{npz_data["algorithm_types"][1]} mean')
+plt.plot(np.asarray(intermediate_results)[:, 0, :].squeeze().T.mean(axis=1), '.-', color='#3355ff', linewidth=2.5, label=f'{basis_names[1]} mean')
+plt.plot(np.asarray(intermediate_results)[:, 1, :].squeeze().T.mean(axis=1), '.-', color='#ff2222', linewidth=2.5, label=f'{basis_names[2]} mean')
+plt.plot(np.asarray(intermediate_results)[:, 2, :].squeeze().T.mean(axis=1), '.-', color='#22ff22', linewidth=2.5, label=f'{basis_names[3]} mean')
+plt.plot(np.asarray(intermediate_results)[:, 3, :].squeeze().T.mean(axis=1), '.-', color='#eeee22', linewidth=2.5, label=f'{basis_names[4]} mean')
 
 plt.title('Ping pong convergence')
 plt.xlabel('Ping pong index')
