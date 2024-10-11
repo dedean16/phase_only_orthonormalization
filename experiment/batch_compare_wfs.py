@@ -91,7 +91,7 @@ if not do_quick_test:
         {'phase_patterns': phase_patterns_ortho_pw, 'amplitude': full_beam_amplitude},
         {'phase_patterns': phase_patterns_ortho_pw, 'amplitude': full_beam_amplitude},
     ]
-    algorithm_common_kwargs = {'iterations': 4, 'phase_steps': 8, 'group_mask': split_mask}
+    algorithm_common_kwargs = {'iterations': 3, 'phase_steps': 8, 'group_mask': split_mask}
 
 if do_quick_test:
     # === Quick test settings === #
