@@ -86,6 +86,8 @@ def park_beam(scanner, park_spot: Tuple[int, int, int, int]):
     scanner.top = park_spot[1]
     scanner.width = park_spot[2]
     scanner.height = park_spot[3]
+    if park_spot[3] == 1:
+        scanner._bidirectional = False
 
 
 def find_parking_spot(shutter: Processor, image_reader, median_filter_size: Tuple[int, int],
@@ -193,7 +195,7 @@ def converge_parking_spot(shutter, image_reader: Processor, scanner: ScanningMic
         scanner.left = np.maximum(0, left)
         scanner.top = np.maximum(0, top)
 
-    return (left, top, scanner.width, scanner.height), imgs
+    return (scanner.left, scanner.top, scanner.width, scanner.height), imgs
 
 
 def measure_contrast_enhancement(shutter, reader: Processor, scanner: ScanningMicroscope, slm: SLM, phase_pattern: nd) \

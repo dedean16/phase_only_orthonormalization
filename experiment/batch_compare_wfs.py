@@ -80,8 +80,8 @@ if not do_quick_test:
     stage_settings = {
         'settle_time': 1 * 60 * u.s,
         'step_size': 150 * u.um,
-        'num_steps_axis1': 5,
-        'num_steps_axis2': 5,
+        'num_steps_axis1': 6,
+        'num_steps_axis2': 6,
     }
 
     # WFS
@@ -161,6 +161,7 @@ scanner_props = {
     'v_min': -1.0 * u.V,
     'v_max': 1.0 * u.V,
     'maximum_acceleration': 5.0e4 * u.V/u.s**2,
+    'bidirectional': True
 }
 
 input_channel_kwargs = {
@@ -321,6 +322,7 @@ with Connection.open_serial_port(comport) as connection:            # Open conne
                 # Full frame measurement
                 print('Measure contrast enhancement...')
                 scanner_with_offset.reset_roi()
+                scanner_with_offset._bidirectional = scanner_props['bidirectional']
                 contrast_results = measure_contrast_enhancement(shutter, reader, scanner_with_offset, slm, shaped_phases)
                 print(f'Contrast enhancement: {contrast_results["contrast_enhancement"]:.3f}')
                 contrast_results_all[n_alg] = contrast_results
