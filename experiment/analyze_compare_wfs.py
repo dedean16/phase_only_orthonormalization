@@ -9,6 +9,7 @@ import glob
 
 import numpy as np
 import matplotlib.pyplot as plt
+from matplotlib.colors import TABLEAU_COLORS
 from mpl_toolkits.axes_grid1.anchored_artists import AnchoredSizeBar
 from tqdm import tqdm
 
@@ -77,6 +78,7 @@ print(f'Selected {len(file_numbers_to_include)} files.')
 
 # Initialize
 signal_enhancement = [[], [], [], []]
+fidelity_noise = [[], [], [], []]
 signal_before_flat_all = []
 signal_after_flat_all = []
 signal_shaped_all = []
@@ -235,6 +237,8 @@ for n_f, filepath in enumerate(tqdm(npz_files_sel)):
         signal_enhancement[n_alg] += \
             [np.mean(npz_data['signal_shaped'].squeeze()[n_alg]) / np.mean(npz_data['signal_after_flat'].squeeze()[n_alg])]
 
+        fidelity_noise[n_alg] += [npz_data['wfs_results_all'][0, n_alg].results_all[0].fidelity_noise[0]]
+
         intermediate_results[n_f][n_alg] += [*npz_data['wfs_results_all'][0, n_alg].intermediate_results]
 
     if n_f in file_numbers_to_plot:
@@ -291,6 +295,14 @@ print(f'Average signal improvement factor {npz_data["algorithm_types"][1]}: {mea
 print(f'Average signal improvement factor {npz_data["algorithm_types"][2]}: {mean_signal_enhancement[2]:.4f}')
 print(f'Average signal improvement factor ratio (least squares): {improvement_ratio_1:.4f}')
 print(f'Average signal improvement factor ratio (least squares): {improvement_ratio_2:.4f}')
+
+plt.figure()
+n_algs = range(len(signal_enhancement))
+plt.plot(np.asarray(fidelity_noise).T.squeeze(), np.asarray(signal_enhancement).T, '.',
+         label=[f'{basis_names[n+1]}' for n in n_algs])
+plt.xlabel('Fidelity noise of first ping pong iteration')
+plt.ylabel('Signal enhancement')
+plt.legend()
 
 plt.figure()
 signal_enh_max = np.max(signal_enhancement)
