@@ -58,8 +58,8 @@ with h5py.File(phases_filepath, 'r') as f:
     git_info_process_modes = get_dict_from_hdf5(f['git_info'])
     git_info_orthonormalization = get_dict_from_hdf5(f['git_info_orthonormalization'])
 
+# Construct full SLM basis array from loaded half-SLM basis
 mask_shape = phases_pw_half.shape[1:3]
-
 phases_pw = np.concatenate((phases_pw_half, np.zeros(shape=phases_pw_half.shape)), axis=2)
 phases_ortho_pw = np.concatenate((phases_ortho_pw_half, np.zeros(shape=phases_pw_half.shape)), axis=2)
 split_mask = np.concatenate((np.zeros(shape=mask_shape), np.ones(shape=mask_shape)), axis=1)
