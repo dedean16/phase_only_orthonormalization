@@ -287,7 +287,7 @@ with Connection.open_serial_port(comport) as connection:            # Open conne
             for n_alg_shift in range(len(algorithms)):     # Loop over algorithms
 
                 # Pick algorithm: Compute algorithm index by circ shifting the order per location
-                n_alg = (a2 + a1 * range(stage_settings['num_steps_axis2']) + n_alg_shift) % len(algorithms)
+                n_alg = (a2 + a1 * stage_settings['num_steps_axis2'] + n_alg_shift) % len(algorithms)
                 n_algs[n_alg_shift] = n_alg
                 alg_constructor = algorithms[n_alg]
 
