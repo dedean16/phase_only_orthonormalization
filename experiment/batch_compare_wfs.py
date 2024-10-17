@@ -80,8 +80,8 @@ if not do_quick_test:
     stage_settings = {
         'settle_time': 2 * 60 * u.s,
         'step_size': 150 * u.um,
-        'num_steps_axis1': 4,
-        'num_steps_axis2': 5,
+        'num_steps_axis1': 5,
+        'num_steps_axis2': 3,
     }
 
     # WFS
@@ -96,7 +96,7 @@ if do_quick_test:
     # === Quick test settings === #
     # Stage
     stage_settings = {
-        'settle_time': 2 * u.s,
+        'settle_time': 1 * u.s,
         'step_size': 150 * u.um,
         'num_steps_axis1': 2,
         'num_steps_axis2': 1,
@@ -277,13 +277,20 @@ with Connection.open_serial_port(comport) as connection:            # Open conne
                                                              scanner=reader.source, **park_kwargs)
             print(f'Beam parking spot at {park_location}')
 
+            n_algs = [None] * len(algorithms)
             wfs_results_all = [None] * len(algorithms)
             contrast_results_all = [None] * len(algorithms)
             signal_before_flat = [None] * len(algorithms)
             signal_after_flat = [None] * len(algorithms)
             signal_shaped = [None] * len(algorithms)
 
-            for n_alg, alg_constructor in enumerate(algorithms):     # Loop over algorithms
+            for n_alg_shift in range(len(algorithms)):     # Loop over algorithms
+
+                # Pick algorithm: Compute algorithm index by circ shifting the order per location
+                n_alg = (a2 + a1 * range(stage_settings['num_steps_axis2']) + n_alg_shift) % len(algorithms)
+                n_algs[n_alg_shift] = n_alg
+                alg_constructor = algorithms[n_alg]
+
                 # Construct algorithm
                 alg = alg_constructor(feedback=roi, slm=slm, **algorithm_common_kwargs,
                                       **algorithm_kwargs[n_alg])
@@ -352,6 +359,7 @@ with Connection.open_serial_port(comport) as connection:            # Open conne
                 signal_shaped=[signal_shaped],
                 exec_kwargs=[exec_kwargs],
                 dark_frame=[dark_frame],
+                n_algs=[n_algs],
             )
 
             progress_bar.update()
