@@ -19,8 +19,8 @@ from phase_only_orthonormalization.directories import localdata
 
 
 # Adjust this path to point to the location of the measurement data
-path_glob = 'set13/wfs-comparison_t*.npz'                 # Filename glob defining which files to read
-file_numbers_to_include = list(range(0, 25))        # Which files to read and include in graph (at least two)
+path_glob = 'set14/wfs-comparison_t*.npz'                 # Filename glob defining which files to read
+file_numbers_to_include = list(range(0, 20))        # Which files to read and include in graph (at least two)
 file_numbers_to_plot = []                 # From selection, which images to plot (non-existing are ignored)
 
 do_plot_parking_convergence = True                  # Plot intermediate scans of auto-selecting an ROI around a bead
@@ -171,8 +171,8 @@ for n_f, filepath in enumerate(tqdm(npz_files_sel)):
     xpark = left + width/2
     ypark = top + height/2
 
-    signals_before_flat_photobleach += [np.mean(npz_data['signal_before_flat'].squeeze(), axis=(1, 2))]
-    signals_after_flat_photobleach += [np.mean(npz_data['signal_after_flat'].squeeze(), axis=(1, 2))]
+    signals_before_flat_photobleach += [np.mean(npz_data['signal_before_flat'], axis=(2, 3)).squeeze()]
+    signals_after_flat_photobleach += [np.mean(npz_data['signal_after_flat'], axis=(2, 3)).squeeze()]
 
     # Flat wavefront
     if n_f in file_numbers_to_plot:
@@ -281,20 +281,20 @@ for n_f, filepath in enumerate(tqdm(npz_files_sel)):
 
 
 # Linear Least Squares
-improvement_ratio_1 = scalar_factor_least_squares(signal_enhancement[0], signal_enhancement[1])[0]
-improvement_ratio_2 = scalar_factor_least_squares(signal_enhancement[0], signal_enhancement[2])[0]
-improvement_ratio_3 = scalar_factor_least_squares(signal_enhancement[0], signal_enhancement[3])[0]
-
-improvement_ratio_12 = scalar_factor_least_squares(signal_enhancement[1], signal_enhancement[2])[0]
-improvement_ratio_13 = scalar_factor_least_squares(signal_enhancement[1], signal_enhancement[3])[0]
-improvement_ratio_23 = scalar_factor_least_squares(signal_enhancement[2], signal_enhancement[3])[0]
+# improvement_ratio_1 = scalar_factor_least_squares(signal_enhancement[0], signal_enhancement[1])[0]
+# improvement_ratio_2 = scalar_factor_least_squares(signal_enhancement[0], signal_enhancement[2])[0]
+# improvement_ratio_3 = scalar_factor_least_squares(signal_enhancement[0], signal_enhancement[3])[0]
+#
+# improvement_ratio_12 = scalar_factor_least_squares(signal_enhancement[1], signal_enhancement[2])[0]
+# improvement_ratio_13 = scalar_factor_least_squares(signal_enhancement[1], signal_enhancement[3])[0]
+# improvement_ratio_23 = scalar_factor_least_squares(signal_enhancement[2], signal_enhancement[3])[0]
 
 mean_signal_enhancement = np.mean(signal_enhancement, axis=1)
 print(f'Average signal improvement factor {npz_data["algorithm_types"][0]}: {mean_signal_enhancement[0]:.4f}')
 print(f'Average signal improvement factor {npz_data["algorithm_types"][1]}: {mean_signal_enhancement[1]:.4f}')
 print(f'Average signal improvement factor {npz_data["algorithm_types"][2]}: {mean_signal_enhancement[2]:.4f}')
-print(f'Average signal improvement factor ratio (least squares): {improvement_ratio_1:.4f}')
-print(f'Average signal improvement factor ratio (least squares): {improvement_ratio_2:.4f}')
+# print(f'Average signal improvement factor ratio (least squares): {improvement_ratio_1:.4f}')
+# print(f'Average signal improvement factor ratio (least squares): {improvement_ratio_2:.4f}')
 
 plt.figure()
 n_algs = range(len(signal_enhancement))
@@ -307,7 +307,7 @@ plt.legend()
 plt.figure()
 signal_enh_max = np.max(signal_enhancement)
 plt.plot((0, signal_enh_max), (0, signal_enh_max), '--', color='#999999', label='Equality')
-plt.plot((0, signal_enh_max / improvement_ratio_1), (0, signal_enh_max), color='tab:green', label='Least squares fit')
+# plt.plot((0, signal_enh_max / improvement_ratio_1), (0, signal_enh_max), color='tab:green', label='Least squares fit')
 plt.plot(signal_enhancement[0], signal_enhancement[1], '.', color='tab:blue', label='Signal improvement')
 plt.xlabel(f'{basis_names[1]}')
 plt.ylabel(f'{basis_names[2]}')
@@ -317,7 +317,7 @@ plt.legend()
 plt.figure()
 signal_enh_max = np.max(signal_enhancement)
 plt.plot((0, signal_enh_max), (0, signal_enh_max), '--', color='#999999', label='Equality')
-plt.plot((0, signal_enh_max / improvement_ratio_2), (0, signal_enh_max), color='tab:green', label='Least squares fit')
+# plt.plot((0, signal_enh_max / improvement_ratio_2), (0, signal_enh_max), color='tab:green', label='Least squares fit')
 plt.plot(signal_enhancement[0], signal_enhancement[2], '.', color='tab:blue', label='Signal improvement')
 plt.xlabel(f'{basis_names[1]}')
 plt.ylabel(f'{basis_names[3]}')
@@ -327,7 +327,7 @@ plt.legend()
 plt.figure()
 signal_enh_max = np.max(signal_enhancement)
 plt.plot((0, signal_enh_max), (0, signal_enh_max), '--', color='#999999', label='Equality')
-plt.plot((0, signal_enh_max / improvement_ratio_3), (0, signal_enh_max), color='tab:green', label='Least squares fit')
+# plt.plot((0, signal_enh_max / improvement_ratio_3), (0, signal_enh_max), color='tab:green', label='Least squares fit')
 plt.plot(signal_enhancement[0], signal_enhancement[3], '.', color='tab:blue', label='Signal improvement')
 plt.xlabel(f'{basis_names[1]}')
 plt.ylabel(f'{basis_names[4]}')
@@ -337,7 +337,7 @@ plt.legend()
 plt.figure()
 signal_enh_max = np.max(signal_enhancement)
 plt.plot((0, signal_enh_max), (0, signal_enh_max), '--', color='#999999', label='Equality')
-plt.plot((0, signal_enh_max / improvement_ratio_12), (0, signal_enh_max), color='tab:green', label='Least squares fit')
+# plt.plot((0, signal_enh_max / improvement_ratio_12), (0, signal_enh_max), color='tab:green', label='Least squares fit')
 plt.plot(signal_enhancement[1], signal_enhancement[2], '.', color='tab:blue', label='Signal improvement')
 plt.xlabel(f'{basis_names[2]}')
 plt.ylabel(f'{basis_names[3]}')
@@ -347,7 +347,7 @@ plt.legend()
 plt.figure()
 signal_enh_max = np.max(signal_enhancement)
 plt.plot((0, signal_enh_max), (0, signal_enh_max), '--', color='#999999', label='Equality')
-plt.plot((0, signal_enh_max / improvement_ratio_13), (0, signal_enh_max), color='tab:green', label='Least squares fit')
+# plt.plot((0, signal_enh_max / improvement_ratio_13), (0, signal_enh_max), color='tab:green', label='Least squares fit')
 plt.plot(signal_enhancement[1], signal_enhancement[3], '.', color='tab:blue', label='Signal improvement')
 plt.xlabel(f'{basis_names[2]}')
 plt.ylabel(f'{basis_names[4]}')
@@ -357,7 +357,7 @@ plt.legend()
 plt.figure()
 signal_enh_max = np.max(signal_enhancement)
 plt.plot((0, signal_enh_max), (0, signal_enh_max), '--', color='#999999', label='Equality')
-plt.plot((0, signal_enh_max / improvement_ratio_23), (0, signal_enh_max), color='tab:green', label='Least squares fit')
+# plt.plot((0, signal_enh_max / improvement_ratio_23), (0, signal_enh_max), color='tab:green', label='Least squares fit')
 plt.plot(signal_enhancement[2], signal_enhancement[3], '.', color='tab:blue', label='Signal improvement')
 plt.xlabel(f'{basis_names[3]}')
 plt.ylabel(f'{basis_names[4]}')
