@@ -19,23 +19,30 @@ from phase_only_orthonormalization.directories import localdata
 
 # Adjust this path to point to the location of the measurement data
 path_glob = 'set15/wfs-comparison_t*.npz'                 # Filename glob defining which files to read
-file_numbers_to_include = list(range(0, 23))        # Which files to read and include in graph (at least two)
-file_numbers_to_plot = []                 # From selection, which images to plot (non-existing are ignored)
+# file_numbers_to_include = list(range(0, 23))        # Which files to read and include in graph (at least two)
+file_numbers_to_include = [5,6]        # Which files to read and include in graph (at least two)
+file_numbers_to_plot = [0,1]                 # From selection, which images to plot (non-existing are ignored)
 
 do_plot_parking_convergence = True                  # Plot intermediate scans of auto-selecting an ROI around a bead
 
 # Image settings
 cmap = 'magma'                                      # Colormap
-slice0 = slice(0, 1000)                              # Crop x
+slice0 = slice(0, 700)                              # Crop x
 slice1 = slice(0, 1000)                             # Crop y
 circ_style = '--w'                                  # Pupil circle
 
-flat_beadline_x = (544, 613)                        # Line through bead x coords, flat wavefront
-flat_beadline_y = (257, 257)                        # Line through bead y coords, flat wavefront
-algs_beadline_x = ((534, 603), (542, 611), (1,3))          # Line through bead x coords, shaped wavefront algorithms
-algs_beadline_y = ((245, 245), (255, 255), (1,3))          # Line through bead y coords, shaped wavefront algorithms
+fbx1 = 750
+fbx2 = fbx1 + 80
+fby = 495
+
+flat_beadline_x = (fbx1, fbx2)                        # Line through bead x coords, flat wavefront
+flat_beadline_y = (fby, fby)                        # Line through bead y coords, flat wavefront
+algs_beadline_x = ((fbx1, fbx2), (fbx1, fbx2), (fbx1, fbx2))          # Line through bead x coords, shaped wavefront algorithms
+algs_beadline_y = ((fby, fby), (fby, fby), (fby-5, fby-5))          # Line through bead y coords, shaped wavefront algorithms
 beadline_flat_kwargs = {'color': (0.0, 0.9, 1.0), 'linewidth': 0.5}
-beadline_alg_kwargs = ({'color': (1.0, 0.7, 0.0), 'linewidth': 0.5}, {'color': (0.1, 1.0, 0.1), 'linewidth': 0.5}, {})
+beadline_alg_kwargs = ({'color': (1.0, 0.7, 0.0), 'linewidth': 0.5},
+                       {'color': (0.1, 1.0, 0.1), 'linewidth': 0.5},
+                       {'color': (0.1, 1.0, 0.1), 'linewidth': 0.5})
 
 bead_flat_kwargs = {'color': 'tab:blue', 'linestyle': 'dashdot'}
 bead_alg0_kwargs = {'color': 'tab:orange', 'linestyle': 'dashed'}
@@ -51,13 +58,13 @@ scalebar_props = {
 
 # Subplot settings
 nrows = 2
-ncols = 4
+ncols = 3
 
 # Title strings
 # image_letters = ('a. ', 'b. ', 'c. ')
 # pattern_letters = ('e. ', 'f. ', 'g. ')
-image_letters = ('a. ', 'b. ', 'c. ', 'x')
-pattern_letters = ('e. ', 'f. ', 'g. ', 'x')
+image_letters = ('a. ', 'b. ', 'x. ', 'c. ')
+pattern_letters = ('e. ', 'f. ', 'x. ', 'g. ')
 beadline_letter = 'd.'
 basis_names = ('No correction', 'Plane wave basis', 'Plane wave gauss', 'Our orthonormal basis')
 
@@ -157,8 +164,8 @@ for n_f, filepath in enumerate(tqdm(npz_files_sel)):
         plt.subplots_adjust(left=0.01, right=0.93, top=0.955, bottom=0.01, wspace=0.02, hspace=0.12)
 
     # Extract images
-    img_shaped_wf = npz_data['contrast_results_all'][0][1]['img_shaped_wf']
-    img_flat_wf = npz_data['contrast_results_all'][0][1]['img_flat_wf']
+    img_shaped_wf = npz_data['contrast_results_all'][0][2]['img_shaped_wf']
+    img_flat_wf = npz_data['contrast_results_all'][0][2]['img_flat_wf']
     vmin = 0
     vmax = np.maximum(np.percentile(img_shaped_wf, 100 - 1e-2), np.percentile(img_shaped_wf, 100 - 1e-2))
 
@@ -193,12 +200,15 @@ for n_f, filepath in enumerate(tqdm(npz_files_sel)):
         intermediate_results[n_f].append([])
         alg_str = npz_data['algorithm_types'][n_alg]
 
-        if n_f in file_numbers_to_plot:
+        if n_f in file_numbers_to_plot and not n_alg == 1:
             # Load images
             img_shaped_wf = npz_data['contrast_results_all'][0][n_alg]['img_shaped_wf']
 
             # Shaped wf
-            plt.subplot(nrows, ncols, 2+n_alg)
+            if n_alg == 0:
+                plt.subplot(nrows, ncols, 2)
+            if n_alg == 2:
+                plt.subplot(nrows, ncols, 3)
             im1 = plt.imshow(img_shaped_wf[slice0, slice1], vmin=vmin, vmax=vmax, cmap=cmap)
             plt.title(f'{image_letters[1+n_alg]}{basis_names[1+n_alg]}')
             plt.xticks([])
@@ -211,10 +221,12 @@ for n_f, filepath in enumerate(tqdm(npz_files_sel)):
             scale_tc = 1 / np.abs(tc).max()
             field_at_slm = amplitude * np.exp(1j * np.angle(tc))
             phase_rgb = complex_to_rgb(field_at_slm, 1)
-            plt.subplot(nrows, ncols, 2+ncols+n_alg)
+
             if n_alg == 0:
+                plt.subplot(nrows, ncols, 5)
                 plt.gca().set_position((0.407, 0.01, 0.141, 0.446))
-            if n_alg == 1:
+            if n_alg == 2:
+                plt.subplot(nrows, ncols, 6)
                 plt.gca().set_position((0.627, 0.01, 0.141, 0.446))
             plt.imshow(phase_rgb, extent=(-1, 1, -1, 1))
             plt.title(f'{pattern_letters[1 + n_alg]}')
@@ -250,16 +262,16 @@ for n_f, filepath in enumerate(tqdm(npz_files_sel)):
         plt.axes((0.060, 0.120, 0.080, 0.282))
 
         img_shaped_wf0 = npz_data['contrast_results_all'][0][0]['img_shaped_wf']
-        img_shaped_wf1 = npz_data['contrast_results_all'][0][1]['img_shaped_wf']
+        img_shaped_wf2 = npz_data['contrast_results_all'][0][2]['img_shaped_wf']
         beadsignal_flat = get_data_beadline(img_flat_wf, flat_beadline_x, flat_beadline_y).squeeze()
         beadsignal_alg0 = get_data_beadline(img_shaped_wf0, algs_beadline_x[0], algs_beadline_y[0]).squeeze()
-        beadsignal_alg1 = get_data_beadline(img_shaped_wf1, algs_beadline_x[1], algs_beadline_y[1]).squeeze()
+        beadsignal_alg2 = get_data_beadline(img_shaped_wf2, algs_beadline_x[1], algs_beadline_y[1]).squeeze()
         num_pix_beadline = (flat_beadline_x[1] - flat_beadline_x[0] + 1)
         xrange = np.linspace(0, scalebar_props['pix_size_m'] * 1e6 * num_pix_beadline, num_pix_beadline)
 
         plt.plot(xrange, beadsignal_flat, label=basis_names[0], **bead_flat_kwargs)
         plt.plot(xrange, beadsignal_alg0, label=basis_names[1], **bead_alg0_kwargs)
-        plt.plot(xrange, beadsignal_alg1, label=basis_names[2], **bead_alg1_kwargs)
+        plt.plot(xrange, beadsignal_alg2, label=basis_names[3], **bead_alg1_kwargs)
         plt.xlabel('position ($\\mu m$)')
         plt.ylabel('PMT signal through bead')
         plt.title(beadline_letter)
