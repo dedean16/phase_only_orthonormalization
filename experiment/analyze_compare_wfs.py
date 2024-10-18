@@ -18,8 +18,8 @@ from phase_only_orthonormalization.directories import localdata
 
 
 # Adjust this path to point to the location of the measurement data
-path_glob = 'set10/wfs-comparison_t*.npz'                 # Filename glob defining which files to read
-file_numbers_to_include = list(range(0, 9))        # Which files to read and include in graph (at least two)
+path_glob = 'set15/wfs-comparison_t*.npz'                 # Filename glob defining which files to read
+file_numbers_to_include = list(range(0, 23))        # Which files to read and include in graph (at least two)
 file_numbers_to_plot = []                 # From selection, which images to plot (non-existing are ignored)
 
 do_plot_parking_convergence = True                  # Plot intermediate scans of auto-selecting an ROI around a bead
@@ -77,10 +77,10 @@ print(f'Selected {len(file_numbers_to_include)} files.')
 
 # Initialize
 signal_enhancement = [[], [], []]
-signal_flat_all = []
+signal_before_flat_all = []
+signal_after_flat_all = []
 signal_shaped_all = []
 intermediate_results = []
-signals_flat_photobleach = []
 
 
 # ===== Compute amplitude profile ===== #
@@ -167,8 +167,6 @@ for n_f, filepath in enumerate(tqdm(npz_files_sel)):
     xpark = left + width/2
     ypark = top + height/2
 
-    signals_flat_photobleach += [np.mean(npz_data['signal_flat'].squeeze(), axis=(1, 2))]
-
     # Flat wavefront
     if n_f in file_numbers_to_plot:
         img_flat_wf = npz_data['contrast_results_all'][0][0]['img_flat_wf']
@@ -225,11 +223,16 @@ for n_f, filepath in enumerate(tqdm(npz_files_sel)):
             draw_circle(circ_style, 1)
 
         # Extract signal intensities
-        signal_flat_all += [np.mean(npz_data['signal_flat'].squeeze())]
+        signal_before_flat_all += [np.mean(npz_data['signal_before_flat'].squeeze())]
+        signal_after_flat_all += [np.mean(npz_data['signal_after_flat'].squeeze())]
         signal_shaped_all += [np.mean(npz_data['signal_shaped'].squeeze())]
 
+        # Dark frame
+        dark_mean = npz_data['dark_frame'].mean()
+
         signal_enhancement[n_alg] += \
-            [np.mean(npz_data['signal_shaped'].squeeze()[n_alg]) / np.mean(npz_data['signal_flat'].squeeze()[n_alg])]
+            [(np.mean(npz_data['signal_shaped'].squeeze()[n_alg]) - dark_mean)
+             / (np.mean(npz_data['signal_after_flat'].squeeze()[n_alg]) - dark_mean)]
 
         intermediate_results[n_f][n_alg] += [*npz_data['wfs_results_all'][0, n_alg].intermediate_results]
 
@@ -285,7 +288,7 @@ print(f'Average signal improvement factor ratio (least squares): {improvement_ra
 
 plt.figure()
 signal_enh_max = np.max(signal_enhancement)
-plt.plot((0, signal_enh_max), (0, signal_enh_max), '--', color='#999999', label='Equality')
+plt.plot((0, signal_enh_max / improvement_ratio_1), (0, signal_enh_max / improvement_ratio_1), '--', color='#999999', label='Equality')
 plt.plot((0, signal_enh_max / improvement_ratio_1), (0, signal_enh_max), color='tab:green', label='Least squares fit')
 plt.plot(signal_enhancement[0], signal_enhancement[1], '.', color='tab:blue', label='Signal improvement')
 plt.xlabel(f'{basis_names[1]}')
@@ -295,7 +298,7 @@ plt.legend(loc=4)
 
 plt.figure()
 signal_enh_max = np.max(signal_enhancement)
-plt.plot((0, signal_enh_max), (0, signal_enh_max), '--', color='#999999', label='Equality')
+plt.plot((0, signal_enh_max / improvement_ratio_2), (0, signal_enh_max / improvement_ratio_2), '--', color='#999999', label='Equality')
 plt.plot((0, signal_enh_max / improvement_ratio_2), (0, signal_enh_max), color='tab:green', label='Least squares fit')
 plt.plot(signal_enhancement[0], signal_enhancement[2], '.', color='tab:blue', label='Signal improvement')
 plt.xlabel(f'{basis_names[1]}')
@@ -304,15 +307,7 @@ plt.title('Signal improvement factor')
 plt.legend(loc=4)
 
 plt.figure()
-plt.plot(np.asarray(signals_flat_photobleach).T, '.-', label=[f'Location {n}' for n in range(len(signals_flat_photobleach))])
-plt.xlabel('Algorithm index')
-plt.ylabel('Signal')
-plt.title('Photobleaching - flat wf signal measurements')
-plt.legend()
-plt.show()
-
-plt.figure()
-plt.plot(signal_flat_all, signal_shaped_all, '.')
+plt.plot(signal_before_flat_all, signal_shaped_all, '.')
 plt.xlabel('Signal flat')
 plt.ylabel('Signal shaped')
 plt.title('Signal flat vs signal shaped')
