@@ -53,7 +53,7 @@ if do_quick_test:
     algorithm_common_kwargs = {'iterations': 2, 'phase_steps': 4, 'group_mask': split_mask, 'amplitude': 'uniform'}
 else:
     algorithm_kwargs = {'phase_patterns': (phases_ortho_pw, np.flip(phases_ortho_pw))}
-    algorithm_common_kwargs = {'iterations': 6, 'phase_steps': 16, 'group_mask': split_mask, 'amplitude': 'uniform'}
+    algorithm_common_kwargs = {'iterations': 3, 'phase_steps': 8, 'group_mask': split_mask, 'amplitude': 'uniform'}
 
 # Setup WFS sim
 t = np.random.normal(size=size) + 1j * np.random.normal(size=size)
