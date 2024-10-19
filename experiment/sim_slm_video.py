@@ -32,7 +32,7 @@ output_filepath = os.path.join(localdata, "slm-frames/slm-pattern")
 # Import modes
 phases_filepath = os.path.join(localdata, "ortho-plane-waves-hires.hdf5")
 
-size = (400, 400)
+size = (500, 500)
 
 # Import variables
 print('\nStart import modes...')
@@ -70,4 +70,8 @@ reader = SLMPatternSaver(source=sim, slm=sim.slm, output_filepath=output_filepat
 # Run WFS
 print(f'Run WFS simulation... Saving frames to {output_filepath}')
 alg = DualReference(feedback=reader, slm=sim.slm, **algorithm_common_kwargs, **algorithm_kwargs)
-alg.execute()
+result = alg.execute()
+
+# Final pattern
+sim.slm.set_phases(-np.angle(result.t))
+reader.read()
