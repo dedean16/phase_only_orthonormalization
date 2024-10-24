@@ -18,10 +18,9 @@ from phase_only_orthonormalization.directories import localdata
 
 
 # Adjust this path to point to the location of the measurement data
-path_glob = 'set15/wfs-comparison_t*.npz'                 # Filename glob defining which files to read
-# file_numbers_to_include = list(range(0, 23))        # Which files to read and include in graph (at least two)
-file_numbers_to_include = [5,6]        # Which files to read and include in graph (at least two)
-file_numbers_to_plot = [0,1]                 # From selection, which images to plot (non-existing are ignored)
+path_glob = 'wfs-comparison_t*.npz'                 # Filename glob defining which files to read
+file_numbers_to_include = list(range(0, 23))        # Which files to read and include in graph (at least two)
+file_numbers_to_plot = [5, 14]                      # From selection, which images to plot (non-existing are ignored)
 
 do_plot_parking_convergence = True                  # Plot intermediate scans of auto-selecting an ROI around a bead
 
@@ -36,7 +35,7 @@ fbx2 = fbx1 + 80
 fby = 495
 
 flat_beadline_x = (fbx1, fbx2)                        # Line through bead x coords, flat wavefront
-flat_beadline_y = (fby, fby)                        # Line through bead y coords, flat wavefront
+flat_beadline_y = (fby-10, fby-10)                        # Line through bead y coords, flat wavefront
 algs_beadline_x = ((fbx1, fbx2), (fbx1, fbx2), (fbx1, fbx2))          # Line through bead x coords, shaped wavefront algorithms
 algs_beadline_y = ((fby, fby), (fby, fby), (fby-5, fby-5))          # Line through bead y coords, shaped wavefront algorithms
 beadline_flat_kwargs = {'color': (0.0, 0.9, 1.0), 'linewidth': 0.5}
@@ -61,8 +60,6 @@ nrows = 2
 ncols = 3
 
 # Title strings
-# image_letters = ('a. ', 'b. ', 'c. ')
-# pattern_letters = ('e. ', 'f. ', 'g. ')
 image_letters = ('a. ', 'b. ', 'x. ', 'c. ')
 pattern_letters = ('e. ', 'f. ', 'x. ', 'g. ')
 beadline_letter = 'd.'
@@ -284,7 +281,6 @@ for n_f, filepath in enumerate(tqdm(npz_files_sel)):
                 imshow = axs2.ravel()[i].imshow(img)
                 fig2.colorbar(imshow, ax=axs2.ravel()[i])
                 fig2.suptitle(f'{n_f}: Beam park convergence')
-
 
 
 # Linear Least Squares
