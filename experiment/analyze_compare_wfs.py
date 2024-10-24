@@ -22,7 +22,8 @@ path_glob = 'wfs-comparison_t*.npz'                 # Filename glob defining whi
 file_numbers_to_include = list(range(0, 23))        # Which files to read and include in graph (at least two)
 file_numbers_to_plot = [5, 14]                      # From selection, which images to plot (non-existing are ignored)
 
-do_plot_parking_convergence = True                  # Plot intermediate scans of auto-selecting an ROI around a bead
+do_plot_parking_convergence = False                 # Plot intermediate scans of auto-selecting an ROI around a bead
+do_plot_extra_graphs = False
 
 # Image settings
 cmap = 'magma'                                      # Colormap
@@ -158,7 +159,7 @@ for n_f, filepath in enumerate(tqdm(npz_files_sel)):
         fig, axs = plt.subplots(nrows, ncols)
         fig.set_size_inches(14.2, 6)
         fig.set_dpi(120)
-        plt.subplots_adjust(left=0.01, right=0.93, top=0.955, bottom=0.01, wspace=0.02, hspace=0.12)
+        plt.subplots_adjust(left=0.01, right=0.93, top=0.95, bottom=0.01, wspace=0.02, hspace=0.12)
 
     # Extract images
     img_shaped_wf = npz_data['contrast_results_all'][0][2]['img_shaped_wf']
@@ -247,7 +248,7 @@ for n_f, filepath in enumerate(tqdm(npz_files_sel)):
 
     if n_f in file_numbers_to_plot:
         # Colorbar
-        ax_cb = plt.axes((0.937, 0.516, 0.012, 0.433))
+        ax_cb = plt.axes((0.925, 0.516, 0.012, 0.433))
         fig.colorbar(im0, cax=ax_cb)
         ax_cb.set_ylabel('PMT signal')
 
@@ -294,15 +295,16 @@ print(f'Average signal improvement factor {npz_data["algorithm_types"][2]}: {mea
 print(f'Average signal improvement factor ratio (least squares): {improvement_ratio_1:.4f}')
 print(f'Average signal improvement factor ratio (least squares): {improvement_ratio_2:.4f}')
 
-plt.figure()
-signal_enh_max = np.max(signal_enhancement)
-plt.plot((0, signal_enh_max / improvement_ratio_1), (0, signal_enh_max / improvement_ratio_1), '--', color='#999999', label='Equality')
-plt.plot((0, signal_enh_max / improvement_ratio_1), (0, signal_enh_max), color='tab:green', label='Least squares fit')
-plt.plot(signal_enhancement[0], signal_enhancement[1], '.', color='tab:blue', label='Signal improvement')
-plt.xlabel(f'{basis_names[1]}')
-plt.ylabel(f'{basis_names[2]}')
-plt.title('Signal improvement factor')
-plt.legend(loc=4)
+if do_plot_extra_graphs:
+    plt.figure()
+    signal_enh_max = np.max(signal_enhancement)
+    plt.plot((0, signal_enh_max / improvement_ratio_1), (0, signal_enh_max / improvement_ratio_1), '--', color='#999999', label='Equality')
+    plt.plot((0, signal_enh_max / improvement_ratio_1), (0, signal_enh_max), color='tab:green', label='Least squares fit')
+    plt.plot(signal_enhancement[0], signal_enhancement[1], '.', color='tab:blue', label='Signal improvement')
+    plt.xlabel(f'{basis_names[1]}')
+    plt.ylabel(f'{basis_names[2]}')
+    plt.title('Signal improvement factor')
+    plt.legend(loc=4)
 
 plt.figure()
 signal_enh_max = np.max(signal_enhancement)
@@ -314,24 +316,25 @@ plt.ylabel(f'{basis_names[3]}')
 plt.title('Signal improvement factor')
 plt.legend(loc=4)
 
-plt.figure()
-plt.plot(signal_before_flat_all, signal_shaped_all, '.')
-plt.xlabel('Signal flat')
-plt.ylabel('Signal shaped')
-plt.title('Signal flat vs signal shaped')
+if do_plot_extra_graphs:
+    plt.figure()
+    plt.plot(signal_before_flat_all, signal_shaped_all, '.')
+    plt.xlabel('Signal flat')
+    plt.ylabel('Signal shaped')
+    plt.title('Signal flat vs signal shaped')
 
-plt.figure()
-plt.plot(np.asarray(intermediate_results)[:, 0, :].squeeze().T, '.-', color='#99ccff')
-plt.plot(np.asarray(intermediate_results)[:, 1, :].squeeze().T, '.-', color='#ffaaaa')
+    plt.figure()
+    plt.plot(np.asarray(intermediate_results)[:, 0, :].squeeze().T, '.-', color='#99ccff')
+    plt.plot(np.asarray(intermediate_results)[:, 1, :].squeeze().T, '.-', color='#ffaaaa')
 
-plt.plot(np.asarray(intermediate_results)[:, 0, :].squeeze().T.mean(axis=1), '.-', color='#3355ff', linewidth=2.5, label=f'{npz_data["algorithm_types"][0]} mean')
-plt.plot(np.asarray(intermediate_results)[:, 1, :].squeeze().T.mean(axis=1), '.-', color='#ff2222', linewidth=2.5, label=f'{npz_data["algorithm_types"][1]} mean')
+    plt.plot(np.asarray(intermediate_results)[:, 0, :].squeeze().T.mean(axis=1), '.-', color='#3355ff', linewidth=2.5, label=f'{npz_data["algorithm_types"][0]} mean')
+    plt.plot(np.asarray(intermediate_results)[:, 1, :].squeeze().T.mean(axis=1), '.-', color='#ff2222', linewidth=2.5, label=f'{npz_data["algorithm_types"][1]} mean')
 
-plt.title('Ping pong convergence')
-plt.xlabel('Ping pong index')
-plt.ylabel('Signal')
-plt.legend()
-plt.ylim(bottom=0)
+    plt.title('Ping pong convergence')
+    plt.xlabel('Ping pong index')
+    plt.ylabel('Signal')
+    plt.legend()
+    plt.ylim(bottom=0)
 
 plt.show()
 
