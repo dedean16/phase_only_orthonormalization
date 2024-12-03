@@ -93,8 +93,8 @@ def phase_gradient(x, y, kx, ky):
     Args:
         x: Tensor containing the x spatial coordinates.
         y: Tensor containing the y spatial coordinates.
-        kx: Wavenumber in x.
-        ky: Wavenumber in y.
+        kx: Wavenumber in x, in units of π / (x units).
+        ky: Wavenumber in y, in units of π / (y units).
 
     Returns:
         A phase gradient of π * (kx*x + ky*y)
@@ -638,6 +638,9 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
         optimizer.zero_grad()
 
         progress_bar.update()
+
+    print(f'Non-orthogonality N = {non_orthogonality.detach().item():.3g}')
+    print(f'Phase gradient, mean of squared = {phase_grad_magsq.detach().item():.3g}')
 
     # Final plot
     if do_plot:
