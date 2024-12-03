@@ -260,3 +260,27 @@ def scalar_factor_least_squares(x, y):
     A = np.vstack([x]).T
     b = np.linalg.lstsq(A, y)[0]
     return b
+
+
+def place_xy_arrows(ax, arrow_props={'head_width': 0.1, 'head_length': 0.15, 'fc': 'black', 'ec': 'black'},
+                    label_props={'fontsize': 14, 'ha': 'center', 'va': 'center'}):
+    # Draw arrows
+    ax.arrow(0, 0, 1, 0, **arrow_props)
+    ax.arrow(0, 0, 0, 1, **arrow_props)
+
+    # Set the limits of the plot
+    ax.set_xlim(-0.5, 1.5)
+    ax.set_ylim(-0.5, 1.5)
+
+    # Add labels for x and y axes
+    ax.text(1.05, 0.2, 'x', **label_props)
+    ax.text(0.2, 1.05, 'y', **label_props)
+
+    # Customize the plot appearance
+    ax.set_aspect('equal')
+    ax.spines['right'].set_color('none')
+    ax.spines['top'].set_color('none')
+    ax.spines['left'].set_color('none')
+    ax.spines['bottom'].set_color('none')
+    ax.set_xticks([])
+    ax.set_yticks([])
