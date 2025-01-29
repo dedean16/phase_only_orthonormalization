@@ -13,7 +13,7 @@ from skimage.transform import resize
 from mode_functions import get_coords, coord_transform, trunc_gaussian, amplitude_rectangle, compute_modes, \
     phase_gradient
 from helper_functions import plot_field, complex_colorwheel, get_dict_from_hdf5, add_dict_as_hdf5group, gitinfo, \
-    grid_bitmap, place_xy_arrows
+    grid_bitmap
 from directories import localdata
 
 
@@ -103,10 +103,15 @@ if do_plot_bases:
     ax_cw = plt.subplot(n_rows, n_cols_total, (center_spi, center_spi+1))
     complex_colorwheel(ax=ax_cw, shape=(150, 150))
 
-    # Axis arrows
-    arrows_spi = int(n_cols_basis - 1 + np.floor(n_rows/2))
-    ax_arrows = plt.subplot(n_rows, n_cols_total, (arrows_spi, arrows_spi+1))
-    place_xy_arrows(ax_arrows)
+    # Axis domain
+    domain_spi = int(n_cols_basis - 1 + np.floor(n_rows/2))
+    ax_domain = plt.subplot(n_rows, n_cols_total, (domain_spi, domain_spi+1))
+    ax_domain.set_xlim((-1, 0))
+    ax_domain.set_ylim((-1, 1))
+    ax_domain.set_xlabel('x', labelpad=-2.0)
+    ax_domain.set_ylabel('y', labelpad=-2.0, rotation=0)
+    ax_domain.set_aspect(1)
+    ax_domain.set_title('Domain')
 
     # Title
     fig.text(0.23, 0.985, 'a. Initial functions', ha='center', va='center', fontsize=14)
