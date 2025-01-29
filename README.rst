@@ -1,7 +1,7 @@
 Phase-only orthonormalization
 =============================
 
-Orthonormalization of phase-only 2D basis functions using PyTorch. Read the pre-print research paper at https://arxiv.org/abs/2409.04565
+Orthonormalization of phase-only 2D basis functions using PyTorch. Read the paper at https://opg.optica.org/oe/fulltext.cfm?uri=oe-33-2-2427&id=567075
 
 Installation
 ------------
