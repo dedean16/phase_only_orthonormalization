@@ -645,8 +645,8 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
     # Final plot
     if do_plot:
         # Gram matrices and error evolution
-        plt.figure(figsize=(14, 4), dpi=120)
-        plt.subplots_adjust(left=0.06, right=0.98, top=0.93, bottom=0.13)
+        plt.figure(figsize=(10, 3), dpi=120)
+        plt.subplots_adjust(left=0.04, right=0.97, top=0.91, bottom=0.15)
 
         # Original Gram matrix
         plt.subplot(1, 3, 1)
@@ -678,6 +678,12 @@ def optimize_modes(domain: dict, amplitude_func: callable, phase_func: callable,
         plt.xlabel('Iteration')
         plt.legend()
         plt.title('c. Error convergence')
+
+        # Adjust the position of the current axes to add left margin
+        ax = plt.gca()
+        pos = ax.get_position()
+        # Shift the subplot right and reduce its width slightly
+        ax.set_position([pos.x0 + 0.02, pos.y0, pos.width - 0.02, pos.height])
 
         plt.show()
 
