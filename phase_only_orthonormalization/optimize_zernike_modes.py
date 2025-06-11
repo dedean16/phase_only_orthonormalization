@@ -130,8 +130,8 @@ if do_plot_end:
         + (n_cols_basis + 1) * np.expand_dims(np.arange(n_rows), axis=1)).ravel()), spi_skip)
 
     # Initialize figure with subplots
-    fig = plt.figure(figsize=(16, 6.2))
-    plt.subplots_adjust(left=0.01, right=0.99, top=0.95, bottom=0.02, wspace=0.05, hspace=0.01)
+    fig = plt.figure(figsize=(13, 4.9))
+    plt.subplots_adjust(left=0.01, right=0.99, top=0.95, bottom=0.01, wspace=0.05, hspace=0.02)
     scale = 1 / np.abs(init_modes[:, :, 0]).max()
 
     # Plot init functions
@@ -154,7 +154,7 @@ if do_plot_end:
     complex_colorwheel(ax=ax_cw, shape=(150, 150))
 
     # Title
-    fig.text(0.23, 0.98, 'a. Initial functions', ha='center', va='center', fontsize=14)
-    fig.text(0.77, 0.98, 'b. Our orthonormalized functions', ha='center', va='center', fontsize=14)
+    fig.text(0.23, 0.97, 'a. Initial functions', ha='center', va='center', fontsize=14)
+    fig.text(0.77, 0.97, 'b. Our orthonormalized functions', ha='center', va='center', fontsize=14)
 
     plt.show()
