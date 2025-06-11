@@ -81,8 +81,8 @@ subplot_index = (1 + np.flip(np.arange(n_rows * n_cols_basis).reshape((n_rows, n
 if do_plot_bases:
     scale = 1 / np.abs(init_modes[:, :, 0]).max()
 
-    fig = plt.figure(figsize=(16, 8))
-    plt.subplots_adjust(left=0.01, right=0.99, top=0.96, bottom=0.01)
+    fig = plt.figure(figsize=(14, 7))
+    plt.subplots_adjust(left=0.005, right=0.995, top=0.965, bottom=0.005, wspace=0.03, hspace=0.05)
 
     # Plot init functions
     for m, spi in enumerate(subplot_index):
@@ -109,7 +109,7 @@ if do_plot_bases:
     ax_domain.set_xlim((-1, 0))
     ax_domain.set_ylim((-1, 1))
     ax_domain.set_xlabel('x', labelpad=-2.0)
-    ax_domain.set_ylabel('y', labelpad=-2.0, rotation=0)
+    ax_domain.set_ylabel('y', labelpad=-3.0, rotation=0)
     ax_domain.set_aspect(1)
     ax_domain.set_title('Domain')
 
@@ -121,8 +121,8 @@ if do_plot_bases:
 # Plot transformed grid and Jacobian
 if do_plot_transform_jacobian:
     # Prepare plot
-    fig = plt.figure(figsize=(16, 8))
-    plt.subplots_adjust(left=0.01, right=0.99, top=0.92, bottom=0.01)
+    fig = plt.figure(figsize=(12, 6))
+    plt.subplots_adjust(left=0.005, right=0.995, top=0.922, bottom=0.005, hspace=0.045, wspace=0.02)
 
     # === Plot transformed grid === #
     gridsize_x = 1 + num_grid_cells * (domain['x_max'] - domain['x_min'])
@@ -153,6 +153,7 @@ if do_plot_transform_jacobian:
         plt.ylim((domain['y_min'], domain['y_max']))
         plt.xticks([])
         plt.yticks([])
+        plt.gca().set_aspect(1)
 
     # Plot amplitude
     middletop_spi = n_cols_basis + 1
