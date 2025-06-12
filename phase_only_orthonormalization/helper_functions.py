@@ -121,7 +121,8 @@ def complex_colorwheel(ax: Axes = None, shape: Tuple[int, int] = (100, 100), ims
     ax.annotate('', xy=(0, 0.9), xytext=(0.9, 0),
                 arrowprops={'connectionstyle': 'arc3,rad=0.4', 'color': 'white', 'width': 1.8, 'headwidth': 5.0,
                             'headlength': 6.0, **arrow_props})
-    ax.text(**{'x': 0.1, 'y': 0.5, 's': phase_str, 'color': 'white', 'fontsize': 15, **text_kwargs})
+    ax.text(**{'x': 0.15, 'y': 0.55, 's': phase_str, 'color': 'white', 'fontsize': 15, 'ha': 'center', 'va': 'center',
+               **text_kwargs})
 
     # Hide axes spines and ticks
     ax.set_xticks([])
