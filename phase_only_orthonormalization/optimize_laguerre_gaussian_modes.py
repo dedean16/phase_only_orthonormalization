@@ -96,8 +96,8 @@ if do_plot_end:
     subplot_index = 1 + np.arange(n_rows * n_cols_total).reshape((n_cols_total, n_rows))[:, 0:n_cols_basis].T.ravel()
 
     # Initialize figure with subplots
-    fig = plt.figure(figsize=(10, 9.5))
-    plt.subplots_adjust(left=0.01, right=0.99, top=0.95, bottom=0.02, wspace=0.05, hspace=0.01)
+    fig = plt.figure(figsize=(8, 8))
+    plt.subplots_adjust(left=0.005, right=0.995, top=0.965, bottom=0.005, wspace=0.04, hspace=0.005)
     scale = 1 / np.abs(init_modes[:, :, 0]).max()
 
     # Plot init functions
@@ -121,7 +121,7 @@ if do_plot_end:
 
     # Title
     fig.text(0.23, 0.98, 'a. Initial functions', ha='center', va='center', fontsize=14)
-    fig.text(0.77, 0.98, 'b. Our orthonormalized functions', ha='center', va='center', fontsize=14)
+    fig.text(0.78, 0.98, 'b. Our orthonormalized functions', ha='center', va='center', fontsize=14)
 
     plt.show()
 
