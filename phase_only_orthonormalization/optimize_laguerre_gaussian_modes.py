@@ -56,14 +56,14 @@ q_tuple = (0, 2, 4)
 poly_per_mode = True    # If True, every mode has its own transform polynomial
 
 # Optimization parameters
-learning_rate = 5.0e-5
+learning_rate = 1.0e-4
 iterations = 8000
-phase_grad_weight = 0.3     # 1/w²
+phase_grad_weight = 0.01     # 1/w²
 
 
 # ====== Initial basis ====== #
 amplitude_kwargs = {'waist': waist, 'r_pupil': 1}
-phase_kwargs = {'el_max': 3, 'p_max': 2, 'w0': waist/3, 'step_smoothness': 0.02}
+phase_kwargs = {'el_max': 3, 'p_max': 2, 'w0': waist/3, 'step_smoothness': 0.01}
 
 # Mode plotting
 nrows = 4
