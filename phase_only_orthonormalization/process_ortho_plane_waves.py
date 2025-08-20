@@ -21,6 +21,7 @@ from directories import localdata
 do_plot_bases = True
 do_plot_transform_jacobian = True
 do_plot_transformed_gridmap = False
+do_plot_thesis_cover_img = True
 do_export_modes = True
 
 import_filepath = os.path.join(localdata, 'ortho-plane-waves.hdf5')
@@ -36,6 +37,8 @@ gridstyle = '-k'
 
 # Jacobian plot
 cmap = 'magma'
+
+thesis_cover_mode = 29
 
 plt.rcParams['font.size'] = 12
 
@@ -232,6 +235,30 @@ if do_plot_transformed_gridmap:
         plt.imshow(gridmap, cmap='gray')
         plt.xticks([])
         plt.yticks([])
+
+
+if do_plot_thesis_cover_img:
+    # Thesis cover mode
+    # Coords and amplitude profile
+    domain_cover = {**domain, 'yxshape': (3000, 1500)}
+    x_cover, y_cover = get_coords(domain_cover)
+    amplitude_profile = trunc_gaussian(x_cover, y_cover, **amplitude_kwargs)
+
+    # Transformed phase pattern
+    a_cover = a[:, :, thesis_cover_mode, None, :, :]
+    b_cover = b[:, :, thesis_cover_mode, None, :, :]
+    kx_cover = phase_kwargs['kx'][:, :, thesis_cover_mode, None, :, :]
+    ky_cover = phase_kwargs['ky'][:, :, thesis_cover_mode, None, :, :]
+    phase_kwargs_cover = {'kx': kx_cover, 'ky': ky_cover}
+    wx, wy = coord_transform(x_cover, y_cover, a_cover, b_cover, p_tuple, q_tuple)
+    cover_modes = compute_modes(amplitude_profile, phase_gradient, phase_kwargs_cover, wx, wy)[0].flip(1)
+
+    # Plot
+    fig = plt.figure(figsize=(8, 8*np.sqrt(2)))
+    scale = 1 / amplitude_profile.max()
+    plot_field(cover_modes[:, :, 0, 0, 0], scale=scale)
+    plt.xticks([])
+    plt.yticks([])
 
 plt.show()
 
