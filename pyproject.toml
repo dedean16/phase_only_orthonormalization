@@ -6,13 +6,13 @@ authors = ["Daniel Cox <danielcox16@hotmail.com>"]
 readme = "README.rst"
 
 [tool.poetry.dependencies]
-python = "~3.11"                # Currently restricted to be compatible with openwfs
-numpy = "^1.26.4"               # Currently restricted to be compatible with openwfs
+python = ">=3.11,<4.0"
+numpy = ">=1.26.4"
 matplotlib = "^3.8.3"
 tqdm = "^4.66.2"
 gitpython = "^3.1.43"
 h5py = "^3.11.0"
-scikit-image = "^0.24.0"
+scikit-image = ">=0.24.0,<1.0"
 
 
 [tool.poetry.group.dev]
@@ -26,7 +26,7 @@ pytest = "~7.2.0"
 optional = true
 
 [tool.poetry.group.torchdefault.dependencies]
-torch = "~2.3.0"                # Platform default torch version = non-CUDA for Windows
+torch = ">=2.3.0,<3.0"                # Platform default torch version = non-CUDA for Windows
 
 
 [tool.poetry.group.experiment]
