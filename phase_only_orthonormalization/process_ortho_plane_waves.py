@@ -217,7 +217,7 @@ if do_plot_transform_jacobian:
     plt.yticks((0, 0.5, 1.0, vmax), ('0.0', '0.5', '1.0', f'$\\geq${vmax:.1f}'))
 
     fig.text(0.23, 0.96, "a. Transformed arcs and grids (x', y')", ha='center', va='center', fontsize=14)
-    fig.text(0.77, 0.96, "c. $A_R^2(x', y')\\cdot |\\,J\,|$", ha='center', va='center', fontsize=14)
+    fig.text(0.77, 0.96, "c. $A_R^2(x', y')\\cdot |\\,J\\,|$", ha='center', va='center', fontsize=14)
 
 
 # Plot a transformed bitmap image of a grid
