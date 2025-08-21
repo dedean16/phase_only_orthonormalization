@@ -9,11 +9,12 @@ import numpy as np
 import matplotlib.pyplot as plt
 import h5py
 from skimage.transform import resize
+from skimage.io import imsave
 
 from mode_functions import get_coords, coord_transform, trunc_gaussian, amplitude_rectangle, compute_modes, \
     phase_gradient
 from helper_functions import plot_field, complex_colorwheel, get_dict_from_hdf5, add_dict_as_hdf5group, gitinfo, \
-    grid_bitmap
+    grid_bitmap, complex_to_rgb
 from directories import localdata
 
 
@@ -21,8 +22,8 @@ from directories import localdata
 do_plot_bases = True
 do_plot_transform_jacobian = True
 do_plot_transformed_gridmap = False
-do_plot_thesis_cover_img = True
 do_export_modes = True
+do_export_thesis_cover_img = False
 
 import_filepath = os.path.join(localdata, 'ortho-plane-waves.hdf5')
 export_filepath = os.path.join(localdata, 'ortho-plane-waves-hires.hdf5')
@@ -38,7 +39,9 @@ gridstyle = '-k'
 # Jacobian plot
 cmap = 'magma'
 
+# Thesis cover
 thesis_cover_mode = 29
+export_thesis_cover_image_path = os.path.join(localdata, 'thesis-cover-image.png')
 
 plt.rcParams['font.size'] = 12
 
@@ -237,10 +240,13 @@ if do_plot_transformed_gridmap:
         plt.yticks([])
 
 
-if do_plot_thesis_cover_img:
+if do_export_thesis_cover_img:
     # Thesis cover mode
     # Coords and amplitude profile
-    domain_cover = {**domain, 'yxshape': (3000, 1500)}
+    # y_numpixels = 8000
+    y_numpixels = 1000
+    x_numpixels = np.round(0.5 * y_numpixels * np.sqrt(2)).astype(np.int32)
+    domain_cover = {'y_min': -1.05, 'y_max': 1.05, 'x_min':-1.05*np.sqrt(2), 'x_max': 0, 'yxshape': (y_numpixels, x_numpixels)}
     x_cover, y_cover = get_coords(domain_cover)
     amplitude_profile = trunc_gaussian(x_cover, y_cover, **amplitude_kwargs)
 
@@ -254,11 +260,10 @@ if do_plot_thesis_cover_img:
     cover_modes = compute_modes(amplitude_profile, phase_gradient, phase_kwargs_cover, wx, wy)[0].flip(1)
 
     # Plot
-    fig = plt.figure(figsize=(8, 8*np.sqrt(2)))
     scale = 1 / amplitude_profile.max()
-    plot_field(cover_modes[:, :, 0, 0, 0], scale=scale)
-    plt.xticks([])
-    plt.yticks([])
+    srgb = complex_to_rgb(cover_modes[:, :, 0, 0, 0], scale, colorspace='oklab')
+    srgb_uint8 = np.round(255 * srgb).astype(np.uint8)
+    imsave(export_thesis_cover_image_path, srgb_uint8)
 
 plt.show()
 

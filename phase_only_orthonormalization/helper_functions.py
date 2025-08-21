@@ -7,6 +7,7 @@ from matplotlib.colors import hsv_to_rgb
 from matplotlib.axes import Axes
 import git
 import h5py
+import colour
 
 
 def slope_step(a, width=0.1):
@@ -28,14 +29,28 @@ def linear_blend(a, b, blend):
     return a*blend + b*(1-blend)
 
 
-def complex_to_rgb(array, scale, axis=2):
+def complex_to_rgb(array, scale, axis=2, colorspace='hsv', Lmax=0.75, abmax=0.12):
     """Generate RGB values to represent values of a complex array."""
-    h = np.expand_dims(np.angle(array) / (2 * np.pi) + 0.5, axis=axis)
-    s = np.ones_like(h)
-    v = np.expand_dims(np.abs(array) * scale, axis=axis).clip(min=0, max=1)
-    hsv = np.concatenate((h, s, v), axis=axis)
-    rgb = hsv_to_rgb(hsv)
-    return rgb
+    if colorspace == 'hsv':
+        h = np.expand_dims(np.angle(array) / (2 * np.pi) + 0.5, axis=axis)
+        s = np.ones_like(h)
+        v = np.expand_dims(np.abs(array) * scale, axis=axis).clip(min=0, max=1)
+        hsv = np.concatenate((h, s, v), axis=axis)
+        srgb = hsv_to_rgb(hsv)
+
+    elif colorspace == 'oklab':
+        scaled_array = scale * array
+        L = Lmax * np.abs(scaled_array)
+        a = abmax * np.imag(scaled_array)
+        b = -abmax * np.real(scaled_array)
+        Lab = np.stack((L, a, b), axis=-1)
+        xyz = colour.Oklab_to_XYZ(Lab)
+        srgb = colour.XYZ_to_sRGB(xyz)
+
+    else:
+        raise f'Colorspace {colorspace} is not supported! Must be "hsv" or "oklab".'
+
+    return srgb
 
 
 def plot_field(array, scale, imshow_kwargs={}):
