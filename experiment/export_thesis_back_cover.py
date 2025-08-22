@@ -43,8 +43,8 @@ print(f'Found {len(npz_files_all)} files.')
 print(f'Selected {len(file_numbers_to_include)} files.')
 
 
-Ny = 7619
-Nx = 3810
+Ny = 2000
+Nx = 1000
 
 # ===== Compute amplitude profile ===== #
 # Compute initial coordinates and amplitude profile
