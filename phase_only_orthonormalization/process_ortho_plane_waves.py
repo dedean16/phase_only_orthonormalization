@@ -245,8 +245,9 @@ if do_export_thesis_cover_img:
     # Coords and amplitude profile
     # y_numpixels = 8000
     y_numpixels = 1000
-    x_numpixels = np.round(0.5 * y_numpixels * np.sqrt(2)).astype(np.int32)
-    domain_cover = {'y_min': -1.05, 'y_max': 1.05, 'x_min':-1.05*np.sqrt(2), 'x_max': 0, 'yxshape': (y_numpixels, x_numpixels)}
+    AR = (170 + 5 + 7.7 / 2) / (240 + 2 * 5)  # Aspect Ratio
+    x_numpixels = np.round(y_numpixels * AR).astype(np.int32)
+    domain_cover = {'y_min': -1.1, 'y_max': 1.1, 'x_min':-1.1*2*AR, 'x_max': 0, 'yxshape': (y_numpixels, x_numpixels)}
     x_cover, y_cover = get_coords(domain_cover)
     amplitude_profile = trunc_gaussian(x_cover, y_cover, **amplitude_kwargs)
 

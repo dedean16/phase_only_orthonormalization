@@ -43,16 +43,18 @@ print(f'Found {len(npz_files_all)} files.')
 print(f'Selected {len(file_numbers_to_include)} files.')
 
 
-Ny = 2000
-Nx = 1000
+# Ny = 8000  # Number of pixels in vertical direction
+Ny = 1000  # Number of pixels in vertical direction
+AR = (170 + 5 + 7.7 / 2) / (240 + 2 * 5)  # Aspect Ratio
+Nx = np.round(Ny * AR).astype(np.int32)
 
 # ===== Compute amplitude profile ===== #
 # Compute initial coordinates and amplitude profile
 domain = {
-    'x_min': -1,
+    'x_min': -1.1*2*AR,
     'x_max': 0,
-    'y_min': -1,
-    'y_max': 1,
+    'y_min': -1.1,
+    'y_max': 1.1,
     'yxshape': (Ny, Nx),           # Number of samples in each spatial direction
 }
 x = np.linspace(domain['x_min'], domain['x_max'], domain['yxshape'][1]).reshape(1, -1)  # x coords
